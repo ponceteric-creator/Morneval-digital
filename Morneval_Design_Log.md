@@ -24,4 +24,24 @@ New ordinary Stakes enter as Young. At generation end, Elder Stakes leave, Matur
 
 This supersedes the earlier prototype interpretation of “1 Stake slot per Sector level” as one total slot per level.
 
-**Still to clarify:** when a player replaces an existing Stake, whether the replacement inherits the occupied age slot or enters as a Young Stake.
+## 24 September 2026 — Replacing an existing Stake
+
+**Locked principle:** replacing an occupied Stake is more expensive than taking an empty slot.
+
+The exact numerical premium remains a playtest parameter.
+
+The user described this as a higher **Prestige cost**. This needs one later rules confirmation because the current core rules state that Prestige is normally accumulated rather than spent. The v0.4 diagnostic sandbox therefore lets ownership be changed to simulate replacement, but deliberately charges no game resource yet.
+
+The replacement's treatment of age/seniority is also still to be finalized. In v0.4, changing the owner of a Stake preserves that Stake's current age and placement order solely so economic consequences can be stress-tested without committing the final replacement rule.
+
+## 24 September 2026 — Diagnostic sandbox v0.4
+
+The browser prototype now permits direct testing edits to:
+- Production Stake owner
+- Production Stake age
+- adding/removing Stakes within age-specific slot capacity
+- raw-resource Stake owner
+- raw-resource base capacity
+- raw-resource capacity modifier
+
+These direct edits are diagnostic controls, not player actions, and therefore do not spend Influence or Prestige.
