@@ -73,18 +73,31 @@ function getSectorConfig(sectorId) {
   return sectorConfig;
 }
 
+/*
+ * One Production Stake represents one unit of productive capacity and can
+ * satisfy exactly one unit of demand. Sector tier does NOT directly create
+ * output; it only creates age-specific Stake slots (3 slots per tier).
+ * Raw-resource capacity can still reduce how many occupied Stakes can produce.
+ */
 function calculateResourceLimitedSupply(state, sectorId) {
   const sector = state.productionSectors.find(item => item.id === sectorId);
   if (!sector) throw new Error(`Unknown sector: ${sectorId}`);
 
   const config = getSectorConfig(sectorId);
-  const sectorCapacity = config.supplyCapacityByTier[sector.tier];
+  const stakes = state.players
+    .flatMap(player => player.productionStakes)
+    .filter(stake => stake.sectorId === sectorId);
+
+  const slotCapacity = sector.tier * 3;
+  const stakeSupply = Math.min(stakes.length, slotCapacity);
+
   const relevantLands = state.lands.filter(land => land.resourceType === config.inputResourceType);
   const totalResourceCapacity = relevantLands.reduce(
     (sum, land) => sum + Math.max(0, land.baseCapacity + land.capacityModifier),
     0,
   );
-  const supply = Math.min(sectorCapacity, totalResourceCapacity);
+
+  const supply = Math.min(stakeSupply, totalResourceCapacity);
 
   let remainingUsage = supply;
   const usage = relevantLands.map(land => {
@@ -104,7 +117,13 @@ function calculateResourceLimitedSupply(state, sectorId) {
     };
   });
 
-  return { supply, usage };
+  return {
+    supply,
+    usage,
+    stakeSupply,
+    slotCapacity,
+    totalResourceCapacity,
+  };
 }
 
 export function resolveSectorEconomy(state, sectorId) {
@@ -116,7 +135,14 @@ export function resolveSectorEconomy(state, sectorId) {
     land.usedCapacityThisGeneration = 0;
   }
 
-  const { supply: resourceLimitedSupply, usage } = calculateResourceLimitedSupply(state, sectorId);
+  const {
+    supply: resourceLimitedSupply,
+    usage,
+    stakeSupply,
+    slotCapacity,
+    totalResourceCapacity,
+  } = calculateResourceLimitedSupply(state, sectorId);
+
   for (const item of usage) {
     const land = state.lands.find(candidate => candidate.id === item.landId);
     if (land) land.usedCapacityThisGeneration = item.usedCapacity;
@@ -164,7 +190,10 @@ export function resolveSectorEconomy(state, sectorId) {
   return {
     sectorId: sector.id,
     sectorName: sector.name,
-    availableSupply: config.supplyCapacityByTier[sector.tier],
+    availableSupply: stakeSupply,
+    stakeSupply,
+    slotCapacity,
+    totalResourceCapacity,
     resourceLimitedSupply,
     demand,
     actualProduction: demand.totalServed,
