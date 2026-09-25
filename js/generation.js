@@ -4,8 +4,44 @@ import { ageProductionStakes, erodeInfluence } from "./engine.js";
 
 function ensureState(state) {
   if (typeof state.autoPopulationDemand !== "boolean") state.autoPopulationDemand = true;
+  if (typeof state.autoInstitutionDemand !== "boolean") state.autoInstitutionDemand = true;
+  if (typeof state.autoExternalDemand !== "boolean") state.autoExternalDemand = true;
   if (!Number.isInteger(state.rngState)) state.rngState = 246813579;
   if (!Array.isArray(state.history)) state.history = [];
+  if (!Array.isArray(state.institutions)) state.institutions = [];
+}
+
+export function totalInstitutionLevels(state) {
+  ensureState(state);
+  return state.institutions.reduce((sum, institution) => sum + Math.max(0, Number(institution.level) || 0), 0);
+}
+
+export function institutionPopulationCap(state) {
+  return Math.max(0, Math.floor(Number(state.city.population) || 0));
+}
+
+export function institutionCapacityStatus(state) {
+  const total = totalInstitutionLevels(state);
+  const cap = institutionPopulationCap(state);
+  return { total, cap, overCap: total > cap };
+}
+
+export function setInstitutionLevel(state, institutionId, requestedLevel) {
+  ensureState(state);
+  const institution = state.institutions.find(item => item.id === institutionId);
+  if (!institution) throw new Error(`Unknown Institution: ${institutionId}`);
+
+  const otherLevels = state.institutions
+    .filter(item => item.id !== institutionId)
+    .reduce((sum, item) => sum + Math.max(0, Number(item.level) || 0), 0);
+  const maxAllowed = Math.max(0, institutionPopulationCap(state) - otherLevels);
+  const desired = Math.max(0, Math.floor(Number(requestedLevel) || 0));
+
+  if (desired > maxAllowed) {
+    throw new Error(`Institution development cap exceeded. With Population ${institutionPopulationCap(state)}, this Institution can be at most level ${maxAllowed} right now.`);
+  }
+  institution.level = desired;
+  return institution;
 }
 
 export function applyAutoPopulationDemand(state) {
@@ -18,6 +54,34 @@ export function applyAutoPopulationDemand(state) {
       ? 0
       : Math.ceil(state.city.population / divisor);
   }
+}
+
+export function applyAutoInstitutionDemand(state) {
+  ensureState(state);
+  if (!state.autoInstitutionDemand) return;
+  const levels = totalInstitutionLevels(state);
+  for (const sector of state.productionSectors) {
+    const divisor = BALANCE_CONFIG.institutionDemandDivisors[sector.id];
+    if (!divisor) continue;
+    sector.demandThisGeneration.institutions = levels <= 0 ? 0 : Math.ceil(levels / divisor);
+  }
+}
+
+export function applyAutoExternalDemand(state) {
+  ensureState(state);
+  if (!state.autoExternalDemand) return;
+  const renown = Math.max(0, Number(state.city.renown) || 0);
+  for (const sector of state.productionSectors) {
+    const divisor = BALANCE_CONFIG.externalDemandDivisors[sector.id];
+    if (!divisor) continue;
+    sector.demandThisGeneration.external_markets = renown <= 0 ? 0 : Math.ceil(renown / divisor);
+  }
+}
+
+export function applyAutoDemand(state) {
+  applyAutoPopulationDemand(state);
+  applyAutoInstitutionDemand(state);
+  applyAutoExternalDemand(state);
 }
 
 function diseaseChanceForSqualor(squalor) {
@@ -44,12 +108,6 @@ function moveToward(current, target, maxStep) {
     : Math.max(target, current - maxStep);
 }
 
-/*
- * The v0.4 economy reports raw-resource capacity used to establish maximum
- * supply. For Prestige, Morneval needs ACTUAL resource consumption: only
- * output that really served demand counts. This converts each sector report
- * into actual land usage, in land order, and updates the state meters.
- */
 export function normalizeActualResourceUsage(state, economyReports) {
   for (const land of state.lands) land.usedCapacityThisGeneration = 0;
 
@@ -90,11 +148,13 @@ export function calculateProductiveLandPrestige(state, economyReports = null) {
 
 export function resolveGeneration(state) {
   ensureState(state);
-  applyAutoPopulationDemand(state);
+  applyAutoDemand(state);
 
   const generationNumber = state.generation;
   const populationBefore = state.city.population;
   const squalorBefore = state.city.squalor;
+  const institutionStatusBefore = institutionCapacityStatus(state);
+  const renown = state.city.renown;
   const influenceBefore = Object.fromEntries(state.players.map(p => [p.id, p.influence]));
   const prestigeBefore = Object.fromEntries(state.players.map(p => [p.id, p.prestige]));
 
@@ -160,6 +220,9 @@ export function resolveGeneration(state) {
   state.phase = "stake_aging";
   ageProductionStakes(state);
 
+  const institutionStatusAfter = institutionCapacityStatus(state);
+  const wealthAfter = Object.fromEntries(state.players.map(p => [p.id, p.wealthGeneratedThisGeneration]));
+
   const summary = {
     generation: generationNumber,
     populationBefore,
@@ -176,7 +239,11 @@ export function resolveGeneration(state) {
     diseaseRoll,
     diseaseOccurred,
     diseaseLoss,
+    institutionStatusBefore,
+    institutionStatusAfter,
+    renown,
     landPrestigeAwards,
+    wealthAfter,
     influenceBefore,
     influenceAfter: Object.fromEntries(state.players.map(p => [p.id, p.influence])),
     prestigeBefore,
@@ -187,6 +254,6 @@ export function resolveGeneration(state) {
   state.history.push(summary);
   state.generation += 1;
   state.phase = "action_phase";
-  applyAutoPopulationDemand(state);
+  applyAutoDemand(state);
   return summary;
 }
