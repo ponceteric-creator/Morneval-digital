@@ -37,7 +37,10 @@ export function setInstitutionLevel(state, institutionId, requestedLevel) {
   const maxAllowed = Math.max(0, institutionPopulationCap(state) - otherLevels);
   const desired = Math.max(0, Math.floor(Number(requestedLevel) || 0));
 
-  if (desired > maxAllowed) {
+  // The cap constrains development, not contraction. If Population later falls
+  // below existing Institution levels, players may reduce levels gradually even
+  // while the city remains temporarily over-cap.
+  if (desired > institution.level && desired > maxAllowed) {
     throw new Error(`Institution development cap exceeded. With Population ${institutionPopulationCap(state)}, this Institution can be at most level ${maxAllowed} right now.`);
   }
   institution.level = desired;
