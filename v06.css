@@ -1,0 +1,11 @@
+.institution-panel { margin-top: 12px; }
+.institution-grid, .toggle-grid, .balance-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); }
+.toggle-grid { margin-top: 10px; }
+.capacity-ok { margin: 10px 0; padding: 9px 11px; border-radius: 9px; background: #edf3ea; color: #315e43; font-size: 12px; font-weight: 700; }
+.warning { margin: 10px 0; padding: 9px 11px; border-radius: 9px; background: #f6e5dc; color: #7a3e25; font-size: 12px; }
+.balance-grid { margin-bottom: 14px; }
+.disease-grid { grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); }
+.report-detail { line-height: 1.45; }
+@media (max-width:560px) {
+  .institution-grid, .balance-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
