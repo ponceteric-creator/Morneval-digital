@@ -1,11 +1,12 @@
 # Morneval — Indexed Rules Reference
 
-**Version:** 0.1  
+**Rules version:** 0.2  
+**Prototype alignment:** v0.6.1  
 **Status:** Consolidated design reference
 
-This document is the master indexed rules source for Morneval. Each rule section has a stable identifier (`MOR-X.Y.Z`). Use these identifiers when discussing, revising, or cross-referencing rules.
+This is the master rules source for Morneval. It distinguishes **locked rules** from **current prototype balancing rules**. Numerical sandbox values remain provisional unless explicitly marked as locked.
 
----
+**v0.6.1 update:** corrected Production-Sector age-slot capacity and Stake-based supply; documented scalable demand, differentiated Wealth, Population/Squalor/disease, and the Institution-cap model as provisional balancing rules.
 
 <a id="index"></a>
 ## Index
@@ -19,7 +20,7 @@ This document is the master indexed rules source for Morneval. Each rule section
 ### [MOR-2 — Game Concepts & Terminology](#mor-2)
 - [MOR-2.1 — Generation](#mor-2-1)
 - [MOR-2.2 — Families](#mor-2-2)
-- [MOR-2.3 — Family Members and the Three-Generation Window](#mor-2-3)
+- [MOR-2.3 — Family Members](#mor-2-3)
 - [MOR-2.4 — Prestige](#mor-2-4)
 - [MOR-2.5 — Influence](#mor-2-5)
 - [MOR-2.6 — Wealth](#mor-2-6)
@@ -49,7 +50,7 @@ This document is the master indexed rules source for Morneval. Each rule section
   - [MOR-3.1.2 — Replace an Existing Stake](#mor-3-1-2)
   - [MOR-3.1.3 — Place / Acquire a Raw-Resource Stake](#mor-3-1-3)
   - [MOR-3.1.4 — Develop a Production Sector](#mor-3-1-4)
-  - [MOR-3.1.5 — Place an Agent in an Institution](#mor-3-1-5)
+  - [MOR-3.1.5 — Place an Agent](#mor-3-1-5)
   - [MOR-3.1.6 — Develop an Institution](#mor-3-1-6)
   - [MOR-3.1.7 — Use a Minor Institution](#mor-3-1-7)
   - [MOR-3.1.8 — Assassination](#mor-3-1-8)
@@ -61,7 +62,7 @@ This document is the master indexed rules source for Morneval. Each rule section
   - [MOR-3.2.4 — Resolve Population Needs and Growth](#mor-3-2-4)
   - [MOR-3.2.5 — Update Squalor](#mor-3-2-5)
   - [MOR-3.2.6 — Resolve Disease](#mor-3-2-6)
-  - [MOR-3.2.7 — Update Order and Other City Characteristics](#mor-3-2-7)
+  - [MOR-3.2.7 — Update Other City Characteristics](#mor-3-2-7)
   - [MOR-3.2.8 — Resolve External Relations](#mor-3-2-8)
   - [MOR-3.2.9 — Resolve the Generation Event](#mor-3-2-9)
   - [MOR-3.2.10 — Calculate Family Wealth](#mor-3-2-10)
@@ -91,1144 +92,581 @@ This document is the master indexed rules source for Morneval. Each rule section
 - [MOR-4.11 — Secret Endgame Allegiance](#mor-4-11)
 - [MOR-4.12 — Squalor, Unrest and Independence](#mor-4-12)
 - [MOR-4.13 — Important Design Tensions](#mor-4-13)
-- [MOR-4.14 — Locked in Principle but Numerically Provisional](#mor-4-14)
+- [MOR-4.14 — Provisional vs Locked](#mor-4-14)
 - [MOR-4.15 — Systems Still Requiring Design Completion](#mor-4-15)
 - [MOR-4.16 — Core Design Identity](#mor-4-16)
 
 ---
 
 <a id="mor-1"></a>
-# MOR-1 — Overview of the Game
+# MOR-1 — OVERVIEW OF THE GAME
 
 <a id="mor-1-1"></a>
 ## MOR-1.1 — Core Premise
 
-**Morneval** is a competitive city-building and political board game set in a medieval-fantasy world.
+**Morneval** is a competitive city-building and political board game set in a medieval-fantasy world. Each player controls a powerful **Family** influencing the development of the same city over centuries. Morneval begins as a small **coastal settlement** and develops economically, politically, institutionally and territorially.
 
-Each player controls a powerful **Family** whose members influence the development of the same city across centuries. Morneval begins as a relatively small **coastal settlement** and develops economically, politically, institutionally, and territorially over successive generations.
-
-Players are not building separate cities. They are jointly developing Morneval while competing for control, opportunity, and historical importance.
-
-[↑ Back to index](#index)
+Players do not build separate cities. They compete inside the same evolving city.
 
 <a id="mor-1-2"></a>
 ## MOR-1.2 — Player Objective
 
-The primary victory-point measure is **Prestige**.
-
-Prestige comes from sources including:
-- developing Production Sectors;
-- developing Institutions;
-- benefiting from investments;
-- controlling productive land;
-- Institution-related scoring;
-- character abilities;
-- Events;
-- the final political destiny of Morneval.
-
-The winning Family is the Family with the greatest accumulated Prestige at game end.
-
-[↑ Back to index](#index)
+The primary victory-point measure is **Prestige**. Prestige can come from Production-Sector and Institution development, productive land, Institution scoring, characters, Events and the final political destiny of Morneval. The Family with the greatest Prestige at game end wins.
 
 <a id="mor-1-3"></a>
 ## MOR-1.3 — Generational Scale
 
-One Generation represents approximately **20 years**.
-
-The game is intentionally generational rather than year-by-year. Characters, Stakes, city development, demographic change, and political evolution therefore operate on a long historical timescale.
-
-[↑ Back to index](#index)
+One Generation represents approximately **20 years**. Characters, Stakes, demographics, economic positions and political conditions therefore evolve on a generational rather than annual timescale.
 
 <a id="mor-1-4"></a>
 ## MOR-1.4 — Shared-City Tension
 
-The city is simultaneously:
-- a shared engine that all players need to keep functioning;
-- and the principal competitive arena.
-
-What is good for Morneval is not necessarily what is best for an individual Family.
-
-Players may benefit from developments created by rivals. Conversely, a Family may sometimes profit from shortages, instability, or crises, provided the city is not damaged beyond usefulness.
-
-[↑ Back to index](#index)
+Morneval is both a shared engine and the principal competitive arena. A prosperous city creates opportunities for everyone, but what benefits the city is not always what maximizes an individual Family's Prestige or Wealth. Shortages, crises and political instability can sometimes be profitable for one Family, provided the city remains viable.
 
 ---
 
 <a id="mor-2"></a>
-# MOR-2 — Game Concepts & Terminology
+# MOR-2 — GAME CONCEPTS & TERMINOLOGY
 
 <a id="mor-2-1"></a>
 ## MOR-2.1 — Generation
 
-A **Generation** is the fundamental turn of the game.
-
-During a Generation:
-1. a long-term Event establishes the historical context;
-2. Families take actions;
-3. production and demand are resolved;
-4. Morneval undergoes demographic, economic, and political upkeep;
-5. players score Prestige;
-6. characters and Production-Sector Stakes age.
-
-[↑ Back to index](#index)
+A **Generation** is the fundamental turn. Broadly: reveal the generational context, take player actions, resolve production/demand and upkeep, score Prestige, then age generational elements.
 
 <a id="mor-2-2"></a>
 ## MOR-2.2 — Families
 
-Each player represents a dynasty or **Family**.
-
-A Family persists across generations through:
-- family members;
-- Stakes;
-- Agents;
-- land/resource holdings;
-- accumulated Influence;
-- political positioning.
-
-Families accumulate Prestige across the game.
-
-[↑ Back to index](#index)
+Each player represents a dynasty or **Family**. Family presence persists through characters, Production and Raw-Resource Stakes, Agents, accumulated Influence and political positioning.
 
 <a id="mor-2-3"></a>
 ## MOR-2.3 — Family Members and the Three-Generation Window
 
 Each Family maintains three important members simultaneously:
-- **Young**;
-- **Mature**;
-- **Elder**.
+- **Young** — usually a simple bonus or modifier;
+- **Mature** — usually a special action or active power;
+- **Elder** — usually a special Prestige-scoring condition.
 
-All three are active at the same time.
-
-Intended structure:
-- **Young:** usually a simple bonus or modifier;
-- **Mature:** usually a special action or active power;
-- **Elder:** usually a special Prestige-scoring condition.
-
-At the end of a Generation:
-- the Elder leaves;
-- the Mature becomes Elder;
-- the Young becomes Mature;
-- a new Young member enters.
-
-Character abilities should primarily benefit the owning Family. The complete roster remains to be finalized.
-
-[↑ Back to index](#index)
+All three are active. At Generation end, the Elder leaves, Mature becomes Elder, Young becomes Mature and a new Young member enters. The complete character roster remains unfinished.
 
 <a id="mor-2-4"></a>
 ## MOR-2.4 — Prestige
 
-**Prestige** is the main victory-point currency.
-
-Prestige is accumulated permanently and is not normally spent.
-
-Typical sources include Production-Sector development, Institution development, Institution scoring, Elder character objectives, productive land holdings, Events, and final political objectives.
-
-Prestige is distinct from both Wealth and Influence.
-
-[↑ Back to index](#index)
+**Prestige** is the primary victory-point currency. It is accumulated permanently and is not normally spent. This creates a current unresolved point for Stake replacement: the replacement **premium** is locked, but whether it is paid in Influence, Prestige or another cost has not been finally confirmed.
 
 <a id="mor-2-5"></a>
 ## MOR-2.5 — Influence
 
-**Influence** is a stored and spendable Family resource.
-
-Influence is used for:
-- placing Stakes;
-- replacing existing Stakes;
-- developing Production Sectors;
-- developing Institutions;
-- political activity and Votes;
-- other Institution-related actions.
-
-Influence is subject to a maximum capacity.
-
-At the end of each Generation, each Family loses **2 Influence** through natural erosion.
-
-The exact maximum Influence capacity remains a playtest value.
-
-[↑ Back to index](#index)
+**Influence** is a stored and spendable Family resource used for actions such as investment, development and politics. Influence is capped and erodes at Generation end. The currently established erosion principle is **-2 Influence per Generation**; the maximum capacity remains a playtest value.
 
 <a id="mor-2-6"></a>
 ## MOR-2.6 — Wealth
 
-**Wealth is a capacity, not a stored resource.**
-
-A Family's investments generate Wealth during a Generation. Its network of Agents and other commitments consumes Wealth.
-
-At the end of the Generation:
-1. calculate Wealth generated;
-2. calculate Wealth obligations;
-3. compare the two.
-
-If obligations exceed available Wealth, the Family cannot support its entire network and must remove unsupported elements such as Agents.
-
-If Wealth exceeds expenditure, the surplus disappears. Unused Wealth is not banked between Generations.
-
-[↑ Back to index](#index)
+**Wealth is a capacity, not a stored resource.** A Family's economic interests generate Wealth; Agents and other commitments consume it. At Generation end compare generation Wealth against obligations. Unsupported commitments must be reduced if obligations exceed capacity. Surplus Wealth disappears and is not banked.
 
 <a id="mor-2-7"></a>
 ## MOR-2.7 — Agents
 
-**Agents** represent members of a Family permanently embedded in Institutions.
-
-Agents:
-- remain associated with Institutions;
-- provide passive benefits;
-- grant access to relevant Minor Institutions or actions;
-- may create Prestige opportunities.
-
-Agents are not worker-placement pawns that return every turn.
-
-Maintaining a large Agent network becomes progressively more expensive. The intended model is an escalating Wealth-maintenance track on the player board, similar in principle to *Eclipse*.
-
-Exact costs remain subject to playtesting.
-
-[↑ Back to index](#index)
+**Agents** represent persistent Family presence inside Institutions. They are not workers recalled each turn. Agents provide passive benefits and/or access to Minor Institutions and may create scoring opportunities. Maintaining many Agents should become progressively more expensive through an escalating Wealth-maintenance curve.
 
 <a id="mor-2-8"></a>
 ## MOR-2.8 — Stakes
 
 A **Stake** represents a Family's economic participation or privileged position.
 
-### Production-Sector Stakes
-Production-Sector Stakes age through:
-- Young;
-- Mature;
-- Elder.
+### Production-Sector Stakes — locked structure
+Production Stakes have three ages: **Young, Mature, Elder**. Each Sector tier provides age-specific capacity:
+- **1 Young slot per tier**;
+- **1 Mature slot per tier**;
+- **1 Elder slot per tier**.
 
-At Generation end:
-- Elder Stakes leave;
-- Mature Stakes become Elder;
-- Young Stakes become Mature.
+Therefore a Tier N Sector can contain up to **N Young + N Mature + N Elder = 3 × N total Stakes**. New ordinary Stakes enter as Young. At Generation end Elder Stakes leave, Mature become Elder, and Young become Mature.
 
-A Stake may be replaced early by another Family by paying an additional Influence cost.
+An occupied Stake may be replaced early, but replacement must have a **premium cost** relative to filling an empty slot. The exact resource/amount and whether replacement preserves or resets age/seniority are unresolved. Direct ownership edits in the digital sandbox deliberately charge no resource and preserve age/order only for testing.
 
 ### Raw-Resource Stakes
-Raw-resource Stakes use a single Stake slot. They are permanent until deliberately replaced and do not age out during generational upkeep.
-
-[↑ Back to index](#index)
+Raw-resource locations have a single Family Stake slot. These Stakes are permanent until replaced and do not age out.
 
 <a id="mor-2-9"></a>
 ## MOR-2.9 — Hinterland and Raw Resources
 
-Hinterland tiles provide **production capacity**.
+Hinterland tiles provide **raw-resource capacity**. Magic or technology may later modify capacity. Raw resources constrain Production-Sector output:
 
-Later technological or magical development may increase that capacity.
+**Actual available Sector supply = min(occupied Production Stakes, relevant raw-resource capacity).**
 
-Families may hold Stakes in raw-resource locations.
-
-A Family earns **1 Prestige for each controlled raw-resource land whose production is actually used by a Production Sector**.
-
-Unused land does not generate this Prestige.
-
-[↑ Back to index](#index)
+A Family gains **1 Prestige for each controlled raw-resource land whose production is actually used during the Generation**. Potential but unused capacity does not score.
 
 <a id="mor-2-10"></a>
 ## MOR-2.10 — Production Sectors
 
-Production Sectors represent increasingly sophisticated economic activities.
+Production Sectors represent increasingly sophisticated economic activities. Higher tiers represent greater specialization and institutional/economic maturity.
 
-Each Sector has development tiers. Higher tiers represent greater specialization, refining capability, mastery, and economic importance.
+### Locked v0.6.1 correction
+**Sector tier creates Stake capacity; it does not create production by itself.**
 
-The current structural rule is:
+Each tier adds **1 Young + 1 Mature + 1 Elder slot**:
+- Tier I: up to **3 Stakes**;
+- Tier II: up to **6 Stakes**;
+- Tier III: up to **9 Stakes**.
 
-> **1 Stake slot per Production-Sector level.**
+Each occupied Production Stake represents exactly **1 unit of potential supply**, subject to raw-resource capacity. A high-tier Sector with no Stakes produces nothing.
 
-Developing a Sector:
-- costs Influence;
-- requires an appropriate city-size threshold;
-- grants Prestige;
-- increases Sector capacity;
-- allows the developing player to place a Stake immediately while still paying the normal Stake cost.
-
-Exact numerical values remain subject to playtesting.
-
-[↑ Back to index](#index)
+Developing a Sector costs Influence, requires appropriate city size, grants Prestige, adds the three age-specific slots for the new tier, and allows the developing player to place a Stake immediately while still paying the normal placement cost. Exact costs/thresholds/rewards remain provisional.
 
 <a id="mor-2-11"></a>
 ## MOR-2.11 — Production-Sector Wealth
 
-Production-sector profitability depends on actual demand.
+### Locked production rule
+Each occupied Production Stake represents **1 unit of potential supply** and can satisfy **exactly 1 unit of demand / one need**.
 
-Base rule:
+For each Sector:
+- Potential Stake supply = number of occupied Production Stakes;
+- Actual available supply = **min(Potential Stake supply, raw-resource capacity)**.
 
-> **A served Stake generates 1 Wealth.**
+If not every Stake can be served, Stake seniority applies: **Elder > Mature > Young**, then earlier placement breaks ties.
 
-If demand is insufficient to support every Stake, service is allocated by seniority:
-1. oldest Stake generation;
-2. earliest placement within the same generation.
+### Current v0.6.1 Wealth model — provisional
+Each served Stake is paired with the demand category that actually receives its unit. Current test values:
+- Population: **0 Wealth**;
+- Institutions: **1 Wealth**;
+- External Markets: **2 Wealth**.
 
-Scarcity may grant additional profitability to Elder Stakes. The exact scarcity bonus requires numerical confirmation during balancing.
-
-[↑ Back to index](#index)
+This means City Inclination can change Family Wealth by changing which customer category receives scarce production first. These values are balancing parameters, not locked final numbers. The previously discussed scarcity/Elder bonus is not implemented in v0.6.1 and remains unresolved.
 
 <a id="mor-2-12"></a>
 ## MOR-2.12 — Demand
 
-Goods must satisfy demand from three categories:
-1. **Population**;
-2. **Institutions**;
-3. **External Markets**.
+Demand comes from three categories: **Population, Institutions, External Markets**.
 
-Production does not automatically generate value.
+### Current scalable-demand model — provisional
+In v0.6.1:
+- Population demand scales from Population;
+- Institution demand scales from total Institution levels;
+- External Market demand scales from Renown.
 
-Political and diplomatic development can change the amount or priority of demand.
+Current sandbox formulas:
 
-The system deliberately creates tension between expanding supply, maintaining scarcity, satisfying basic city needs, and maximizing Family profitability.
+| Sector | Population demand | Institution demand | External demand |
+|---|---:|---:|---:|
+| Food | `ceil(Population / 2)` | `ceil(total Institution levels / 3)` | `ceil(Renown / 2)` |
+| Textiles | `ceil(Population / 6)` | `ceil(total Institution levels / 3)` | `ceil(Renown / 2)` |
+| Smithing | `ceil(Population / 6)` | `ceil(total Institution levels / 3)` | `ceil(Renown / 2)` |
 
-[↑ Back to index](#index)
+If the driver is 0, demand is 0. All divisors are editable playtest parameters.
+
+City Inclination changes the **priority** of demand; demographic, institutional and geopolitical development change the **amount**.
 
 <a id="mor-2-13"></a>
 ## MOR-2.13 — City Inclination
 
-Morneval has a political/cultural **Inclination** represented on a cross-shaped map.
+Morneval's political/cultural Inclination uses two opposed axes:
+- **Arcane ↔ Religion/Temple**;
+- **Military ↔ Mercantile**.
 
-The four directions are:
-- Arcane;
-- Religion / Temple;
-- Military;
-- Mercantile.
-
-Opposing pairs:
-- Arcane ↔ Religion;
-- Military ↔ Mercantile.
-
-The city may be Neutral, Level I aligned, Level II strongly aligned, or hybrid across the two axes.
-
-Pure Level II positions should be powerful but dangerous.
-
-[↑ Back to index](#index)
+The city may be Neutral, Level I, Level II or hybrid across axes. Pure Level II positions should be powerful but carry meaningful danger or drawback.
 
 <a id="mor-2-14"></a>
 ## MOR-2.14 — Inclination and Demand Priority
 
-City Inclination determines how scarce production is distributed.
+City Inclination determines distribution of scarce production:
+- **Mercantile:** External Markets priority;
+- **Arcane:** Institutions priority;
+- **Religious:** Institutions priority;
+- **Military:** Population priority;
+- **Hybrid:** both favored categories share the first priority group;
+- **Neutral:** all three categories share priority.
 
-### Mercantile
-External Markets have priority.
-
-### Arcane
-Institutions have priority.
-
-### Religious
-Institutions have priority.
-
-### Military
-Population has priority.
-
-### Hybrid Inclinations
-Both favored categories share priority.
-
-Example: Mercantile I + Religious I prioritizes External Markets and Institutions before Population.
-
-### Neutral
-All three demand categories receive equal priority.
-
-### Tie-breaker
-Where a further tie is required:
-
-> **Population > Institutions > External Markets**
-
-[↑ Back to index](#index)
+Within a priority group use the tie-breaker **Population > Institutions > External Markets**.
 
 <a id="mor-2-15"></a>
 ## MOR-2.15 — Institutions
 
-Institutions are permanent civic, religious, military, economic, medical, or scholarly structures within Morneval.
-
-Families place Agents in Institutions.
-
-Institutions can provide:
-- passive benefits;
-- special actions through Minor Institutions;
-- Prestige opportunities.
-
-Examples previously discussed include Merchant Guild, City Guard, Temple, Hospice, College of Medicine, and scholarly Institutions.
-
-Agents remain in Institutions rather than being recalled each turn.
-
-[↑ Back to index](#index)
+Institutions are permanent civic, religious, military, economic, medical or scholarly structures. Families embed Agents within them. Institutions may grant passive benefits, access to Minor Institutions/actions and Prestige opportunities. Examples discussed include Merchant Guild, City Guard, Temple, Hospice, College of Medicine and scholarly Institutions.
 
 <a id="mor-2-16"></a>
 ## MOR-2.16 — Developing Institutions
 
-A Family may develop an Institution by spending Influence.
+Institution development costs Influence, grants Prestige, places an Agent and can select/lock a development branch or Minor Institution.
 
-The developing Family:
-- gains Prestige;
-- places an Agent;
-- selects the associated Minor Institution or development branch.
+### Current v0.6.1 Institution-cap model — provisional
+For balance testing, **total Institution levels may not be increased above current Population**. If Population subsequently falls below the already-developed total:
+- Institutions are not automatically destroyed;
+- Morneval is flagged over-cap;
+- further development is blocked until the city is no longer over-cap.
 
-Selecting one branch may permanently lock out alternatives.
-
-Morneval therefore develops path-dependently and cannot necessarily contain every possible option.
-
-[↑ Back to index](#index)
+This is a prototype constraint, not a final Institution-loss rule.
 
 <a id="mor-2-17"></a>
 ## MOR-2.17 — Conditional Institution Benefits
 
-Some Institutions earn additional Prestige only when their purpose is genuinely relevant.
-
-Example: a famine-response Institution should not earn crisis Prestige in a Generation with no famine.
-
-This creates an intentional incentive where a player controlling the solution may sometimes benefit from the existence of the problem.
-
-[↑ Back to index](#index)
+Some Institutions should earn extra Prestige only when their purpose is genuinely relevant—for example a famine-response Institution should not gain crisis Prestige in a Generation with no famine. This deliberately creates a “solution owner may benefit from the problem” tension.
 
 <a id="mor-2-18"></a>
 ## MOR-2.18 — Knowledge
 
-A scholarly Institution may generate **Knowledge**.
-
-Knowledge is intended as a limited wild resource.
-
-Potential uses include restricted substitution for:
-- Influence;
-- part of a Wealth requirement;
-- Prestige conversion.
-
-Knowledge must be tightly capped so that it supplements rather than replaces normal resources.
-
-The exact implementation remains unfinished.
-
-[↑ Back to index](#index)
+A scholarly Institution may generate **Knowledge**, intended as a tightly limited wild resource. Possible uses include limited substitution for Influence, Wealth requirements or Prestige conversion. Exact implementation remains unfinished.
 
 <a id="mor-2-19"></a>
 ## MOR-2.19 — Population
 
-Population represents the size of Morneval.
-
-Larger Population creates more demand, more economic potential, more pressure on resources, more potential Squalor, and greater vulnerability to shortages and disease.
-
-Population growth is not automatic.
-
-A city whose basic Population demand is not met should not continue growing normally.
-
-[↑ Back to index](#index)
+Population measures Morneval's size. Larger Population increases demand and economic potential but also pressure, Squalor and vulnerability to shortages/disease. Population growth is not automatic and depends particularly on Food supply.
 
 <a id="mor-2-20"></a>
 ## MOR-2.20 — Squalor
 
-**Squalor** represents crowding, inadequate infrastructure, poor living conditions, and unmet urban needs.
-
-Higher Squalor increases disease risk.
-
-Disease reduces Population.
-
-This creates a negative-feedback loop:
-
-> Population growth → pressure → Squalor → disease → Population loss → reduced pressure.
-
-Disease is resolved on the scale of a Generation rather than persisting as a multi-generation state.
-
-[↑ Back to index](#index)
+**Squalor** represents crowding, inadequate infrastructure and poor urban conditions. High Squalor raises disease risk. Population growth can therefore create a negative-feedback loop through Squalor and disease.
 
 <a id="mor-2-21"></a>
 ## MOR-2.21 — Order
 
-**Order** represents internal civic stability.
-
-Order is relevant to City Guard, Temple, unrest, political stability, and potentially the late-game independence struggle.
-
-Order and Squalor are related but remain separate concepts.
-
-[↑ Back to index](#index)
+**Order** measures civic stability and may matter to City Guard, Temple, unrest and the late-game independence struggle. It remains distinct from Squalor.
 
 <a id="mor-2-22"></a>
 ## MOR-2.22 — Force
 
-**Force** represents Morneval's ability to defend itself and project military power.
-
-Force matters particularly for City Guard, raids, external threats, and geopolitical development.
-
-[↑ Back to index](#index)
+**Force** represents Morneval's ability to defend itself and project military power. It matters particularly to City Guard, raids, external threats and geopolitical development.
 
 <a id="mor-2-23"></a>
 ## MOR-2.23 — City Economic Strength
 
-Morneval has an economic condition distinct from individual Family Wealth.
-
-This city-level economic strength can be used as a scoring parameter for Institutions.
-
-The Merchant Guild, for example, is intended to care strongly about city prosperity.
-
-[↑ Back to index](#index)
+Morneval has a city-level economic condition distinct from individual Family Wealth. It can become a scoring input for Institutions such as Merchant Guild. Automatic update rules remain unfinished.
 
 <a id="mor-2-24"></a>
 ## MOR-2.24 — Renown
 
-**Renown** represents Morneval's overall historical importance and maturity.
+**Renown** represents Morneval's historical importance and maturity and is expected to contribute to the endgame trigger.
 
-Renown is not a Family victory score.
-
-It is expected to form part of the endgame trigger.
-
-Exact thresholds remain to be determined.
-
-[↑ Back to index](#index)
+In the current v0.6.1 demand prototype, Renown also drives External Market demand using `ceil(Renown / 2)` for each implemented Sector. This formula is provisional. Automatic Renown growth is not yet defined; the sandbox allows manual editing.
 
 ---
 
 <a id="mor-3"></a>
-# MOR-3 — Turn / Generation Sequence
+# MOR-3 — TURN / GENERATION SEQUENCE
 
 <a id="mor-3-0"></a>
 ## MOR-3.0 — Generation Structure
 
-The agreed structure is:
+The intended structure is:
+1. **Beginning of Generation:** establish/reveal the long-term Event or context;
+2. **Player Action Phase:** Families take economic, institutional and political actions;
+3. **End-of-Generation Upkeep:** resolve production/demand, city and Family economy, demographics, Events, relations and aging;
+4. **End-of-Generation Scoring:** resolve Prestige sources.
 
-### A. Beginning of Generation
-Reveal the long-term Generation Event.
-
-### B. Player Action Phase
-Families take actions to alter their economic, institutional, and political position.
-
-### C. End-of-Generation Upkeep
-Resolve city economy, Family economy, demographics, external relations, Events, and aging.
-
-### D. End-of-Generation Scoring
-Resolve Prestige from Institutions, characters, productive land, Events, and other conditions.
-
-The exact number of actions, initiative system, passing procedure, and action-round structure remain unfinished.
-
-[↑ Back to index](#index)
+Exact action count, initiative, passing and action-round structure remain unfinished.
 
 <a id="mor-3-1"></a>
-# MOR-3.1 — Possible Player Actions
+# MOR-3.1 — POSSIBLE PLAYER ACTIONS
 
 <a id="mor-3-1-1"></a>
 ## MOR-3.1.1 — Place a Production-Sector Stake
 
-Spend Influence to place a Stake in an available Production-Sector slot.
-
-The Stake enters as Young and may generate Wealth if sufficient demand exists.
-
-[↑ Back to index](#index)
+Pay the appropriate cost to place a new Stake in an available **Young** slot. It enters Young and adds **1 unit of potential supply** to that Sector, subject to raw-resource capacity and demand.
 
 <a id="mor-3-1-2"></a>
 ## MOR-3.1.2 — Replace an Existing Stake
 
-A Family may replace an occupied Stake.
-
-Replacement requires additional Influence beyond normal placement cost.
-
-This preserves the value of established economic positions while allowing aggressive entry.
-
-[↑ Back to index](#index)
+A Family may replace an occupied Production Stake. Replacement must cost a **premium** over filling an empty slot. Exact resource and numerical premium are unresolved, as is whether replacement inherits or resets age/seniority. The v0.6.1 diagnostic ownership edit is not a final player-action rule.
 
 <a id="mor-3-1-3"></a>
 ## MOR-3.1.3 — Place / Acquire a Raw-Resource Stake
 
-Take control of an available resource-producing land position.
-
-Each raw-resource location has one Stake slot.
-
-Raw-resource Stakes remain until replaced. They may generate Prestige when their output is actually used.
-
-[↑ Back to index](#index)
+Take control of an available resource-producing land position. Each raw-resource location has one persistent Stake slot. Productive ownership may generate Prestige when its output is actually used.
 
 <a id="mor-3-1-4"></a>
 ## MOR-3.1.4 — Develop a Production Sector
 
-Advance a Production Sector by one tier.
-
-Requirements include an appropriate city-size threshold.
-
-The acting Family:
-1. pays the tier's Influence cost;
-2. gains Prestige;
-3. increases the Sector's development;
-4. gains the opportunity to place a Stake immediately;
-5. still pays the normal Stake-placement cost.
-
-Exact costs, thresholds, and Prestige rewards remain playtest values.
-
-[↑ Back to index](#index)
+Advance a Sector by one tier. The acting Family pays the tier's Influence cost, gains Prestige, adds **1 Young + 1 Mature + 1 Elder slot**, and may place a new Young Stake immediately while paying its normal cost. Tier development alone does not create production; additional occupied Stakes and raw-resource capacity are required. Exact costs/thresholds/rewards remain provisional.
 
 <a id="mor-3-1-5"></a>
 ## MOR-3.1.5 — Place an Agent in an Institution
 
-Establish Family representation inside an Institution where permitted.
-
-Agents provide persistent benefits but increase the Family's Wealth-maintenance burden.
-
-[↑ Back to index](#index)
+Establish Family presence inside an Institution where permitted. Agents provide persistent benefits but increase Wealth-maintenance burden.
 
 <a id="mor-3-1-6"></a>
 ## MOR-3.1.6 — Develop an Institution
 
-Spend Influence to advance Morneval institutionally.
-
-The acting Family:
-- gains Prestige;
-- places an Agent;
-- chooses the relevant Minor Institution / branch.
-
-Alternative branches may become permanently unavailable.
-
-[↑ Back to index](#index)
+Spend Influence to develop Morneval institutionally. The acting Family gains Prestige, places an Agent and may choose a branch/Minor Institution, potentially locking alternatives. Under the current provisional v0.6.1 cap, total Institution levels may not be increased above Population.
 
 <a id="mor-3-1-7"></a>
 ## MOR-3.1.7 — Use a Minor Institution
 
-A Family with the required access may use a Minor Institution's special action.
-
-Minor Institution actions are restricted rather than freely repeatable.
-
-Exact costs and frequency should be specified on the Institution itself.
-
-[↑ Back to index](#index)
+A Family with appropriate access may use a Minor Institution's special action. Exact costs/frequency should be specified by the Institution and are not yet fully consolidated.
 
 <a id="mor-3-1-8"></a>
 ## MOR-3.1.8 — Assassination
 
-Assassination is a **Minor Institution action**, not a standard basic action.
-
-Potential targets may include:
-- Stakes;
-- Agents;
-- Family members.
-
-Assassination contains uncertainty.
-
-Family members must be harder to kill than Agents or Stakes.
-
-A successful character assassination removes only one of the target Family's three active character bonuses.
-
-After suffering a character assassination, the Family gains bodyguard protection against repeated character assassinations during the relevant protection period.
-
-Exact probabilities remain unfinished.
-
-[↑ Back to index](#index)
+Assassination is a **Minor Institution action**, not a standard basic action. Possible targets may include Stakes, Agents and Family members. Family-member assassination should be hardest and include uncertainty. After a Family member is assassinated, bodyguard protection prevents repeated character losses within the relevant protection period. Exact probabilities remain unfinished.
 
 <a id="mor-3-1-9"></a>
 ## MOR-3.1.9 — Initiate a Vote
 
-A player may initiate a political Vote where permitted.
-
-Influencing the outcome belongs to the Vote procedure itself rather than existing as a separate generic action.
-
-Votes are a principal mechanism for altering City Inclination and political direction.
-
-[↑ Back to index](#index)
+A player may initiate a political Vote where permitted. Influence of the result belongs to the Vote procedure itself rather than being a separate generic action. Votes are a primary mechanism for changing City Inclination and political direction.
 
 <a id="mor-3-2"></a>
-# MOR-3.2 — End-of-Generation Upkeep
+# MOR-3.2 — END-OF-GENERATION UPKEEP
 
 <a id="mor-3-2-1"></a>
 ## MOR-3.2.1 — Resolve Supply and Demand
 
-Determine available production and demand for each relevant Sector.
+For each Production Sector:
+1. count occupied Production Stakes;
+2. determine relevant raw-resource capacity;
+3. calculate **available supply = min(occupied Production Stakes, raw-resource capacity)**;
+4. determine Population, Institution and External Market demand;
+5. allocate supply according to City Inclination and the category tie-breaker.
 
-Demand originates from Population, Institutions, and External Markets.
-
-Where supply is insufficient, allocate according to Morneval's City Inclination. Use the established tie-breaker when necessary.
-
-[↑ Back to index](#index)
+Each Production Stake can satisfy at most **1 need**. Current v0.6.1 demand quantities use the provisional scalable formulas in MOR-2.12.
 
 <a id="mor-3-2-2"></a>
 ## MOR-3.2.2 — Determine Which Stakes Are Served
 
-Within each Production Sector, determine which Stakes are supported by available demand.
+After demand allocation determines how many units are actually served, assign those units to Stakes by seniority: **Elder > Mature > Young**, then earliest placement.
 
-Priority:
-1. oldest Stake generation;
-2. earliest placement.
-
-Each served Stake normally generates **1 Wealth**.
-
-Scarcity may provide additional returns to Elder Stakes.
-
-[↑ Back to index](#index)
+Each served Stake is paired with the customer category receiving its unit. Current provisional Wealth: Population **0**, Institutions **1**, External Markets **2**. Junior/unserved Stakes generate no Wealth that Generation.
 
 <a id="mor-3-2-3"></a>
 ## MOR-3.2.3 — Resolve Raw-Resource Usage
 
-Determine which raw-resource production is actually consumed by active Production Sectors.
-
-This affects both city production capacity and Family Prestige.
-
-[↑ Back to index](#index)
+Track how much raw-resource capacity is actually consumed by each Sector. Raw-resource capacity caps productive supply. Only lands with **used capacity > 0** count as productive for land Prestige; unused potential capacity does not score.
 
 <a id="mor-3-2-4"></a>
 ## MOR-3.2.4 — Resolve Population Needs and Growth
 
-Check whether Population demand is adequately supplied.
+### Current v0.6.1 balancing rule — provisional
+For Food:
+- if Population > 0, Food Population demand > 0 and **all Food Population demand is met**, Population **+1**;
+- if **any Food Population demand is unmet**, Population **-1** through famine.
 
-A city whose basic demand is not satisfied does not grow normally.
-
-Food shortages may cause famine and Population loss.
-
-The **Hospice** can prevent **1 Population loss caused by famine** when applicable.
-
-[↑ Back to index](#index)
+The Hospice is intended to prevent **1 Population loss from famine** when applicable; its final digital integration remains part of the Institution implementation.
 
 <a id="mor-3-2-5"></a>
 ## MOR-3.2.5 — Update Squalor
 
-Adjust Squalor based on urban pressure and how effectively Morneval supports its Population.
+### Current v0.6.1 balancing rule — provisional
+After Population growth/famine:
 
-Conceptually:
+**Base Squalor target = ceil(current Population / 3)**
 
-> larger and/or underserved city → more Squalor.
-
-The exact numerical table requires final consolidation.
-
-[↑ Back to index](#index)
+If any Food Population demand was unmet, target **+1**. Squalor moves by at most **1 point per Generation** toward the target. These values are playtest parameters.
 
 <a id="mor-3-2-6"></a>
 ## MOR-3.2.6 — Resolve Disease
 
-Disease risk depends on Squalor.
+Disease risk depends on Squalor and currently causes **1 Population loss** if triggered. Disease does not persist across Generations.
 
-Disease causes Population loss and does not normally remain on the board across multiple Generations.
+### Current v0.6.1 balancing table — provisional
+| Squalor | Disease chance |
+|---:|---:|
+| 0 | 0% |
+| 1 | 0% |
+| 2 | 5% |
+| 3 | 10% |
+| 4 | 20% |
+| 5 | 35% |
+| 6+ | 50% |
 
-The **College of Medicine** modifies disease probability rather than simply cancelling Population loss afterward.
-
-The exact probability table requires confirmation from the original locked discussion.
-
-[↑ Back to index](#index)
+The sandbox uses deterministic seeded pseudo-randomness for repeatable testing; this is not a tabletop rule. The College of Medicine is intended to modify disease probability; final modifiers remain unfinished.
 
 <a id="mor-3-2-7"></a>
 ## MOR-3.2.7 — Update Order and Other City Characteristics
 
-Apply changes to Order, Force, and other city parameters caused by shortages, Institutions, Events, political decisions, and external interactions.
-
-[↑ Back to index](#index)
+Apply changes to Order, Force, Economic Strength and other city parameters when caused by Institutions, Events, shortages or political/external effects. General automatic growth/update formulas for these tracks are not yet defined in v0.6.1.
 
 <a id="mor-3-2-8"></a>
 ## MOR-3.2.8 — Resolve External Relations
 
-Recalculate Morneval's relationships with each External Power.
-
-Relations are affected by Morneval's actual development and behavior.
-
-Example: large-scale exploitation of forests damages relations with Elves.
-
-Relationship changes are primarily tallied at Generation end.
-
-[↑ Back to index](#index)
+Recalculate relationships with External Powers from Morneval's actual behavior and development. For example, large-scale forest exploitation can damage Elven relations. Relationship tally is principally end-of-Generation.
 
 <a id="mor-3-2-9"></a>
 ## MOR-3.2.9 — Resolve the Generation Event
 
-Evaluate the Event revealed at the beginning of the Generation.
-
-Its resolution may modify Morneval, External Powers, Prestige, diplomatic relationships, or other end-of-Generation outcomes.
-
-[↑ Back to index](#index)
+Evaluate the Event/context established at Generation start. It may modify the city, External Powers, relationships, Prestige or other end-of-Generation outcomes.
 
 <a id="mor-3-2-10"></a>
 ## MOR-3.2.10 — Calculate Family Wealth
 
-For each Family:
-1. total Wealth generated;
-2. determine maintenance obligations;
-3. compare Wealth capacity against expenditure.
-
-Agents use the escalating Wealth-maintenance structure.
-
-If a Family cannot support its network, unsupported Agents or other commitments must be removed until expenditure is supportable.
-
-Unused Wealth disappears.
-
-[↑ Back to index](#index)
+For each Family total Wealth generated by served Production Stakes, compare it with maintenance obligations and reduce unsupported commitments if necessary. Current provisional v0.6.1 Stake Wealth depends on customer category: Population **0**, Institutions **1**, External Markets **2**. Unused Wealth disappears and is not banked.
 
 <a id="mor-3-2-11"></a>
 ## MOR-3.2.11 — Erode Influence
 
-Each Family loses **2 Influence**.
-
-Influence may not exceed the Family's maximum capacity.
-
-[↑ Back to index](#index)
+Each Family loses **2 Influence** at Generation end, subject to the eventual finalized Influence-cap rules.
 
 <a id="mor-3-2-12"></a>
 ## MOR-3.2.12 — Age Production-Sector Stakes
 
-For ordinary Production-Sector Stakes:
-- Elder Stakes leave;
-- Mature Stakes become Elder;
-- Young Stakes become Mature.
-
-Raw-resource Stakes do not age.
-
-[↑ Back to index](#index)
+Remove Elder Production Stakes; Mature become Elder; Young become Mature. Raw-resource Stakes do not age. Age-specific capacity is checked against the Sector tier.
 
 <a id="mor-3-2-13"></a>
 ## MOR-3.2.13 — Age Family Members
 
-Advance the Family character window:
-- Elder leaves;
-- Mature becomes Elder;
-- Young becomes Mature;
-- introduce a new Young character.
-
-[↑ Back to index](#index)
+The Elder leaves, Mature becomes Elder, Young becomes Mature and a new Young character enters.
 
 <a id="mor-3-3"></a>
-# MOR-3.3 — End-of-Generation Scoring
+# MOR-3.3 — END-OF-GENERATION SCORING
 
 <a id="mor-3-3-1"></a>
 ## MOR-3.3.1 — Institution Scoring
 
-Institutions are major recurring Prestige sources.
-
-Each Institution should score according to a distinct combination of city characteristics.
-
-Examples:
-
-### Merchant Guild
-Primarily scores city economic prosperity.
-
-### City Guard
-Scores factors such as Force and Order.
-
-### Temple
-Scores factors such as Population and Order.
-
-The full scoring matrix remains unfinished.
-
-[↑ Back to index](#index)
+Institutions are intended to score from different combinations of city characteristics rather than using one universal formula. Examples: Merchant Guild primarily values economic prosperity; City Guard values Force/Order; Temple values Population/Order. Exact matrix remains unfinished.
 
 <a id="mor-3-3-2"></a>
 ## MOR-3.3.2 — City Inclination and Institution Scoring
 
-City Inclination modifies the value of Institutions.
-
-Players may therefore gain from direct institutional association and indirect synergy between an Institution and Morneval's current political direction.
-
-[↑ Back to index](#index)
+City Inclination can modify the value of Institutions, creating synergy between institutional investment and political direction.
 
 <a id="mor-3-3-3"></a>
 ## MOR-3.3.3 — Conditional Institution Prestige
 
-Institutions that respond to crises may gain additional Prestige only when the relevant crisis actually occurs.
-
-This preserves the intended “pyromaniac fireman” incentive structure.
-
-[↑ Back to index](#index)
+Crisis-response Institutions may earn additional Prestige only when the relevant crisis actually occurs, preserving the intended “pyromaniac fireman” tension.
 
 <a id="mor-3-3-4"></a>
 ## MOR-3.3.4 — Productive Land Prestige
 
-A Family gains:
-
-> **1 Prestige per controlled raw-resource land whose production is actually being used by a Production Sector.**
-
-Unused land does not score.
-
-[↑ Back to index](#index)
+A Family gains **1 Prestige per controlled raw-resource land whose production was actually used during the Generation**. A land scores if its used capacity is greater than 0; unused land/potential capacity does not. In the digital prototype, previews may show prospective awards, but cumulative Prestige is applied only when the Generation advances.
 
 <a id="mor-3-3-5"></a>
 ## MOR-3.3.5 — Elder Character Scoring
 
-Each Elder may provide a Family-specific Prestige condition.
-
-The complete character set remains unfinished.
-
-[↑ Back to index](#index)
+Each Elder may provide a Family-specific Prestige condition. The complete character set is unfinished.
 
 <a id="mor-3-3-6"></a>
 ## MOR-3.3.6 — Event Scoring
 
-Generation Events may impose special Prestige conditions.
-
-Players see the Event before taking their actions, allowing deliberate adaptation.
-
-[↑ Back to index](#index)
+Generation Events may impose special scoring conditions visible early enough for players to adapt strategically.
 
 <a id="mor-3-3-7"></a>
 ## MOR-3.3.7 — Immediate Development Prestige
 
-Some Prestige is gained during the Action Phase.
-
-In particular:
-- Production-Sector development;
-- Institution development.
-
-These points are added immediately to the Family's total Prestige.
-
-[↑ Back to index](#index)
+Production-Sector and Institution development may award Prestige immediately during the Action Phase; those points remain part of cumulative Prestige.
 
 ---
 
 <a id="mor-4"></a>
-# MOR-4 — Other Systems
+# MOR-4 — OTHER SYSTEMS
 
 <a id="mor-4-1"></a>
 ## MOR-4.1 — External Powers
 
-Morneval is surrounded by external societies creating both opportunities and threats.
-
-Each External Power should:
-- care about different aspects of Morneval;
-- offer distinct benefits;
-- impose distinct risks;
-- react to the city's development.
-
-Morneval should not be able to satisfy every External Power simultaneously.
-
-[↑ Back to index](#index)
+External Powers create differentiated opportunities/threats and should care about different aspects of Morneval. Friendly relations open benefits; hostility creates costs or threats; city development itself changes relations. Morneval should not be able to satisfy every power simultaneously.
 
 <a id="mor-4-2"></a>
 ## MOR-4.2 — Elves
 
-Elves are associated with nature, low-impact development, Magic, and selected raw resources and economic sectors.
-
-Deforestation and destructive exploitation damage relations.
-
-Good relations should make a low-production / magical development path viable.
-
-Exact modifiers remain unfinished.
-
-[↑ Back to index](#index)
+Elves are associated with nature, low-impact development, Magic and selected raw resources. Deforestation/destructive exploitation damages relations. Good relations should help make a lower-production/magical path viable. Exact modifiers remain unfinished.
 
 <a id="mor-4-3"></a>
 ## MOR-4.3 — Gnomes
 
-Gnomes replaced the earlier Dwarf concept.
-
-They are associated with engineering, trade, productivity, and technology.
-
-Good relations may improve economic efficiency or trade.
-
-Hostile Gnomes may disrupt or close trade routes.
-
-[↑ Back to index](#index)
+Gnomes replaced the earlier Dwarf concept. They are associated with engineering, trade, productivity and technology. Good relations may improve economic efficiency/trade; hostility may disrupt or close trade routes.
 
 <a id="mor-4-4"></a>
 ## MOR-4.4 — Orcs
 
-Orcs create strong physical pressure.
-
-Hostile Orcs can raid, pillage the city, and devastate surrounding land.
-
-Full alliance may not be appropriate. Neutrality may represent the best stable relationship.
-
-Neutral Orcs may provide a limited external trade outlet.
-
-[↑ Back to index](#index)
+Hostile Orcs raid, pillage and threaten surrounding land. Full alliance may not be appropriate; neutrality may be the best stable relationship. Neutral Orcs may provide a limited trade outlet.
 
 <a id="mor-4-5"></a>
 ## MOR-4.5 — Mainland / Maritime Power
 
-The Mainland is a major distant political and trading power accessed primarily through maritime routes.
-
-It may value Morneval's raw materials, provide external market opportunities, and become increasingly hostile to Morneval's autonomy as the city grows.
-
-The relationship is broadly colonial in structure.
-
-The Mainland becomes central to the endgame.
-
-[↑ Back to index](#index)
+The Mainland is a distant political/trading power accessed primarily by maritime routes. It may value Morneval's raw materials and external trade while becoming less comfortable with Morneval's autonomy as the city grows. It becomes central to the endgame.
 
 <a id="mor-4-6"></a>
 ## MOR-4.6 — External Powers and Production
 
-External Powers should value different Production Sectors differently.
-
-Diplomacy therefore changes the viability of different development paths rather than providing only generic trade income.
-
-[↑ Back to index](#index)
+Different External Powers should value different Production Sectors, making diplomacy change the viability of economic paths rather than simply adding generic trade income.
 
 <a id="mor-4-7"></a>
 ## MOR-4.7 — External Events
 
-At the start of each Generation, an Event establishes a long-term historical situation.
-
-Events should represent developments such as regime changes, migration, climate shifts, epidemics, geopolitical changes, or major territorial developments.
-
-The Event:
-1. creates an initial condition;
-2. gives players a Generation to respond;
-3. resolves at Generation end;
-4. may alter Prestige, Morneval, or External Powers.
-
-A future campaign mode may use scripted Event sequences.
-
-[↑ Back to index](#index)
+At Generation start an Event establishes a long-term historical context—e.g. regime change, migration, climatic change, epidemic or geopolitical shift. Players adapt during the Generation and consequences resolve at Generation end. A campaign mode could use scripted Event sequences.
 
 <a id="mor-4-8"></a>
 ## MOR-4.8 — Voting and Politics
 
-Voting is a primary mechanism for collectively steering Morneval.
-
-Votes can change City Inclination and therefore influence demand priorities, Institution values, economic incentives, and future city development.
-
-Political decisions are intended to alter the functioning of the city, not merely distribute Prestige.
-
-[↑ Back to index](#index)
+Voting is a primary mechanism for collectively steering Morneval. Votes can change City Inclination and therefore demand priorities, Institution value, economic incentives and future development. Influencing a Vote belongs to the Vote process rather than being a separate basic action.
 
 <a id="mor-4-9"></a>
 ## MOR-4.9 — Assassination and Political Violence
 
-Assassination belongs to the Institution system.
-
-The intended target hierarchy is:
-- Stakes = relatively vulnerable;
-- Agents = more valuable;
-- Family members = hardest to kill.
-
-Character assassination must contain uncertainty.
-
-A Family should not be able to lose its entire three-character engine to repeated attacks.
-
-Bodyguard protection exists to limit repeated character assassinations.
-
-[↑ Back to index](#index)
+Assassination belongs to the Institution system. Stakes should be relatively vulnerable, Agents more consequential, Family members hardest to kill. Character assassination includes uncertainty and bodyguard protection prevents repeated character losses from crippling one Family.
 
 <a id="mor-4-10"></a>
 ## MOR-4.10 — Endgame
 
-The game should not simply end after a fixed number of Generations.
+The game should not simply end after an arbitrary fixed number of Generations. Once Morneval reaches sufficient historical maturity—**Renown** being part of the trigger—a final window of roughly **2–3 Generations** is intended to open. Exact trigger/timing remain provisional.
 
-Instead, Morneval eventually becomes important enough that its political relationship with the Mainland must be resolved.
-
-**Renown** forms part of the trigger.
-
-Once the endgame conditions are met, a final window of approximately **2–3 Generations** is intended to open.
-
-Exact timing remains to be balanced.
-
-Three political outcomes exist:
-
-### Ending I — Remain with the Mainland
-Morneval remains aligned with / part of the Mainland system.
-
-### Ending II — Reject the Mainland under Foreign Protection
-Morneval breaks with the Mainland but relies on another External Power.
-
-### Ending III — Full Independence
-Morneval becomes genuinely independent of both the Mainland and foreign patrons.
-
-Full Independence should be the hardest outcome.
-
-[↑ Back to index](#index)
+Three political outcomes:
+1. **Remain with the Mainland** — safest/easiest path;
+2. **Reject the Mainland under Foreign Protection** — autonomy backed by another External Power;
+3. **Full Independence** — independence from both Mainland and foreign patrons; intended to be hardest.
 
 <a id="mor-4-11"></a>
 ## MOR-4.11 — Secret Endgame Allegiance
 
-Players secretly commit to one of the possible political endings.
-
-If their chosen outcome becomes Morneval's actual destiny, they gain bonus Prestige.
-
-The three endings need not award equal Prestige.
-
-Full Independence should award the largest bonus because it is intended to be the hardest outcome to achieve.
-
-This creates asymmetric risk: a leading player may prefer a safer outcome, while a trailing player may pursue a harder, higher-value outcome.
-
-[↑ Back to index](#index)
+Players secretly commit to one political ending and gain bonus Prestige if it occurs. Rewards need not be equal; Full Independence should pay most because it is hardest. This creates asymmetric risk: a leader may prefer a safe ending while a trailing Family gambles on a harder outcome.
 
 <a id="mor-4-12"></a>
 ## MOR-4.12 — Squalor, Unrest and Independence
 
-During the final political struggle, Squalor and Unrest should increasingly favor independence.
-
-A prosperous and stable Morneval may be more comfortable remaining within the existing political order.
-
-A city suffering instability may become more revolutionary.
-
-The concept is inspired by the independence buildup in *Sid Meier's Colonization*.
-
-The precise mechanism remains unfinished.
-
-[↑ Back to index](#index)
+During the final struggle, Squalor and Unrest should increasingly favor independence. A stable prosperous city may tolerate the existing order; an unstable city may become revolutionary. Exact mechanism remains unfinished.
 
 <a id="mor-4-13"></a>
 ## MOR-4.13 — Important Design Tensions
 
-### Shared city vs personal advantage
-Players need Morneval to function, but not necessarily in the same way.
-
-### Supply vs scarcity
-More production strengthens the city, while scarcity can increase profitability for established interests.
-
-### Stability vs opportunity
-Order helps the city, but crises can create scoring opportunities.
-
-### Long-term investment vs turnover
-Agents and raw-resource Stakes persist, while Production-Sector Stakes naturally age out.
-
-### Political ideology vs economic reality
-City Inclination changes economic allocation and Institution value.
-
-### Growth vs sustainability
-Population creates opportunities and pressure simultaneously.
-
-### Foreign friendship vs autonomy
-External relationships provide benefits but may compromise independence.
-
-[↑ Back to index](#index)
+- **Shared city vs personal advantage:** everyone needs Morneval, but Families benefit differently.
+- **Supply vs scarcity:** production supports the city while scarcity can make certain markets more lucrative.
+- **Stability vs opportunity:** crises are harmful but may create scoring opportunities for Institutions positioned to solve them.
+- **Long-term investment vs turnover:** Agents/raw-resource Stakes persist while Production Stakes age out.
+- **Politics vs economy:** Inclination changes who receives scarce goods and thus can change Wealth.
+- **Growth vs sustainability:** Population expands opportunity and pressure simultaneously.
+- **Foreign friendship vs autonomy:** diplomacy grants benefits but may compromise independence.
 
 <a id="mor-4-14"></a>
-## MOR-4.14 — Locked in Principle but Numerically Provisional
+## MOR-4.14 — Provisional vs Locked
 
-The following are conceptually established but remain subject to playtesting:
-- Influence costs for Stakes;
-- Stake replacement costs;
-- Sector-development costs;
-- Population requirements for Sector tiers;
-- Prestige rewards for development;
-- Agent-maintenance curve;
-- maximum Influence;
-- Institution-development costs;
-- Institution scoring formulas;
-- exact Demand values;
-- Squalor thresholds;
-- disease probabilities;
-- College of Medicine values;
-- scarcity bonus for Elder Stakes;
-- External Power relationship thresholds;
-- trade modifiers;
+### Locked structural rules reflected in v0.6.1
+- each Sector level provides **1 Young + 1 Mature + 1 Elder Production-Stake slot**;
+- each Production Stake represents exactly **1 unit of potential supply** and can satisfy exactly **1 need**;
+- Sector tier creates Stake capacity, not output;
+- actual supply is capped by occupied Stakes and raw-resource capacity;
+- productive raw-resource land scores **1 Prestige** only when its production is actually used;
+- older Stakes receive service before younger Stakes, with earlier placement breaking same-age ties.
+
+### Current balancing values/mechanisms — provisional
+- Stake placement/replacement costs and replacement payment resource;
+- Sector development costs, thresholds and Prestige rewards;
+- Agent maintenance curve and maximum Influence;
+- Institution development costs/scoring;
+- scalable-demand divisors;
+- Wealth values by demand category;
+- Institution-development Population cap;
+- Population growth/famine values;
+- Squalor target and movement rate;
+- disease table/loss and College of Medicine values;
+- any scarcity/Elder profitability bonus;
+- External Power thresholds/trade modifiers;
 - Event values;
 - assassination probabilities;
-- Knowledge limits and uses;
-- Renown endgame threshold;
-- endgame-window length;
-- final Prestige rewards for political endings.
-
-[↑ Back to index](#index)
+- Knowledge limits/uses;
+- Renown growth/endgame threshold;
+- endgame length and ending Prestige bonuses.
 
 <a id="mor-4-15"></a>
 ## MOR-4.15 — Systems Still Requiring Design Completion
 
-The following remain structurally incomplete:
-
-### Character roster
-The Young/Mature/Elder framework exists, but the complete character set has not been finalized.
-
-### Full voting procedure
-The purpose and links to City Inclination are established, but the exact procedure requires consolidation.
-
-### Complete Institution tree
-The branching/development system exists, but the definitive list must be restored into the central rules source.
-
-### Institution scoring matrix
-The principle of asymmetric scoring is locked; exact formulas are not.
-
-### External Power tables
-Strategic identities exist, but exact relationship benefits and penalties remain unfinished.
-
-### Endgame thresholds
-Political endings and secret commitments exist, but exact trigger conditions are unresolved.
-
-### Action structure
-The action types exist, but the exact number of actions, player order, passing, and round structure are not yet codified.
-
-[↑ Back to index](#index)
+- **Character roster:** complete Young/Mature/Elder character set.
+- **Voting:** final procedure and vote-resolution mechanics.
+- **Institution tree:** definitive branches/Minor Institutions.
+- **Institution scoring:** exact asymmetric formulas.
+- **Institution capacity consequences:** final treatment if Population falls below developed levels.
+- **Stake replacement:** payment resource/premium and whether replacement preserves age/seniority.
+- **Automatic city-track development:** Renown, Order, Force and Economic Strength update rules.
+- **External Power tables:** exact benefits, penalties and relationship thresholds.
+- **Endgame thresholds:** exact trigger and final-window timing.
+- **Action structure:** number of actions, player order, passing and action-round structure.
 
 <a id="mor-4-16"></a>
 ## MOR-4.16 — Core Design Identity
 
-Morneval is not a set of parallel individual engines.
+Morneval is not a set of parallel individual engines. Families invest in the same Production Sectors and Institutions; Inclination changes allocation; allocation changes Wealth; Population and shortages change Squalor and stability; Institutions and External Powers react to city conditions; and accumulated development ultimately produces the political endgame.
 
-All major systems feed into the same city.
-
-A Family's investments alter production. City Inclination changes how production is allocated. Allocation determines Family Wealth. Population and shortages affect Squalor and stability. Institutions respond to those conditions. External Powers react to the city's development. Foreign relationships alter trade and strategic possibilities. Eventually Morneval's accumulated development produces a political crisis over its future.
-
-The winner is the Family that best exploits several centuries of Morneval's history to accumulate Prestige.
-
-[↑ Back to index](#index)
+The winner is the Family that best converts several centuries of Morneval's shared history into **Prestige**.
