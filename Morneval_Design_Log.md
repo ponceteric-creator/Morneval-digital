@@ -69,3 +69,34 @@ The following are **temporary balancing rules**, not locked Morneval rules:
 Disease uses a deterministic seeded pseudo-random sequence so identical test setups can be reproduced during balancing.
 
 Order, Force, city Economic Strength and Renown remain unchanged automatically until their update rules are designed.
+
+## 25 September 2026 — Scalable demand and differentiated Wealth (v0.6)
+
+**Design direction implemented for balancing:** the three demand categories no longer need to remain fixed as the city develops.
+
+- **Population demand** continues to scale from Population using sector-specific divisors.
+- **Institution demand** now scales from the sum of Institution levels using sector-specific divisors.
+- **External demand** now scales from city Renown using sector-specific divisors.
+
+The sandbox includes three prototype Institutions — Merchant Guild, City Guard and Temple — only to provide Institution levels for demand testing. Their unique powers and scoring are not implemented yet.
+
+### Institution development cap
+
+For prototype testing, the sum of Institution levels cannot be **increased** above current Population.
+
+If Population subsequently falls below the existing total Institution levels, Institutions are not automatically destroyed. The city is instead flagged as over-cap and further Institution development is blocked. This avoids inventing an Institution-loss rule before that mechanism is designed.
+
+### Wealth by customer category
+
+Prototype Wealth per unit served is now:
+- Population: **0 Wealth**
+- Institutions: **1 Wealth**
+- External Markets: **2 Wealth**
+
+These values are editable playtest parameters.
+
+Stake seniority still determines which Stakes are served first. Each served Stake is paired with the demand category actually receiving that unit of production, so City Inclination can directly alter Family Wealth by changing which market receives scarce goods first.
+
+### Still provisional
+
+The exact demand divisors, Wealth values and Institution cap mechanism remain subject to balancing. Renown is manually editable in v0.6 because its automatic growth rules are not yet defined.
