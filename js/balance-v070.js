@@ -4,13 +4,13 @@ import { getDemandPriorityGroups, resolveAllSectorEconomies } from "./economy.js
 import { applyAutoDemand, totalInstitutionLevels } from "./generation.js";
 import { AUCTION_CONFIG, getTurnOrder, resolveAutomatedGeneration } from "./auction.js";
 
-const VERSION = "0.7.1";
+const VERSION = "0.7.2";
 const root = document.querySelector("#app");
 if (!root) throw new Error("Missing #app root element");
 
 let game = createScenario();
 let reports = [];
-let message = `v${VERSION} ready. First Player now follows end-of-generation Influence.`;
+let message = `v${VERSION} ready. First Player: Influence, then Prestige, then Wealth, then random.`;
 
 function createScenario() {
   const state = createGame(["Valenne", "D'Arcy", "Corven"]);
@@ -103,7 +103,7 @@ function render() {
       <button class="secondary" id="reset">Reset simulation</button>
     </div>
 
-    <div class="notice"><b>v${VERSION} auction test:</b> each Generation every Family receives +${AUCTION_CONFIG.grossInfluenceIncome} Influence before bidding, then the normal −2 erosion occurs during upkeep. Winning bids are spent; losing bids cost 0. Bids rise one point at a time in player sequence. Each served Population need awards the Stake owner <b>+${AUCTION_CONFIG.populationPrestigePerNeed} Prestige</b>. After erosion, the Family with the most remaining Influence becomes First Player next Generation.</div>
+    <div class="notice"><b>v${VERSION} auction test:</b> each Generation every Family receives +${AUCTION_CONFIG.grossInfluenceIncome} Influence before bidding, then the normal −2 erosion occurs during upkeep. Winning bids are spent; losing bids cost 0. Bids rise one point at a time in player sequence. Each served Population need awards the Stake owner <b>+${AUCTION_CONFIG.populationPrestigePerNeed} Prestige</b>. First Player next Generation is determined by remaining Influence → Prestige → Generation Wealth → random selection.</div>
     <div class="status">${message}</div>
 
     <h2 class="section-title">Morneval</h2>
@@ -128,7 +128,7 @@ function render() {
 
     <section class="panel" style="margin-top:12px">
       <h3>First Player & bidding order</h3>
-      <div class="prototype-rules"><b>First Player:</b> ${playerName(game.firstPlayerId)}. <b>Current order:</b> ${currentTurnOrderText()}. At Generation end, after Influence erosion, the Family with the most Influence becomes First Player for the next Generation. <b>Prototype tie-break only:</b> if several Families tie for most Influence, the earliest tied Family in the current turn order wins the tie until a tabletop tie rule is chosen.</div>
+      <div class="prototype-rules"><b>First Player:</b> ${playerName(game.firstPlayerId)}. <b>Current order:</b> ${currentTurnOrderText()}. At Generation end, after Influence erosion: (1) most Influence; (2) if tied, most Prestige; (3) if still tied, most Wealth generated that Generation; (4) if still tied, random selection. The digital sandbox uses seeded randomness for the final step so repeated tests remain reproducible.</div>
     </section>
 
     <section class="panel" style="margin-top:12px">
@@ -198,6 +198,22 @@ function renderReport(report) {
   return `<article class="report"><h4>${report.sectorName}</h4><div class="report-kpis"><div class="kpi"><b>${report.stakeSupply}</b><span>Stake supply</span></div><div class="kpi"><b>${report.resourceLimitedSupply}</b><span>Resource-limited</span></div><div class="kpi"><b>${report.actualProduction}</b><span>Needs served</span></div></div><table><thead><tr><th>Demand</th><th>Requested</th><th>Served</th><th>Wealth/unit</th></tr></thead><tbody>${["population", "institutions", "external_markets"].map(key => `<tr><td>${categoryLabel(key)}</td><td>${report.demand.requested[key]}</td><td>${report.demand.served[key]}</td><td>${BALANCE_CONFIG.wealthPerDemand[key]}</td></tr>`).join("")}</tbody></table><div class="report-detail"><b>Served Stakes:</b> ${report.servedStakes.length ? report.servedStakes.map(stake => `${playerName(stake.ownerId)} (${stake.age}) → ${categoryLabel(stake.demandCategory)} = ${stake.wealthGenerated} Wealth${stake.demandCategory === "population" ? " + 1 Prestige" : ""}`).join("; ") : "none"}</div></article>`;
 }
 
+function firstPlayerResolutionText(resolution) {
+  if (!resolution) return "";
+  if (resolution.tieBreakMethod === "influence") return "highest Influence";
+  if (resolution.tieBreakMethod === "prestige") {
+    return `Influence tie; won on Prestige (${resolution.maxPrestige})`;
+  }
+  if (resolution.tieBreakMethod === "wealth") {
+    return `Influence + Prestige tie; won on Wealth (${resolution.maxWealth})`;
+  }
+  if (resolution.tieBreakMethod === "random") {
+    const roll = Number.isFinite(resolution.randomRoll) ? resolution.randomRoll.toFixed(3) : "?";
+    return `Influence + Prestige + Wealth tie; random selection (seeded roll ${roll})`;
+  }
+  return resolution.tieBreakMethod ?? "";
+}
+
 function renderHistory(entry) {
   const income = game.players.map(player => {
     const row = entry.influenceIncome?.find(item => item.playerId === player.id);
@@ -212,10 +228,8 @@ function renderHistory(entry) {
   const winners = entry.auctions?.filter(auction => auction.winnerId).map(auction => `${auction.sectorId}: ${playerName(auction.winnerId)} ${auction.winningBid}`).join(" · ") || "none";
   const wealth = game.players.map(player => `${player.familyName} ${entry.wealthAfter?.[player.id] ?? 0}`).join(" · ");
   const firstPlayerLine = `${playerName(entry.firstPlayerBefore)} → ${playerName(entry.nextFirstPlayerId)}`;
-  const tieNote = entry.firstPlayerResolution?.usedPrototypeTieBreak
-    ? ` (Influence tie: prototype current-order tie-break among ${entry.firstPlayerResolution.tiedPlayerIds.map(playerName).join(", ")})`
-    : "";
-  return `<article class="panel history-card"><div class="history-head"><h3>Generation ${entry.generation}</h3><span>${entry.diseaseOccurred ? "Disease" : "No disease"}</span></div><div class="history-grid"><div><b>${entry.populationBefore} → ${entry.populationAfter}</b><span>Population</span></div><div><b>${entry.foodServed}/${entry.foodRequested}</b><span>Food to Population</span></div><div><b>${entry.squalorBefore} → ${entry.squalorAfter}</b><span>Squalor</span></div><div><b>${winners}</b><span>Auction winners / bids</span></div><div><b>${firstPlayerLine}</b><span>First Player current → next</span></div></div><div class="history-notes"><b>Influence:</b> ${income}<br><b>Next First Player:</b> ${playerName(entry.nextFirstPlayerId)} with ${entry.firstPlayerResolution?.maxInfluence ?? "?"} Influence${tieNote}<br><b>Wealth:</b> ${wealth}<br><b>Population Prestige:</b> ${popPrestige}<br><b>Land Prestige:</b> ${landPrestige}</div></article>`;
+  const resolutionText = firstPlayerResolutionText(entry.firstPlayerResolution);
+  return `<article class="panel history-card"><div class="history-head"><h3>Generation ${entry.generation}</h3><span>${entry.diseaseOccurred ? "Disease" : "No disease"}</span></div><div class="history-grid"><div><b>${entry.populationBefore} → ${entry.populationAfter}</b><span>Population</span></div><div><b>${entry.foodServed}/${entry.foodRequested}</b><span>Food to Population</span></div><div><b>${entry.squalorBefore} → ${entry.squalorAfter}</b><span>Squalor</span></div><div><b>${winners}</b><span>Auction winners / bids</span></div><div><b>${firstPlayerLine}</b><span>First Player current → next</span></div></div><div class="history-notes"><b>Influence:</b> ${income}<br><b>Next First Player:</b> ${playerName(entry.nextFirstPlayerId)} with ${entry.firstPlayerResolution?.maxInfluence ?? "?"} Influence — ${resolutionText}<br><b>Wealth:</b> ${wealth}<br><b>Population Prestige:</b> ${popPrestige}<br><b>Land Prestige:</b> ${landPrestige}</div></article>`;
 }
 
 function syncCityInputs() {
