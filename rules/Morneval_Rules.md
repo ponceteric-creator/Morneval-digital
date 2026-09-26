@@ -1,12 +1,12 @@
 # Morneval — Indexed Rules Reference
 
-**Rules version:** 0.2  
-**Prototype alignment:** v0.6.1  
+**Rules version:** 0.3  
+**Prototype alignment:** v0.7.1  
 **Status:** Consolidated design reference
 
 This is the master rules source for Morneval. It distinguishes **locked rules** from **current prototype balancing rules**. Numerical sandbox values remain provisional unless explicitly marked as locked.
 
-**v0.6.1 update:** corrected Production-Sector age-slot capacity and Stake-based supply; documented scalable demand, differentiated Wealth, Population/Squalor/disease, and the Institution-cap model as provisional balancing rules.
+**v0.7.1 update:** added sequential Influence bidding for empty Young Production Stakes, +1 Prestige for each Population need served, automated Influence income for balance testing, and the rule that the Family with the most Influence after end-of-Generation erosion becomes First Player for the next Generation.
 
 <a id="index"></a>
 ## Index
@@ -45,8 +45,9 @@ This is the master rules source for Morneval. It distinguishes **locked rules** 
 
 ### [MOR-3 — Turn / Generation Sequence](#mor-3)
 - [MOR-3.0 — Generation Structure](#mor-3-0)
+  - [MOR-3.0.1 — First Player and Turn Order](#mor-3-0-1)
 - [MOR-3.1 — Possible Player Actions](#mor-3-1)
-  - [MOR-3.1.1 — Place a Production-Sector Stake](#mor-3-1-1)
+  - [MOR-3.1.1 — Bid for / Place a Production-Sector Stake](#mor-3-1-1)
   - [MOR-3.1.2 — Replace an Existing Stake](#mor-3-1-2)
   - [MOR-3.1.3 — Place / Acquire a Raw-Resource Stake](#mor-3-1-3)
   - [MOR-3.1.4 — Develop a Production Sector](#mor-3-1-4)
@@ -56,6 +57,7 @@ This is the master rules source for Morneval. It distinguishes **locked rules** 
   - [MOR-3.1.8 — Assassination](#mor-3-1-8)
   - [MOR-3.1.9 — Initiate a Vote](#mor-3-1-9)
 - [MOR-3.2 — End-of-Generation Upkeep](#mor-3-2)
+  - [MOR-3.2.0 — Resolve Pending Stake Auctions](#mor-3-2-0)
   - [MOR-3.2.1 — Resolve Supply and Demand](#mor-3-2-1)
   - [MOR-3.2.2 — Determine Which Stakes Are Served](#mor-3-2-2)
   - [MOR-3.2.3 — Resolve Raw-Resource Usage](#mor-3-2-3)
@@ -66,13 +68,14 @@ This is the master rules source for Morneval. It distinguishes **locked rules** 
   - [MOR-3.2.8 — Resolve External Relations](#mor-3-2-8)
   - [MOR-3.2.9 — Resolve the Generation Event](#mor-3-2-9)
   - [MOR-3.2.10 — Calculate Family Wealth](#mor-3-2-10)
-  - [MOR-3.2.11 — Erode Influence](#mor-3-2-11)
+  - [MOR-3.2.11 — Erode Influence and Determine Next First Player](#mor-3-2-11)
   - [MOR-3.2.12 — Age Production-Sector Stakes](#mor-3-2-12)
   - [MOR-3.2.13 — Age Family Members](#mor-3-2-13)
 - [MOR-3.3 — End-of-Generation Scoring](#mor-3-3)
   - [MOR-3.3.1 — Institution Scoring](#mor-3-3-1)
   - [MOR-3.3.2 — City Inclination and Institution Scoring](#mor-3-3-2)
   - [MOR-3.3.3 — Conditional Institution Prestige](#mor-3-3-3)
+  - [MOR-3.3.3A — Population-Demand Prestige](#mor-3-3-3a)
   - [MOR-3.3.4 — Productive Land Prestige](#mor-3-3-4)
   - [MOR-3.3.5 — Elder Character Scoring](#mor-3-3-5)
   - [MOR-3.3.6 — Event Scoring](#mor-3-3-6)
@@ -111,7 +114,7 @@ Players do not build separate cities. They compete inside the same evolving city
 <a id="mor-1-2"></a>
 ## MOR-1.2 — Player Objective
 
-The primary victory-point measure is **Prestige**. Prestige can come from Production-Sector and Institution development, productive land, Institution scoring, characters, Events and the final political destiny of Morneval. The Family with the greatest Prestige at game end wins.
+The primary victory-point measure is **Prestige**. Prestige can come from Production-Sector and Institution development, productive land, satisfying Population demand, Institution scoring, characters, Events and the final political destiny of Morneval. The Family with the greatest Prestige at game end wins.
 
 <a id="mor-1-3"></a>
 ## MOR-1.3 — Generational Scale
@@ -156,7 +159,12 @@ All three are active. At Generation end, the Elder leaves, Mature becomes Elder,
 <a id="mor-2-5"></a>
 ## MOR-2.5 — Influence
 
-**Influence** is a stored and spendable Family resource used for actions such as investment, development and politics. Influence is capped and erodes at Generation end. The currently established erosion principle is **-2 Influence per Generation**; the maximum capacity remains a playtest value.
+**Influence** is a stored and spendable Family resource used for actions such as investment, development and politics. Influence is capped and erodes at Generation end. The established erosion principle is **-2 Influence per Generation**; the maximum capacity remains a playtest value.
+
+Influence also determines initiative: **after all Generation spending and after the -2 Influence erosion, the Family with the most remaining Influence becomes First Player for the next Generation**.
+
+### Current v0.7.1 automated-test income — provisional
+For automated balance testing only, each Family receives **+5 Influence before bidding** and then suffers the normal **-2 Influence erosion** during upkeep. Therefore a Family that spends nothing and is not constrained by the Influence cap gains a net **+3 Influence** over the Generation. The +5 income and maximum Influence are prototype values, not locked tabletop numbers.
 
 <a id="mor-2-6"></a>
 ## MOR-2.6 — Wealth
@@ -180,6 +188,8 @@ Production Stakes have three ages: **Young, Mature, Elder**. Each Sector tier pr
 - **1 Elder slot per tier**.
 
 Therefore a Tier N Sector can contain up to **N Young + N Mature + N Elder = 3 × N total Stakes**. New ordinary Stakes enter as Young. At Generation end Elder Stakes leave, Mature become Elder, and Young become Mature.
+
+An empty Young slot is acquired through a sequential **Influence auction** described in MOR-3.1.1. Only the winner pays; losing bids are not spent.
 
 An occupied Stake may be replaced early, but replacement must have a **premium cost** relative to filling an empty slot. The exact resource/amount and whether replacement preserves or resets age/seniority are unresolved. Direct ownership edits in the digital sandbox deliberately charge no resource and preserve age/order only for testing.
 
@@ -210,7 +220,7 @@ Each tier adds **1 Young + 1 Mature + 1 Elder slot**:
 
 Each occupied Production Stake represents exactly **1 unit of potential supply**, subject to raw-resource capacity. A high-tier Sector with no Stakes produces nothing.
 
-Developing a Sector costs Influence, requires appropriate city size, grants Prestige, adds the three age-specific slots for the new tier, and allows the developing player to place a Stake immediately while still paying the normal placement cost. Exact costs/thresholds/rewards remain provisional.
+Developing a Sector costs Influence, requires appropriate city size, grants Prestige, adds the three age-specific slots for the new tier, and opens additional Stake capacity. Exact costs/thresholds/rewards remain provisional. Acquisition of an empty Young Stake slot is resolved through the Influence-auction procedure in MOR-3.1.1.
 
 <a id="mor-2-11"></a>
 ## MOR-2.11 — Production-Sector Wealth
@@ -224,13 +234,13 @@ For each Sector:
 
 If not every Stake can be served, Stake seniority applies: **Elder > Mature > Young**, then earlier placement breaks ties.
 
-### Current v0.6.1 Wealth model — provisional
+### Current v0.7.1 customer rewards
 Each served Stake is paired with the demand category that actually receives its unit. Current test values:
-- Population: **0 Wealth**;
+- Population: **0 Wealth + 1 Prestige** to the Stake owner;
 - Institutions: **1 Wealth**;
 - External Markets: **2 Wealth**.
 
-This means City Inclination can change Family Wealth by changing which customer category receives scarce production first. These values are balancing parameters, not locked final numbers. The previously discussed scarcity/Elder bonus is not implemented in v0.6.1 and remains unresolved.
+The **+1 Prestige for each Population need served is a locked scoring rule**. Institution/External Wealth values remain balancing parameters. City Inclination can therefore change both Family Wealth and Prestige opportunities by changing which customer category receives scarce production first. The previously discussed scarcity/Elder bonus is not implemented and remains unresolved.
 
 <a id="mor-2-12"></a>
 ## MOR-2.12 — Demand
@@ -238,7 +248,7 @@ This means City Inclination can change Family Wealth by changing which customer 
 Demand comes from three categories: **Population, Institutions, External Markets**.
 
 ### Current scalable-demand model — provisional
-In v0.6.1:
+In v0.7.1:
 - Population demand scales from Population;
 - Institution demand scales from total Institution levels;
 - External Market demand scales from Renown.
@@ -251,7 +261,7 @@ Current sandbox formulas:
 | Textiles | `ceil(Population / 6)` | `ceil(total Institution levels / 3)` | `ceil(Renown / 2)` |
 | Smithing | `ceil(Population / 6)` | `ceil(total Institution levels / 3)` | `ceil(Renown / 2)` |
 
-If the driver is 0, demand is 0. All divisors are editable playtest parameters.
+If the driver is 0, demand is 0. All divisors are playtest parameters.
 
 City Inclination changes the **priority** of demand; demographic, institutional and geopolitical development change the **amount**.
 
@@ -287,7 +297,7 @@ Institutions are permanent civic, religious, military, economic, medical or scho
 
 Institution development costs Influence, grants Prestige, places an Agent and can select/lock a development branch or Minor Institution.
 
-### Current v0.6.1 Institution-cap model — provisional
+### Current v0.7.1 Institution-cap model — provisional
 For balance testing, **total Institution levels may not be increased above current Population**. If Population subsequently falls below the already-developed total:
 - Institutions are not automatically destroyed;
 - Morneval is flagged over-cap;
@@ -335,7 +345,7 @@ Morneval has a city-level economic condition distinct from individual Family Wea
 
 **Renown** represents Morneval's historical importance and maturity and is expected to contribute to the endgame trigger.
 
-In the current v0.6.1 demand prototype, Renown also drives External Market demand using `ceil(Renown / 2)` for each implemented Sector. This formula is provisional. Automatic Renown growth is not yet defined; the sandbox allows manual editing.
+In the current v0.7.1 demand prototype, Renown also drives External Market demand using `ceil(Renown / 2)` for each implemented Sector. This formula is provisional. Automatic Renown growth is not yet defined; the sandbox allows manual editing.
 
 ---
 
@@ -346,25 +356,49 @@ In the current v0.6.1 demand prototype, Renown also drives External Market deman
 ## MOR-3.0 — Generation Structure
 
 The intended structure is:
-1. **Beginning of Generation:** establish/reveal the long-term Event or context;
-2. **Player Action Phase:** Families take economic, institutional and political actions;
-3. **End-of-Generation Upkeep:** resolve production/demand, city and Family economy, demographics, Events, relations and aging;
+1. **Beginning of Generation:** establish/reveal the long-term Event or context and apply any Generation-start income/effects;
+2. **Player Action Phase:** Families take economic, institutional and political actions, including sequential bidding for available Young Production Stakes;
+3. **End-of-Generation Upkeep:** resolve pending Stake auctions, production/demand, city and Family economy, demographics, Events, relations, Influence erosion and aging;
 4. **End-of-Generation Scoring:** resolve Prestige sources.
 
-Exact action count, initiative, passing and action-round structure remain unfinished.
+Exact general action count and non-auction action-round structure remain unfinished. First Player determination is now defined in MOR-3.0.1.
+
+<a id="mor-3-0-1"></a>
+## MOR-3.0.1 — First Player and Turn Order
+
+**Locked rule:** at the end of each Generation, after all bids/spending and after Influence erosion, compare each Family's remaining Influence. The Family with the **most Influence becomes First Player for the next Generation**.
+
+Bidding and other sequential procedures begin with First Player and continue in normal seating/order around the table.
+
+The exact tabletop rule for an **end-of-Generation Influence tie** has not yet been specified. For deterministic digital testing only, v0.7.1 breaks such a tie in favor of the earliest tied Family in the **current turn order**. That tie-break is provisional and is not yet a locked tabletop rule.
 
 <a id="mor-3-1"></a>
 # MOR-3.1 — POSSIBLE PLAYER ACTIONS
 
 <a id="mor-3-1-1"></a>
-## MOR-3.1.1 — Place a Production-Sector Stake
+## MOR-3.1.1 — Bid for / Place a Production-Sector Stake
 
-Pay the appropriate cost to place a new Stake in an available **Young** slot. It enters Young and adds **1 unit of potential supply** to that Sector, subject to raw-resource capacity and demand.
+An available **Young** Production-Sector Stake slot is acquired through a sequential Influence auction.
+
+### Locked bidding procedure
+1. Bidding proceeds in player order, beginning with First Player.
+2. On a player's bidding turn, that player may either **raise the current bid** or **pass**.
+3. A raise establishes that player's new **total bid** and must be strictly higher than the current leading bid.
+4. A player may bid repeatedly on later passes around the table, adding Influence to their bid, provided they have not passed.
+5. A player may never bid more Influence than they currently possess.
+6. Influence is **not spent when a bid is made**. Losing bidders spend nothing.
+7. A player who passes leaves that auction.
+8. Bidding continues until only the current highest bidder remains.
+9. The winner is resolved at Generation resolution, pays the **full winning bid**, and places a new **Young Stake** in the contested slot.
+
+Because every valid raise must exceed the current leading bid, there is no tied winning bid.
+
+The new Stake is in place before that Generation's production/demand resolution and therefore may satisfy demand immediately.
 
 <a id="mor-3-1-2"></a>
 ## MOR-3.1.2 — Replace an Existing Stake
 
-A Family may replace an occupied Production Stake. Replacement must cost a **premium** over filling an empty slot. Exact resource and numerical premium are unresolved, as is whether replacement inherits or resets age/seniority. The v0.6.1 diagnostic ownership edit is not a final player-action rule.
+A Family may replace an occupied Production Stake. Replacement must cost a **premium** over filling an empty slot. Exact resource and numerical premium are unresolved, as is whether replacement inherits or resets age/seniority. The diagnostic ownership edit is not a final player-action rule.
 
 <a id="mor-3-1-3"></a>
 ## MOR-3.1.3 — Place / Acquire a Raw-Resource Stake
@@ -374,7 +408,7 @@ Take control of an available resource-producing land position. Each raw-resource
 <a id="mor-3-1-4"></a>
 ## MOR-3.1.4 — Develop a Production Sector
 
-Advance a Sector by one tier. The acting Family pays the tier's Influence cost, gains Prestige, adds **1 Young + 1 Mature + 1 Elder slot**, and may place a new Young Stake immediately while paying its normal cost. Tier development alone does not create production; additional occupied Stakes and raw-resource capacity are required. Exact costs/thresholds/rewards remain provisional.
+Advance a Sector by one tier. The acting Family pays the tier's Influence cost, gains Prestige, and adds **1 Young + 1 Mature + 1 Elder slot**. Tier development alone does not create production; additional occupied Stakes and raw-resource capacity are required. Empty Young Stake capacity is acquired through the auction procedure in MOR-3.1.1. Exact development costs/thresholds/rewards remain provisional.
 
 <a id="mor-3-1-5"></a>
 ## MOR-3.1.5 — Place an Agent in an Institution
@@ -384,7 +418,7 @@ Establish Family presence inside an Institution where permitted. Agents provide 
 <a id="mor-3-1-6"></a>
 ## MOR-3.1.6 — Develop an Institution
 
-Spend Influence to develop Morneval institutionally. The acting Family gains Prestige, places an Agent and may choose a branch/Minor Institution, potentially locking alternatives. Under the current provisional v0.6.1 cap, total Institution levels may not be increased above Population.
+Spend Influence to develop Morneval institutionally. The acting Family gains Prestige, places an Agent and may choose a branch/Minor Institution, potentially locking alternatives. Under the current provisional cap, total Institution levels may not be increased above Population.
 
 <a id="mor-3-1-7"></a>
 ## MOR-3.1.7 — Use a Minor Institution
@@ -404,6 +438,16 @@ A player may initiate a political Vote where permitted. Influence of the result 
 <a id="mor-3-2"></a>
 # MOR-3.2 — END-OF-GENERATION UPKEEP
 
+<a id="mor-3-2-0"></a>
+## MOR-3.2.0 — Resolve Pending Stake Auctions
+
+Before Production-Sector supply/demand is resolved, resolve every completed auction for an available Young Stake slot:
+- each auction's highest remaining bidder wins;
+- only the winner spends Influence;
+- the winner spends the **full winning bid**;
+- all losing bids cost **0 Influence**;
+- the winning Stake is placed as **Young** and can participate in the immediately following production/demand resolution.
+
 <a id="mor-3-2-1"></a>
 ## MOR-3.2.1 — Resolve Supply and Demand
 
@@ -414,14 +458,14 @@ For each Production Sector:
 4. determine Population, Institution and External Market demand;
 5. allocate supply according to City Inclination and the category tie-breaker.
 
-Each Production Stake can satisfy at most **1 need**. Current v0.6.1 demand quantities use the provisional scalable formulas in MOR-2.12.
+Each Production Stake can satisfy at most **1 need**. Current v0.7.1 demand quantities use the provisional scalable formulas in MOR-2.12.
 
 <a id="mor-3-2-2"></a>
 ## MOR-3.2.2 — Determine Which Stakes Are Served
 
 After demand allocation determines how many units are actually served, assign those units to Stakes by seniority: **Elder > Mature > Young**, then earliest placement.
 
-Each served Stake is paired with the customer category receiving its unit. Current provisional Wealth: Population **0**, Institutions **1**, External Markets **2**. Junior/unserved Stakes generate no Wealth that Generation.
+Each served Stake is paired with the customer category receiving its unit. Current rewards: Population **0 Wealth + 1 Prestige**, Institutions **1 Wealth**, External Markets **2 Wealth**. Junior/unserved Stakes generate no Wealth that Generation.
 
 <a id="mor-3-2-3"></a>
 ## MOR-3.2.3 — Resolve Raw-Resource Usage
@@ -431,7 +475,7 @@ Track how much raw-resource capacity is actually consumed by each Sector. Raw-re
 <a id="mor-3-2-4"></a>
 ## MOR-3.2.4 — Resolve Population Needs and Growth
 
-### Current v0.6.1 balancing rule — provisional
+### Current v0.7.1 balancing rule — provisional
 For Food:
 - if Population > 0, Food Population demand > 0 and **all Food Population demand is met**, Population **+1**;
 - if **any Food Population demand is unmet**, Population **-1** through famine.
@@ -441,7 +485,7 @@ The Hospice is intended to prevent **1 Population loss from famine** when applic
 <a id="mor-3-2-5"></a>
 ## MOR-3.2.5 — Update Squalor
 
-### Current v0.6.1 balancing rule — provisional
+### Current v0.7.1 balancing rule — provisional
 After Population growth/famine:
 
 **Base Squalor target = ceil(current Population / 3)**
@@ -453,7 +497,7 @@ If any Food Population demand was unmet, target **+1**. Squalor moves by at most
 
 Disease risk depends on Squalor and currently causes **1 Population loss** if triggered. Disease does not persist across Generations.
 
-### Current v0.6.1 balancing table — provisional
+### Current balancing table — provisional
 | Squalor | Disease chance |
 |---:|---:|
 | 0 | 0% |
@@ -469,7 +513,7 @@ The sandbox uses deterministic seeded pseudo-randomness for repeatable testing; 
 <a id="mor-3-2-7"></a>
 ## MOR-3.2.7 — Update Order and Other City Characteristics
 
-Apply changes to Order, Force, Economic Strength and other city parameters when caused by Institutions, Events, shortages or political/external effects. General automatic growth/update formulas for these tracks are not yet defined in v0.6.1.
+Apply changes to Order, Force, Economic Strength and other city parameters when caused by Institutions, Events, shortages or political/external effects. General automatic growth/update formulas for these tracks are not yet defined.
 
 <a id="mor-3-2-8"></a>
 ## MOR-3.2.8 — Resolve External Relations
@@ -484,12 +528,14 @@ Evaluate the Event/context established at Generation start. It may modify the ci
 <a id="mor-3-2-10"></a>
 ## MOR-3.2.10 — Calculate Family Wealth
 
-For each Family total Wealth generated by served Production Stakes, compare it with maintenance obligations and reduce unsupported commitments if necessary. Current provisional v0.6.1 Stake Wealth depends on customer category: Population **0**, Institutions **1**, External Markets **2**. Unused Wealth disappears and is not banked.
+For each Family total Wealth generated by served Production Stakes, compare it with maintenance obligations and reduce unsupported commitments if necessary. Current provisional Stake Wealth depends on customer category: Population **0**, Institutions **1**, External Markets **2**. Unused Wealth disappears and is not banked. Population service instead awards Prestige as described in MOR-3.3.3A.
 
 <a id="mor-3-2-11"></a>
-## MOR-3.2.11 — Erode Influence
+## MOR-3.2.11 — Erode Influence and Determine Next First Player
 
 Each Family loses **2 Influence** at Generation end, subject to the eventual finalized Influence-cap rules.
+
+**After this erosion is applied**, compare all Families' remaining Influence. The Family with the most Influence becomes **First Player for the next Generation**. See MOR-3.0.1. The tabletop tie-break for equal highest Influence remains unresolved; the v0.7.1 digital sandbox uses current turn order only as a deterministic simulation tie-break.
 
 <a id="mor-3-2-12"></a>
 ## MOR-3.2.12 — Age Production-Sector Stakes
@@ -518,6 +564,13 @@ City Inclination can modify the value of Institutions, creating synergy between 
 ## MOR-3.3.3 — Conditional Institution Prestige
 
 Crisis-response Institutions may earn additional Prestige only when the relevant crisis actually occurs, preserving the intended “pyromaniac fireman” tension.
+
+<a id="mor-3-3-3a"></a>
+## MOR-3.3.3A — Population-Demand Prestige
+
+**Locked rule:** whenever a Production Stake satisfies **1 Population demand**, the Family owning that Stake gains **1 Prestige**. Because each Stake can satisfy at most one need, a Stake can earn at most 1 Population-demand Prestige from its one served unit in that Generation.
+
+This award applies across Production Sectors whenever the Stake's served customer category is Population. Population demand currently generates **0 Wealth**; its direct Family reward is Prestige instead.
 
 <a id="mor-3-3-4"></a>
 ## MOR-3.3.4 — Productive Land Prestige
@@ -619,25 +672,32 @@ During the final struggle, Squalor and Unrest should increasingly favor independ
 - **Politics vs economy:** Inclination changes who receives scarce goods and thus can change Wealth.
 - **Growth vs sustainability:** Population expands opportunity and pressure simultaneously.
 - **Foreign friendship vs autonomy:** diplomacy grants benefits but may compromise independence.
+- **Influence vs initiative:** spending heavily can win investments now but may surrender First Player for the next Generation.
 
 <a id="mor-4-14"></a>
 ## MOR-4.14 — Provisional vs Locked
 
-### Locked structural rules reflected in v0.6.1
+### Locked structural rules reflected in v0.7.1
 - each Sector level provides **1 Young + 1 Mature + 1 Elder Production-Stake slot**;
 - each Production Stake represents exactly **1 unit of potential supply** and can satisfy exactly **1 need**;
 - Sector tier creates Stake capacity, not output;
 - actual supply is capped by occupied Stakes and raw-resource capacity;
 - productive raw-resource land scores **1 Prestige** only when its production is actually used;
-- older Stakes receive service before younger Stakes, with earlier placement breaking same-age ties.
+- older Stakes receive service before younger Stakes, with earlier placement breaking same-age ties;
+- available Young Production Stakes are allocated through **sequential Influence bidding**; only the winner pays the full winning bid;
+- a served **Population** need awards the serving Stake's owner **1 Prestige**;
+- after end-of-Generation Influence erosion, the Family with the **most remaining Influence becomes First Player** next Generation.
 
 ### Current balancing values/mechanisms — provisional
-- Stake placement/replacement costs and replacement payment resource;
+- **+5 gross Influence income** in the automated sandbox and the maximum Influence cap;
+- tie-break when multiple Families have equal highest end-of-Generation Influence;
+- automated AI Stake valuations and bidding limits;
+- Stake replacement cost/payment resource and replacement treatment of age/seniority;
 - Sector development costs, thresholds and Prestige rewards;
-- Agent maintenance curve and maximum Influence;
+- Agent maintenance curve;
 - Institution development costs/scoring;
 - scalable-demand divisors;
-- Wealth values by demand category;
+- Institution/External Wealth values by demand category;
 - Institution-development Population cap;
 - Population growth/famine values;
 - Squalor target and movement rate;
@@ -662,11 +722,12 @@ During the final struggle, Squalor and Unrest should increasingly favor independ
 - **Automatic city-track development:** Renown, Order, Force and Economic Strength update rules.
 - **External Power tables:** exact benefits, penalties and relationship thresholds.
 - **Endgame thresholds:** exact trigger and final-window timing.
-- **Action structure:** number of actions, player order, passing and action-round structure.
+- **Action structure:** number of non-auction actions and full passing/action-round structure.
+- **First Player tie:** final tabletop tie-break for equal highest remaining Influence.
 
 <a id="mor-4-16"></a>
 ## MOR-4.16 — Core Design Identity
 
-Morneval is not a set of parallel individual engines. Families invest in the same Production Sectors and Institutions; Inclination changes allocation; allocation changes Wealth; Population and shortages change Squalor and stability; Institutions and External Powers react to city conditions; and accumulated development ultimately produces the political endgame.
+Morneval is not a set of parallel individual engines. Families invest in the same Production Sectors and Institutions; Influence auctions determine contested investment; Inclination changes allocation; allocation changes Wealth and Prestige; Population and shortages change Squalor and stability; Institutions and External Powers react to city conditions; and accumulated development ultimately produces the political endgame.
 
 The winner is the Family that best converts several centuries of Morneval's shared history into **Prestige**.
