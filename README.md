@@ -2,7 +2,7 @@
 
 Digital prototype of the Morneval strategy board game.
 
-Current deployed prototype: **Engine v0.6.1 — scalable-demand generational balance sandbox**.
+Current deployed prototype: **Engine v0.6.4 — stable Wealth diagnostic / generational balance sandbox**.
 
 The current browser prototype supports:
 
@@ -22,9 +22,12 @@ The current browser prototype supports:
 - demand-priority resolution
 - Stake seniority
 - differentiated Wealth by customer category: Population 0 / Institutions 1 / External 2 by default
-- editable balance parameters for demand scaling, Wealth, Population, Squalor and disease
+- explicit per-Family Wealth breakdown by demand category
+- automatic clearing of stale Wealth whenever an economic input changes
 
-Sector tier creates capacity for Stakes; it no longer directly caps output at 1/2/3 units. A Sector with three occupied Stakes has three units of potential supply, provided sufficient raw resources are available.
+Sector tier creates capacity for Stakes; it does not directly create output. A Sector with three occupied Stakes has three units of potential supply, provided sufficient raw resources are available.
+
+The v0.6.4 stability build intentionally does not load the experimental balance-parameter editor or any DOM MutationObserver helper. Those controls will be reintroduced only after the core simulation is stable on mobile Safari.
 
 Direct sandbox edits do not spend game resources. They exist so the economic and demographic rules can be stress-tested before final player-action costs and replacement rules are locked.
 
