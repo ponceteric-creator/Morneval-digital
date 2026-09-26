@@ -1,12 +1,12 @@
 # Morneval — Indexed Rules Reference
 
-**Rules version:** 0.3  
-**Prototype alignment:** v0.7.1  
+**Rules version:** 0.4  
+**Prototype alignment:** v0.7.2  
 **Status:** Consolidated design reference
 
 This is the master rules source for Morneval. It distinguishes **locked rules** from **current prototype balancing rules**. Numerical sandbox values remain provisional unless explicitly marked as locked.
 
-**v0.7.1 update:** added sequential Influence bidding for empty Young Production Stakes, +1 Prestige for each Population need served, automated Influence income for balance testing, and the rule that the Family with the most Influence after end-of-Generation erosion becomes First Player for the next Generation.
+**v0.7.2 update:** locked the First Player tie-break hierarchy: highest remaining Influence, then highest Prestige, then highest Generation Wealth, then random selection if still tied. The digital sandbox uses seeded randomness only to keep repeated balance tests reproducible.
 
 <a id="index"></a>
 ## Index
@@ -161,9 +161,9 @@ All three are active. At Generation end, the Elder leaves, Mature becomes Elder,
 
 **Influence** is a stored and spendable Family resource used for actions such as investment, development and politics. Influence is capped and erodes at Generation end. The established erosion principle is **-2 Influence per Generation**; the maximum capacity remains a playtest value.
 
-Influence also determines initiative: **after all Generation spending and after the -2 Influence erosion, the Family with the most remaining Influence becomes First Player for the next Generation**.
+Influence also determines initiative: **after all Generation spending and after the -2 Influence erosion, the Family with the most remaining Influence becomes First Player for the next Generation**. If tied, resolve the tie by **Prestige**, then by **Wealth generated during that Generation**, then randomly if still tied.
 
-### Current v0.7.1 automated-test income — provisional
+### Current v0.7.2 automated-test income — provisional
 For automated balance testing only, each Family receives **+5 Influence before bidding** and then suffers the normal **-2 Influence erosion** during upkeep. Therefore a Family that spends nothing and is not constrained by the Influence cap gains a net **+3 Influence** over the Generation. The +5 income and maximum Influence are prototype values, not locked tabletop numbers.
 
 <a id="mor-2-6"></a>
@@ -234,7 +234,7 @@ For each Sector:
 
 If not every Stake can be served, Stake seniority applies: **Elder > Mature > Young**, then earlier placement breaks ties.
 
-### Current v0.7.1 customer rewards
+### Current v0.7.2 customer rewards
 Each served Stake is paired with the demand category that actually receives its unit. Current test values:
 - Population: **0 Wealth + 1 Prestige** to the Stake owner;
 - Institutions: **1 Wealth**;
@@ -248,7 +248,7 @@ The **+1 Prestige for each Population need served is a locked scoring rule**. In
 Demand comes from three categories: **Population, Institutions, External Markets**.
 
 ### Current scalable-demand model — provisional
-In v0.7.1:
+In v0.7.2:
 - Population demand scales from Population;
 - Institution demand scales from total Institution levels;
 - External Market demand scales from Renown.
@@ -297,7 +297,7 @@ Institutions are permanent civic, religious, military, economic, medical or scho
 
 Institution development costs Influence, grants Prestige, places an Agent and can select/lock a development branch or Minor Institution.
 
-### Current v0.7.1 Institution-cap model — provisional
+### Current v0.7.2 Institution-cap model — provisional
 For balance testing, **total Institution levels may not be increased above current Population**. If Population subsequently falls below the already-developed total:
 - Institutions are not automatically destroyed;
 - Morneval is flagged over-cap;
@@ -345,7 +345,7 @@ Morneval has a city-level economic condition distinct from individual Family Wea
 
 **Renown** represents Morneval's historical importance and maturity and is expected to contribute to the endgame trigger.
 
-In the current v0.7.1 demand prototype, Renown also drives External Market demand using `ceil(Renown / 2)` for each implemented Sector. This formula is provisional. Automatic Renown growth is not yet defined; the sandbox allows manual editing.
+In the current v0.7.2 demand prototype, Renown also drives External Market demand using `ceil(Renown / 2)` for each implemented Sector. This formula is provisional. Automatic Renown growth is not yet defined; the sandbox allows manual editing.
 
 ---
 
@@ -361,16 +361,20 @@ The intended structure is:
 3. **End-of-Generation Upkeep:** resolve pending Stake auctions, production/demand, city and Family economy, demographics, Events, relations, Influence erosion and aging;
 4. **End-of-Generation Scoring:** resolve Prestige sources.
 
-Exact general action count and non-auction action-round structure remain unfinished. First Player determination is now defined in MOR-3.0.1.
+Exact general action count and non-auction action-round structure remain unfinished. First Player determination is defined in MOR-3.0.1.
 
 <a id="mor-3-0-1"></a>
 ## MOR-3.0.1 — First Player and Turn Order
 
-**Locked rule:** at the end of each Generation, after all bids/spending and after Influence erosion, compare each Family's remaining Influence. The Family with the **most Influence becomes First Player for the next Generation**.
+**Locked rule:** at the end of each Generation, after all bids/spending and after Influence erosion, determine First Player for the next Generation using this hierarchy:
+1. the Family with the **most remaining Influence**;
+2. if tied, the tied Family with the **most Prestige**;
+3. if still tied, the tied Family with the **most Wealth generated during that Generation**;
+4. if still tied, determine First Player **randomly** among the remaining tied Families.
 
 Bidding and other sequential procedures begin with First Player and continue in normal seating/order around the table.
 
-The exact tabletop rule for an **end-of-Generation Influence tie** has not yet been specified. For deterministic digital testing only, v0.7.1 breaks such a tie in favor of the earliest tied Family in the **current turn order**. That tie-break is provisional and is not yet a locked tabletop rule.
+For the tabletop, the final random step may be resolved by a die roll, random draw, or equivalent fair method. The digital sandbox uses a seeded pseudo-random selection so identical test setups remain reproducible; the seeded implementation is a testing aid, not a tabletop requirement.
 
 <a id="mor-3-1"></a>
 # MOR-3.1 — POSSIBLE PLAYER ACTIONS
@@ -458,7 +462,7 @@ For each Production Sector:
 4. determine Population, Institution and External Market demand;
 5. allocate supply according to City Inclination and the category tie-breaker.
 
-Each Production Stake can satisfy at most **1 need**. Current v0.7.1 demand quantities use the provisional scalable formulas in MOR-2.12.
+Each Production Stake can satisfy at most **1 need**. Current v0.7.2 demand quantities use the provisional scalable formulas in MOR-2.12.
 
 <a id="mor-3-2-2"></a>
 ## MOR-3.2.2 — Determine Which Stakes Are Served
@@ -475,7 +479,7 @@ Track how much raw-resource capacity is actually consumed by each Sector. Raw-re
 <a id="mor-3-2-4"></a>
 ## MOR-3.2.4 — Resolve Population Needs and Growth
 
-### Current v0.7.1 balancing rule — provisional
+### Current v0.7.2 balancing rule — provisional
 For Food:
 - if Population > 0, Food Population demand > 0 and **all Food Population demand is met**, Population **+1**;
 - if **any Food Population demand is unmet**, Population **-1** through famine.
@@ -485,7 +489,7 @@ The Hospice is intended to prevent **1 Population loss from famine** when applic
 <a id="mor-3-2-5"></a>
 ## MOR-3.2.5 — Update Squalor
 
-### Current v0.7.1 balancing rule — provisional
+### Current v0.7.2 balancing rule — provisional
 After Population growth/famine:
 
 **Base Squalor target = ceil(current Population / 3)**
@@ -535,7 +539,13 @@ For each Family total Wealth generated by served Production Stakes, compare it w
 
 Each Family loses **2 Influence** at Generation end, subject to the eventual finalized Influence-cap rules.
 
-**After this erosion is applied**, compare all Families' remaining Influence. The Family with the most Influence becomes **First Player for the next Generation**. See MOR-3.0.1. The tabletop tie-break for equal highest Influence remains unresolved; the v0.7.1 digital sandbox uses current turn order only as a deterministic simulation tie-break.
+**After this erosion is applied**, determine First Player for the next Generation in this order:
+1. most remaining **Influence**;
+2. if tied, most **Prestige**;
+3. if still tied, most **Wealth generated during that Generation**;
+4. if still tied, **random selection** among the remaining tied Families.
+
+See MOR-3.0.1 for the complete initiative rule.
 
 <a id="mor-3-2-12"></a>
 ## MOR-3.2.12 — Age Production-Sector Stakes
@@ -677,7 +687,7 @@ During the final struggle, Squalor and Unrest should increasingly favor independ
 <a id="mor-4-14"></a>
 ## MOR-4.14 — Provisional vs Locked
 
-### Locked structural rules reflected in v0.7.1
+### Locked structural rules reflected in v0.7.2
 - each Sector level provides **1 Young + 1 Mature + 1 Elder Production-Stake slot**;
 - each Production Stake represents exactly **1 unit of potential supply** and can satisfy exactly **1 need**;
 - Sector tier creates Stake capacity, not output;
@@ -686,11 +696,10 @@ During the final struggle, Squalor and Unrest should increasingly favor independ
 - older Stakes receive service before younger Stakes, with earlier placement breaking same-age ties;
 - available Young Production Stakes are allocated through **sequential Influence bidding**; only the winner pays the full winning bid;
 - a served **Population** need awards the serving Stake's owner **1 Prestige**;
-- after end-of-Generation Influence erosion, the Family with the **most remaining Influence becomes First Player** next Generation.
+- after end-of-Generation Influence erosion, First Player is determined by **Influence → Prestige → Generation Wealth → random selection**.
 
 ### Current balancing values/mechanisms — provisional
 - **+5 gross Influence income** in the automated sandbox and the maximum Influence cap;
-- tie-break when multiple Families have equal highest end-of-Generation Influence;
 - automated AI Stake valuations and bidding limits;
 - Stake replacement cost/payment resource and replacement treatment of age/seniority;
 - Sector development costs, thresholds and Prestige rewards;
@@ -723,7 +732,6 @@ During the final struggle, Squalor and Unrest should increasingly favor independ
 - **External Power tables:** exact benefits, penalties and relationship thresholds.
 - **Endgame thresholds:** exact trigger and final-window timing.
 - **Action structure:** number of non-auction actions and full passing/action-round structure.
-- **First Player tie:** final tabletop tie-break for equal highest remaining Influence.
 
 <a id="mor-4-16"></a>
 ## MOR-4.16 — Core Design Identity
