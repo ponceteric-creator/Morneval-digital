@@ -119,3 +119,48 @@ Actual Sector supply is now:
 with the Sector's tier/age-slot rules limiting how many Stakes may legally exist.
 
 This fixes the earlier prototype error where supply was incorrectly capped directly at the Sector tier (1/2/3), which meant three Stakes could incorrectly satisfy only one need in a Tier I Sector.
+
+## 26 September 2026 — Population Prestige and Stake bidding (v0.7)
+
+### Population Prestige
+
+**Locked rule:** whenever a Production Stake satisfies **1 Population demand**, the Family controlling that Stake gains **+1 Prestige**.
+
+This is separate from Wealth. Under the current prototype Wealth values, Population still produces 0 Wealth, Institutions 1 Wealth, and External Markets 2 Wealth.
+
+### Influence auction for empty Production Stake slots
+
+**Locked auction structure:**
+- Production Stakes cost Influence.
+- Players bid Influence for a Stake.
+- Bids happen sequentially on player turns.
+- A player may increase the current bid when their turn comes.
+- A player may never commit/spend more Influence than they currently possess.
+- A player may pass instead of raising.
+- Once only one bidder remains, that Family wins the Stake.
+- The winning Family spends the full winning bid.
+- Losing Families spend no Influence.
+- The winning Stake is placed as Young and participates in that Generation's production resolution.
+
+Example: Player 1 bids 1, Player 2 bids 2, Player 3 bids 5, Player 1 bids 6, Player 2 passes, Player 3 bids 7, Player 1 passes. Player 3 wins and spends 7 Influence.
+
+### Influence income for automated balancing
+
+For the current simulation, each Family has an effective **+3 Influence per Generation**. This is implemented as **+5 Influence before bidding** followed by the existing **−2 Influence erosion during upkeep**. The existing prototype maximum Influence cap still applies.
+
+### v0.7 automated starting scenario
+
+The automated simulation resets to:
+- Population 1
+- Squalor 0
+- Renown 0
+- neutral City Inclination
+- Food, Textiles and Smithing at Tier I
+- no Production Stakes
+- City Guard level 1
+- Merchant Guild level 0
+- Temple level 0
+
+### Automated bidder heuristic — provisional
+
+The automated bidder is not a locked gameplay rule. For simulation purposes only, it estimates which demand category a newly acquired Young Stake would currently serve, values Population at 1 due to its Prestige reward, Institutions at 1 due to Wealth, External Markets at 2 due to Wealth, and multiplies that immediate value by the Stake's three-generation lifetime to obtain a maximum bid. Bidding then rises by 1 Influence at a time in player sequence until challengers pass.
