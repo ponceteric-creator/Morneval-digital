@@ -2,18 +2,19 @@ import { BALANCE_CONFIG } from "./balance-config.js";
 import { createGame, getSectorStakeCapacity, getSectorStakeOccupancy } from "./engine.js";
 import { getDemandPriorityGroups, resolveAllSectorEconomies } from "./economy.js";
 import { applyAutoDemand, totalInstitutionLevels } from "./generation.js";
-import { AUCTION_CONFIG, resolveAutomatedGeneration } from "./auction.js";
+import { AUCTION_CONFIG, getTurnOrder, resolveAutomatedGeneration } from "./auction.js";
 
-const VERSION = "0.7";
+const VERSION = "0.7.1";
 const root = document.querySelector("#app");
 if (!root) throw new Error("Missing #app root element");
 
 let game = createScenario();
 let reports = [];
-let message = `v${VERSION} ready. Automated Families bid for Young Production Stakes before each Generation resolves.`;
+let message = `v${VERSION} ready. First Player now follows end-of-generation Influence.`;
 
 function createScenario() {
   const state = createGame(["Valenne", "D'Arcy", "Corven"]);
+  state.firstPlayerId = state.players[0].id;
   state.autoPopulationDemand = true;
   state.autoInstitutionDemand = true;
   state.autoExternalDemand = true;
@@ -69,6 +70,10 @@ function priorityText() {
     .join(" → ");
 }
 
+function currentTurnOrderText() {
+  return getTurnOrder(game).map(player => player.familyName).join(" → ");
+}
+
 function currentWealthBreakdown(playerId) {
   const result = { population: 0, institutions: 0, external_markets: 0, total: 0 };
   for (const report of reports) {
@@ -98,7 +103,7 @@ function render() {
       <button class="secondary" id="reset">Reset simulation</button>
     </div>
 
-    <div class="notice"><b>v${VERSION} auction test:</b> each Generation every Family receives +${AUCTION_CONFIG.grossInfluenceIncome} Influence before bidding, then the normal −2 erosion occurs during upkeep. Winning bids are spent; losing bids cost 0. Bids rise one point at a time in player sequence. Each served Population need awards the Stake owner <b>+${AUCTION_CONFIG.populationPrestigePerNeed} Prestige</b>.</div>
+    <div class="notice"><b>v${VERSION} auction test:</b> each Generation every Family receives +${AUCTION_CONFIG.grossInfluenceIncome} Influence before bidding, then the normal −2 erosion occurs during upkeep. Winning bids are spent; losing bids cost 0. Bids rise one point at a time in player sequence. Each served Population need awards the Stake owner <b>+${AUCTION_CONFIG.populationPrestigePerNeed} Prestige</b>. After erosion, the Family with the most remaining Influence becomes First Player next Generation.</div>
     <div class="status">${message}</div>
 
     <h2 class="section-title">Morneval</h2>
@@ -122,6 +127,11 @@ function render() {
     </section>
 
     <section class="panel" style="margin-top:12px">
+      <h3>First Player & bidding order</h3>
+      <div class="prototype-rules"><b>First Player:</b> ${playerName(game.firstPlayerId)}. <b>Current order:</b> ${currentTurnOrderText()}. At Generation end, after Influence erosion, the Family with the most Influence becomes First Player for the next Generation. <b>Prototype tie-break only:</b> if several Families tie for most Influence, the earliest tied Family in the current turn order wins the tie until a tabletop tie rule is chosen.</div>
+    </section>
+
+    <section class="panel" style="margin-top:12px">
       <h3>Automated bidding heuristic</h3>
       <div class="prototype-rules">The AI estimates which current need a newly placed Young Stake would serve. It values Population at 1 (Prestige), Institutions at ${BALANCE_CONFIG.wealthPerDemand.institutions} (Wealth), and External at ${BALANCE_CONFIG.wealthPerDemand.external_markets} (Wealth), then multiplies that immediate value by ${AUCTION_CONFIG.valuationLifetimeGenerations} for the Stake's three-generation lifetime. This is a transparent simulation heuristic, not a locked player rule.</div>
     </section>
@@ -141,7 +151,7 @@ function render() {
     <h2 class="section-title">Generation History</h2>
     <section class="history-list">${game.history?.length ? [...game.history].reverse().map(renderHistory).join("") : '<div class="panel empty">No Generations resolved yet.</div>'}</section>
 
-    <p class="footer-note">Current automated test does not develop Sector tiers, Institutions, Renown or City Inclination. It only automates bidding for empty Young Production Stake slots. Player order is Valenne → D'Arcy → Corven for every auction in this first simulation pass.</p>
+    <p class="footer-note">Current automated test does not develop Sector tiers, Institutions, Renown or City Inclination. It automates bidding for empty Young Production Stake slots. The bidding sequence starts with the current First Player and then continues in fixed Family seating order.</p>
   </main>`;
   bindEvents();
 }
@@ -149,7 +159,8 @@ function render() {
 function renderFamily(player) {
   const wealth = currentWealthBreakdown(player.id);
   const stakeCount = player.productionStakes.length;
-  return `<article class="panel family-card"><h3>${player.familyName}</h3><div class="family-stats"><div class="family-stat"><b>${player.prestige}</b><span>Prestige</span></div><div class="family-stat"><b>${player.influence}</b><span>Influence</span></div><div class="family-stat"><b>${player.wealthGeneratedThisGeneration}</b><span>Last Wealth</span></div></div><div class="land-score-preview">Production Stakes: <b>${stakeCount}</b>${reports.length ? `<br>Current preview Wealth: Population ${wealth.population} · Institutions ${wealth.institutions} · External ${wealth.external_markets}` : ""}</div></article>`;
+  const firstPlayer = player.id === game.firstPlayerId ? ' · <b>FIRST PLAYER</b>' : '';
+  return `<article class="panel family-card"><h3>${player.familyName}${firstPlayer}</h3><div class="family-stats"><div class="family-stat"><b>${player.prestige}</b><span>Prestige</span></div><div class="family-stat"><b>${player.influence}</b><span>Influence</span></div><div class="family-stat"><b>${player.wealthGeneratedThisGeneration}</b><span>Last Wealth</span></div></div><div class="land-score-preview">Production Stakes: <b>${stakeCount}</b>${reports.length ? `<br>Current preview Wealth: Population ${wealth.population} · Institutions ${wealth.institutions} · External ${wealth.external_markets}` : ""}</div></article>`;
 }
 
 function renderSector(sector) {
@@ -179,7 +190,8 @@ function renderAuction(auction) {
   const turns = auction.turns.map(turn => turn.action === "bid"
     ? `${playerName(turn.playerId)} bid ${turn.bid}`
     : `${playerName(turn.playerId)} passed at ${turn.bid}`).join(" → ");
-  return `<article class="report"><h4>${sector?.name ?? auction.sectorId}</h4><div class="report-detail"><b>Expected market for winner:</b> ${categoryLabel(auction.expectedCategory)}</div><div class="report-detail"><b>Result:</b> ${auction.winnerId ? `${playerName(auction.winnerId)} wins for ${auction.winningBid} Influence` : "No bid / no Stake placed"}</div><div class="report-detail"><b>Bidding:</b> ${turns || "none"}</div></article>`;
+  const order = auction.turnOrder?.map(playerName).join(" → ") ?? currentTurnOrderText();
+  return `<article class="report"><h4>${sector?.name ?? auction.sectorId}</h4><div class="report-detail"><b>Starting order:</b> ${order}</div><div class="report-detail"><b>Expected market for winner:</b> ${categoryLabel(auction.expectedCategory)}</div><div class="report-detail"><b>Result:</b> ${auction.winnerId ? `${playerName(auction.winnerId)} wins for ${auction.winningBid} Influence` : "No bid / no Stake placed"}</div><div class="report-detail"><b>Bidding:</b> ${turns || "none"}</div></article>`;
 }
 
 function renderReport(report) {
@@ -199,7 +211,11 @@ function renderHistory(entry) {
     : "none";
   const winners = entry.auctions?.filter(auction => auction.winnerId).map(auction => `${auction.sectorId}: ${playerName(auction.winnerId)} ${auction.winningBid}`).join(" · ") || "none";
   const wealth = game.players.map(player => `${player.familyName} ${entry.wealthAfter?.[player.id] ?? 0}`).join(" · ");
-  return `<article class="panel history-card"><div class="history-head"><h3>Generation ${entry.generation}</h3><span>${entry.diseaseOccurred ? "Disease" : "No disease"}</span></div><div class="history-grid"><div><b>${entry.populationBefore} → ${entry.populationAfter}</b><span>Population</span></div><div><b>${entry.foodServed}/${entry.foodRequested}</b><span>Food to Population</span></div><div><b>${entry.squalorBefore} → ${entry.squalorAfter}</b><span>Squalor</span></div><div><b>${winners}</b><span>Auction winners / bids</span></div></div><div class="history-notes"><b>Influence:</b> ${income}<br><b>Wealth:</b> ${wealth}<br><b>Population Prestige:</b> ${popPrestige}<br><b>Land Prestige:</b> ${landPrestige}</div></article>`;
+  const firstPlayerLine = `${playerName(entry.firstPlayerBefore)} → ${playerName(entry.nextFirstPlayerId)}`;
+  const tieNote = entry.firstPlayerResolution?.usedPrototypeTieBreak
+    ? ` (Influence tie: prototype current-order tie-break among ${entry.firstPlayerResolution.tiedPlayerIds.map(playerName).join(", ")})`
+    : "";
+  return `<article class="panel history-card"><div class="history-head"><h3>Generation ${entry.generation}</h3><span>${entry.diseaseOccurred ? "Disease" : "No disease"}</span></div><div class="history-grid"><div><b>${entry.populationBefore} → ${entry.populationAfter}</b><span>Population</span></div><div><b>${entry.foodServed}/${entry.foodRequested}</b><span>Food to Population</span></div><div><b>${entry.squalorBefore} → ${entry.squalorAfter}</b><span>Squalor</span></div><div><b>${winners}</b><span>Auction winners / bids</span></div><div><b>${firstPlayerLine}</b><span>First Player current → next</span></div></div><div class="history-notes"><b>Influence:</b> ${income}<br><b>Next First Player:</b> ${playerName(entry.nextFirstPlayerId)} with ${entry.firstPlayerResolution?.maxInfluence ?? "?"} Influence${tieNote}<br><b>Wealth:</b> ${wealth}<br><b>Population Prestige:</b> ${popPrestige}<br><b>Land Prestige:</b> ${landPrestige}</div></article>`;
 }
 
 function syncCityInputs() {
@@ -217,8 +233,8 @@ function runGenerations(count) {
   for (let i = 0; i < count; i++) last = resolveAutomatedGeneration(game);
   reports = last?.economyReports ?? [];
   message = count === 1
-    ? `Generation ${start} resolved with automated bidding.`
-    : `Generations ${start}–${game.generation - 1} resolved with automated bidding.`;
+    ? `Generation ${start} resolved. ${playerName(game.firstPlayerId)} is First Player for Generation ${game.generation}.`
+    : `Generations ${start}–${game.generation - 1} resolved. ${playerName(game.firstPlayerId)} is now First Player.`;
   render();
 }
 
@@ -234,7 +250,7 @@ function bindEvents() {
   document.querySelector("#reset")?.addEventListener("click", () => {
     game = createScenario();
     reports = [];
-    message = "Simulation reset to Population 1, Tier I sectors, City Guard 1, no Production Stakes.";
+    message = "Simulation reset to Population 1, Tier I sectors, City Guard 1, no Production Stakes. Valenne is First Player.";
     render();
   });
   for (const input of document.querySelectorAll("[data-city]")) {
