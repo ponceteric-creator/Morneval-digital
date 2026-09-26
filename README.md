@@ -2,7 +2,7 @@
 
 Digital prototype of the Morneval strategy board game.
 
-Current deployed prototype: **Engine v0.7.1 — automated investment sandbox**.
+Current deployed prototype: **Engine v0.7.2 — automated investment sandbox**.
 
 The current browser prototype supports:
 
@@ -18,9 +18,9 @@ The current browser prototype supports:
 - automated bidding for empty Young Production Stake slots
 - sequential bids where only the winning bid is spent
 - +5 gross Influence before bidding followed by normal −2 end-of-generation erosion, representing +3 net income before the Influence cap and auction spending
-- **dynamic First Player: after bids and Influence erosion, the Family with the most remaining Influence becomes First Player next Generation**
+- **dynamic First Player: Influence → Prestige → Generation Wealth → random selection**
 
-## v0.7.1 starting scenario
+## v0.7.2 starting scenario
 
 - Population 1
 - Squalor 0
@@ -36,9 +36,9 @@ The current browser prototype supports:
 
 The first automated AI is deliberately simple and transparent. It estimates which current demand category a new Young Stake would serve, values Population at 1 because it awards Prestige, Institutions at 1 Wealth, External Markets at 2 Wealth, and multiplies that immediate value by the three-generation lifetime of a Stake to determine a maximum bid. Bids rise by 1 Influence in current player order until all challengers pass.
 
-At the end of each Generation, after the normal −2 Influence erosion, the Family with the most remaining Influence becomes First Player for the next Generation. The exact tabletop tie-break for equal highest Influence is not yet defined; the digital prototype uses current turn order as a deterministic tie-break for testing only.
+At the end of each Generation, after the normal −2 Influence erosion, First Player is determined by: **most remaining Influence**, then **most Prestige**, then **most Wealth generated during that Generation**, then **random selection** among any Families still tied. The digital sandbox uses seeded randomness for the final step so identical balance tests remain reproducible.
 
-The AI bidding heuristic, +5 gross Influence income, maximum Influence cap and First Player tie-break remain simulation/balance parameters rather than locked numerical rules.
+The AI bidding heuristic, +5 gross Influence income and maximum Influence cap remain simulation/balance parameters rather than locked numerical rules. The First Player hierarchy itself is locked.
 
 The numerical values remain provisional and are intended for playtesting rather than final balance.
 
