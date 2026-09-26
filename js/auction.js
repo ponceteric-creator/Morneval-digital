@@ -14,6 +14,58 @@ export const AUCTION_CONFIG = {
   valuationLifetimeGenerations: 3,
 };
 
+export function getTurnOrder(state) {
+  const players = [...state.players];
+  if (!players.length) return [];
+
+  if (!state.firstPlayerId || !players.some(player => player.id === state.firstPlayerId)) {
+    state.firstPlayerId = players[0].id;
+  }
+
+  const firstIndex = players.findIndex(player => player.id === state.firstPlayerId);
+  if (firstIndex <= 0) return players;
+  return [...players.slice(firstIndex), ...players.slice(0, firstIndex)];
+}
+
+/*
+ * Locked rule: after all bids and end-of-generation Influence erosion, the
+ * Family with the most remaining Influence becomes First Player next
+ * Generation.
+ *
+ * Exact tabletop tie resolution is not yet specified. For deterministic
+ * simulation only, a tie is broken by the CURRENT turn order: the earliest
+ * tied Family in that order becomes First Player.
+ */
+export function determineNextFirstPlayer(state) {
+  const currentOrder = getTurnOrder(state);
+  if (!currentOrder.length) {
+    return {
+      previousFirstPlayerId: null,
+      nextFirstPlayerId: null,
+      maxInfluence: 0,
+      tiedPlayerIds: [],
+      usedPrototypeTieBreak: false,
+    };
+  }
+
+  const previousFirstPlayerId = state.firstPlayerId;
+  const maxInfluence = Math.max(...state.players.map(player => player.influence));
+  const tiedPlayerIds = currentOrder
+    .filter(player => player.influence === maxInfluence)
+    .map(player => player.id);
+  const nextFirstPlayerId = tiedPlayerIds[0];
+
+  state.firstPlayerId = nextFirstPlayerId;
+
+  return {
+    previousFirstPlayerId,
+    nextFirstPlayerId,
+    maxInfluence,
+    tiedPlayerIds,
+    usedPrototypeTieBreak: tiedPlayerIds.length > 1,
+  };
+}
+
 function sectorResourceCapacity(state, sectorId) {
   const sectorConfig = CONFIG.sectors[sectorId];
   if (!sectorConfig) return 0;
@@ -84,6 +136,7 @@ export function runYoungStakeAuction(state, sectorId) {
     return { sectorId, skipped: true, reason: "Young slot already occupied", turns: [] };
   }
 
+  const turnOrder = getTurnOrder(state);
   const caps = Object.fromEntries(
     state.players.map(player => [player.id, automatedBidCap(state, player, sectorId)]),
   );
@@ -95,11 +148,11 @@ export function runYoungStakeAuction(state, sectorId) {
   let guard = 0;
 
   while (guard++ < 200) {
-    const challengers = state.players.filter(player => !passed.has(player.id) && player.id !== leaderId);
+    const challengers = turnOrder.filter(player => !passed.has(player.id) && player.id !== leaderId);
     if (leaderId && challengers.length === 0) break;
     if (!leaderId && challengers.length === 0) break;
 
-    const player = state.players[cursor % state.players.length];
+    const player = turnOrder[cursor % turnOrder.length];
     cursor += 1;
     if (passed.has(player.id) || player.id === leaderId) continue;
 
@@ -122,6 +175,7 @@ export function runYoungStakeAuction(state, sectorId) {
       winnerId: null,
       winningBid: 0,
       expectedCategory: null,
+      turnOrder: turnOrder.map(player => player.id),
       caps,
       turns,
     };
@@ -138,6 +192,7 @@ export function runYoungStakeAuction(state, sectorId) {
     winningBid: currentBid,
     stakeId: stake.id,
     expectedCategory: caps[leaderId].expectedCategory,
+    turnOrder: turnOrder.map(player => player.id),
     caps,
     turns,
   };
@@ -181,11 +236,20 @@ export function awardPopulationPrestige(state, economyReports) {
 
 export function resolveAutomatedGeneration(state) {
   applyAutoDemand(state);
+  const firstPlayerBefore = state.firstPlayerId ?? state.players[0]?.id ?? null;
+  if (!state.firstPlayerId && firstPlayerBefore) state.firstPlayerId = firstPlayerBefore;
+  const turnOrderBefore = getTurnOrder(state).map(player => player.id);
+
   const influenceIncome = grantGrossInfluenceIncome(state);
   const auctions = runAutomatedInvestment(state);
   const summary = resolveGeneration(state);
   const populationPrestigeAwards = awardPopulationPrestige(state, summary.economyReports);
+  const firstPlayerResolution = determineNextFirstPlayer(state);
 
+  summary.firstPlayerBefore = firstPlayerBefore;
+  summary.turnOrderBefore = turnOrderBefore;
+  summary.firstPlayerResolution = firstPlayerResolution;
+  summary.nextFirstPlayerId = firstPlayerResolution.nextFirstPlayerId;
   summary.influenceIncome = influenceIncome;
   summary.auctions = auctions;
   summary.populationPrestigeAwards = populationPrestigeAwards;
