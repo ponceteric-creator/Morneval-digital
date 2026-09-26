@@ -27,14 +27,23 @@ export function getTurnOrder(state) {
   return [...players.slice(firstIndex), ...players.slice(0, firstIndex)];
 }
 
+function nextTieBreakRandom(state) {
+  if (!Number.isInteger(state.rngState)) state.rngState = 246813579;
+  state.rngState = (Math.imul(1664525, state.rngState >>> 0) + 1013904223) >>> 0;
+  return state.rngState / 4294967296;
+}
+
 /*
- * Locked rule: after all bids and end-of-generation Influence erosion, the
- * Family with the most remaining Influence becomes First Player next
- * Generation.
+ * Locked First Player rule:
+ * 1. Most remaining Influence after all spending and end-of-generation erosion.
+ * 2. If tied, most Prestige.
+ * 3. If still tied, most Wealth generated in that Generation.
+ * 4. If still tied, select randomly.
  *
- * Exact tabletop tie resolution is not yet specified. For deterministic
- * simulation only, a tie is broken by the CURRENT turn order: the earliest
- * tied Family in that order becomes First Player.
+ * The digital sandbox uses the same seeded pseudo-random stream as the rest of
+ * the balance simulation for the final random tie-break so identical starting
+ * states remain reproducible. On the tabletop this final step can be a die roll,
+ * draw, or any other genuinely random selection method.
  */
 export function determineNextFirstPlayer(state) {
   const currentOrder = getTurnOrder(state);
@@ -43,26 +52,63 @@ export function determineNextFirstPlayer(state) {
       previousFirstPlayerId: null,
       nextFirstPlayerId: null,
       maxInfluence: 0,
-      tiedPlayerIds: [],
-      usedPrototypeTieBreak: false,
+      influenceTiedPlayerIds: [],
+      maxPrestige: null,
+      prestigeTiedPlayerIds: [],
+      maxWealth: null,
+      wealthTiedPlayerIds: [],
+      tieBreakMethod: "none",
+      randomRoll: null,
     };
   }
 
   const previousFirstPlayerId = state.firstPlayerId;
   const maxInfluence = Math.max(...state.players.map(player => player.influence));
-  const tiedPlayerIds = currentOrder
-    .filter(player => player.influence === maxInfluence)
-    .map(player => player.id);
-  const nextFirstPlayerId = tiedPlayerIds[0];
+  let finalists = currentOrder.filter(player => player.influence === maxInfluence);
+  const influenceTiedPlayerIds = finalists.map(player => player.id);
 
+  let maxPrestige = null;
+  let prestigeTiedPlayerIds = [...influenceTiedPlayerIds];
+  let maxWealth = null;
+  let wealthTiedPlayerIds = [...influenceTiedPlayerIds];
+  let tieBreakMethod = "influence";
+  let randomRoll = null;
+
+  if (finalists.length > 1) {
+    maxPrestige = Math.max(...finalists.map(player => player.prestige));
+    finalists = finalists.filter(player => player.prestige === maxPrestige);
+    prestigeTiedPlayerIds = finalists.map(player => player.id);
+    tieBreakMethod = "prestige";
+  }
+
+  if (finalists.length > 1) {
+    maxWealth = Math.max(...finalists.map(player => player.wealthGeneratedThisGeneration));
+    finalists = finalists.filter(player => player.wealthGeneratedThisGeneration === maxWealth);
+    wealthTiedPlayerIds = finalists.map(player => player.id);
+    tieBreakMethod = "wealth";
+  }
+
+  if (finalists.length > 1) {
+    randomRoll = nextTieBreakRandom(state);
+    const index = Math.min(finalists.length - 1, Math.floor(randomRoll * finalists.length));
+    finalists = [finalists[index]];
+    tieBreakMethod = "random";
+  }
+
+  const nextFirstPlayerId = finalists[0].id;
   state.firstPlayerId = nextFirstPlayerId;
 
   return {
     previousFirstPlayerId,
     nextFirstPlayerId,
     maxInfluence,
-    tiedPlayerIds,
-    usedPrototypeTieBreak: tiedPlayerIds.length > 1,
+    influenceTiedPlayerIds,
+    maxPrestige,
+    prestigeTiedPlayerIds,
+    maxWealth,
+    wealthTiedPlayerIds,
+    tieBreakMethod,
+    randomRoll,
   };
 }
 
