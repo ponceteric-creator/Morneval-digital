@@ -2,12 +2,14 @@
 
 Digital prototype of the Morneval strategy board game.
 
-Current deployed prototype: **Engine v0.7.2 — automated investment sandbox**.
+Current deployed prototype: **Engine v0.7.3 — automated investment sandbox**.
 
 The current browser prototype supports:
 
 - multi-generation city simulation and Generation History
 - Population, Squalor, Renown and Institution-driven demand
+- editable **Renown** for External-demand testing
+- editable **City Inclination** on the Academic/Arcane ↔ Religion and Military ↔ Commercial/Mercantile axes
 - Production Sectors with age-specific Stake capacity
 - **1 Production Stake = 1 unit of supply = 1 need that can be satisfied**, subject to raw-resource capacity
 - Stake aging: Young → Mature → Elder → removed
@@ -16,11 +18,11 @@ The current browser prototype supports:
 - **+1 Prestige to the Stake owner for each Population need served**
 - productive raw-resource land Prestige
 - automated bidding for empty Young Production Stake slots
-- sequential bids where only the winning bid is spent
+- sequential bids where only winning bids are spent
 - +5 gross Influence before bidding followed by normal −2 end-of-generation erosion, representing +3 net income before the Influence cap and auction spending
 - **dynamic First Player: Influence → Prestige → Generation Wealth → random selection**
 
-## v0.7.2 starting scenario
+## v0.7.3 starting scenario
 
 - Population 1
 - Squalor 0
@@ -34,7 +36,9 @@ The current browser prototype supports:
 - Valenne starts as First Player
 - Families begin with the existing prototype Influence value and maximum Influence cap
 
-The first automated AI is deliberately simple and transparent. It estimates which current demand category a new Young Stake would serve, values Population at 1 because it awards Prestige, Institutions at 1 Wealth, External Markets at 2 Wealth, and multiplies that immediate value by the three-generation lifetime of a Stake to determine a maximum bid. Bids rise by 1 Influence in current player order until all challengers pass.
+The automated bidding AI now uses a **portfolio-first** heuristic. On its turn, a Family prefers to place an opening bid of 1 Influence on a worthwhile Young slot that has no bid yet before escalating an auction another Family already opened. Once every worthwhile empty slot has an opening bid, the AI considers raises. Active leading bids count as committed Influence, so a Family cannot finish the bidding phase with winning commitments above its available Influence.
+
+The AI still estimates which current demand category a new Young Stake would serve, values Population at 1 because it awards Prestige, Institutions at 1 Wealth, External Markets at 2 Wealth, and multiplies that immediate value by the three-generation lifetime of a Stake to determine a maximum bid.
 
 At the end of each Generation, after the normal −2 Influence erosion, First Player is determined by: **most remaining Influence**, then **most Prestige**, then **most Wealth generated during that Generation**, then **random selection** among any Families still tied. The digital sandbox uses seeded randomness for the final step so identical balance tests remain reproducible.
 
