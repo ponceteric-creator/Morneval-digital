@@ -4,13 +4,13 @@ import { getDemandPriorityGroups, resolveAllSectorEconomies } from "./economy.js
 import { applyAutoDemand, totalInstitutionLevels } from "./generation.js";
 import { AUCTION_CONFIG, getTurnOrder, resolveAutomatedGeneration } from "./auction.js";
 
-const VERSION = "0.7.2";
+const VERSION = "0.7.3";
 const root = document.querySelector("#app");
 if (!root) throw new Error("Missing #app root element");
 
 let game = createScenario();
 let reports = [];
-let message = `v${VERSION} ready. First Player: Influence, then Prestige, then Wealth, then random.`;
+let message = `v${VERSION} ready. Automated Families now prefer untouched Young slots before escalating existing bids.`;
 
 function createScenario() {
   const state = createGame(["Valenne", "D'Arcy", "Corven"]);
@@ -64,6 +64,22 @@ function metric(name, value) {
   return `<div class="metric"><span class="number">${value}</span><span class="name">${name}</span></div>`;
 }
 
+function axisLabel(axis, value) {
+  if (axis === "religionArcane") {
+    return ({ [-2]: "Academic / Arcane II", [-1]: "Academic / Arcane I", [0]: "Neutral", [1]: "Religion I", [2]: "Religion II" })[value];
+  }
+  return ({ [-2]: "Military II", [-1]: "Military I", [0]: "Neutral", [1]: "Commercial / Mercantile I", [2]: "Commercial / Mercantile II" })[value];
+}
+
+function axisSelect(axis, value) {
+  const label = axis === "religionArcane"
+    ? "Academic / Arcane ↔ Religion"
+    : "Military ↔ Commercial / Mercantile";
+  return `<div class="field"><label>${label}</label><select data-axis="${axis}">${[-2, -1, 0, 1, 2]
+    .map(v => `<option value="${v}" ${v === value ? "selected" : ""}>${axisLabel(axis, v)}</option>`)
+    .join("")}</select></div>`;
+}
+
 function priorityText() {
   return getDemandPriorityGroups(game.city.religionArcane, game.city.militaryMercantile)
     .map(group => group.map(categoryLabel).join(" + "))
@@ -103,7 +119,7 @@ function render() {
       <button class="secondary" id="reset">Reset simulation</button>
     </div>
 
-    <div class="notice"><b>v${VERSION} auction test:</b> each Generation every Family receives +${AUCTION_CONFIG.grossInfluenceIncome} Influence before bidding, then the normal −2 erosion occurs during upkeep. Winning bids are spent; losing bids cost 0. Bids rise one point at a time in player sequence. Each served Population need awards the Stake owner <b>+${AUCTION_CONFIG.populationPrestigePerNeed} Prestige</b>. First Player next Generation is determined by remaining Influence → Prestige → Generation Wealth → random selection.</div>
+    <div class="notice"><b>v${VERSION} auction test:</b> each Generation every Family receives +${AUCTION_CONFIG.grossInfluenceIncome} Influence before bidding, then the normal −2 erosion occurs during upkeep. Only winning bids are spent. On each bidding turn the automated Family first looks for an <b>untouched Young slot</b>; only when every worthwhile empty slot already has a bid does it start raising existing bids. Each served Population need awards the Stake owner <b>+${AUCTION_CONFIG.populationPrestigePerNeed} Prestige</b>.</div>
     <div class="status">${message}</div>
 
     <h2 class="section-title">Morneval</h2>
@@ -121,9 +137,16 @@ function render() {
       <div class="simulation-grid">
         <div class="field"><label>Population</label><input type="number" min="0" max="99" data-city="population" value="${game.city.population}"></div>
         <div class="field"><label>Squalor</label><input type="number" min="0" max="20" data-city="squalor" value="${game.city.squalor}"></div>
-        <div class="field"><label>Renown</label><input type="number" min="0" max="99" data-city="renown" value="${game.city.renown}"></div>
+        <div class="field"><label>Renown — editable</label><input type="number" min="0" max="99" data-city="renown" value="${game.city.renown}"></div>
       </div>
-      <div class="prototype-rules"><b>Institutions:</b> City Guard 1; Merchant Guild 0; Temple 0. Total level ${totalInstitutionLevels(game)} / Population ${game.city.population}. <b>Demand priority:</b> ${priorityText()}.</div>
+      <div class="prototype-rules"><b>Institutions:</b> City Guard 1; Merchant Guild 0; Temple 0. Total level ${totalInstitutionLevels(game)} / Population ${game.city.population}. <b>Renown ${game.city.renown}</b> currently drives External demand through the prototype demand formula.</div>
+    </section>
+
+    <section class="panel" style="margin-top:12px">
+      <h3>City Inclination</h3>
+      <div class="inclination-grid">${axisSelect("religionArcane", game.city.religionArcane)}${axisSelect("militaryMercantile", game.city.militaryMercantile)}</div>
+      <div class="priority"><b>Current demand priority:</b> ${priorityText()}</div>
+      <div class="prototype-rules">Inclination changes which demand category receives scarce supply first; it does not change the amount of demand.</div>
     </section>
 
     <section class="panel" style="margin-top:12px">
@@ -133,7 +156,7 @@ function render() {
 
     <section class="panel" style="margin-top:12px">
       <h3>Automated bidding heuristic</h3>
-      <div class="prototype-rules">The AI estimates which current need a newly placed Young Stake would serve. It values Population at 1 (Prestige), Institutions at ${BALANCE_CONFIG.wealthPerDemand.institutions} (Wealth), and External at ${BALANCE_CONFIG.wealthPerDemand.external_markets} (Wealth), then multiplies that immediate value by ${AUCTION_CONFIG.valuationLifetimeGenerations} for the Stake's three-generation lifetime. This is a transparent simulation heuristic, not a locked player rule.</div>
+      <div class="prototype-rules"><b>Portfolio-first:</b> a Family prefers to open an unbid Young slot at 1 Influence before outbidding another Family elsewhere. Once all worthwhile empty slots have an opening bid, it considers raises. The AI estimates which current need a new Stake would serve, values Population at 1 (Prestige), Institutions at ${BALANCE_CONFIG.wealthPerDemand.institutions} (Wealth), and External at ${BALANCE_CONFIG.wealthPerDemand.external_markets} (Wealth), then multiplies that immediate value by ${AUCTION_CONFIG.valuationLifetimeGenerations}. Active leading bids are treated as committed Influence, so a Family cannot end up winning auctions whose total cost exceeds its Influence.</div>
     </section>
 
     <h2 class="section-title">Families</h2>
@@ -151,7 +174,7 @@ function render() {
     <h2 class="section-title">Generation History</h2>
     <section class="history-list">${game.history?.length ? [...game.history].reverse().map(renderHistory).join("") : '<div class="panel empty">No Generations resolved yet.</div>'}</section>
 
-    <p class="footer-note">Current automated test does not develop Sector tiers, Institutions, Renown or City Inclination. It automates bidding for empty Young Production Stake slots. The bidding sequence starts with the current First Player and then continues in fixed Family seating order.</p>
+    <p class="footer-note">Sector tiers and Institution levels are not automated in this test. Renown and both City Inclination axes are editable so their effects on demand and demand priority can be stress-tested across several Generations.</p>
   </main>`;
   bindEvents();
 }
@@ -188,10 +211,11 @@ function renderAuction(auction) {
   const sector = game.productionSectors.find(item => item.id === auction.sectorId);
   if (auction.skipped) return `<article class="report"><h4>${sector?.name ?? auction.sectorId}</h4><div>${auction.reason}</div></article>`;
   const turns = auction.turns.map(turn => turn.action === "bid"
-    ? `${playerName(turn.playerId)} bid ${turn.bid}`
+    ? `${playerName(turn.playerId)} ${turn.openedEmptySlot ? "opened" : "raised to"} ${turn.bid}`
     : `${playerName(turn.playerId)} passed at ${turn.bid}`).join(" → ");
   const order = auction.turnOrder?.map(playerName).join(" → ") ?? currentTurnOrderText();
-  return `<article class="report"><h4>${sector?.name ?? auction.sectorId}</h4><div class="report-detail"><b>Starting order:</b> ${order}</div><div class="report-detail"><b>Expected market for winner:</b> ${categoryLabel(auction.expectedCategory)}</div><div class="report-detail"><b>Result:</b> ${auction.winnerId ? `${playerName(auction.winnerId)} wins for ${auction.winningBid} Influence` : "No bid / no Stake placed"}</div><div class="report-detail"><b>Bidding:</b> ${turns || "none"}</div></article>`;
+  const title = `${sector?.name ?? auction.sectorId}${auction.slotNumber ? ` · Young slot ${auction.slotNumber}` : ""}`;
+  return `<article class="report"><h4>${title}</h4><div class="report-detail"><b>Starting order:</b> ${order}</div><div class="report-detail"><b>Expected market for winner:</b> ${categoryLabel(auction.expectedCategory)}</div><div class="report-detail"><b>Result:</b> ${auction.winnerId ? `${playerName(auction.winnerId)} wins for ${auction.winningBid} Influence` : "No bid / no Stake placed"}</div><div class="report-detail"><b>Bidding:</b> ${turns || "none"}</div></article>`;
 }
 
 function renderReport(report) {
@@ -271,7 +295,17 @@ function bindEvents() {
     input.addEventListener("change", () => {
       syncCityInputs();
       reports = [];
-      message = "City value changed; automatic demand recalculated.";
+      message = input.dataset.city === "renown"
+        ? "Renown changed; External demand recalculated."
+        : "City value changed; automatic demand recalculated.";
+      render();
+    });
+  }
+  for (const select of document.querySelectorAll("[data-axis]")) {
+    select.addEventListener("change", () => {
+      game.city[select.dataset.axis] = Number(select.value);
+      reports = [];
+      message = `City Inclination changed. Demand priority is now ${priorityText()}.`;
       render();
     });
   }
