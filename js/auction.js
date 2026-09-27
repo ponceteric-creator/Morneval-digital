@@ -39,11 +39,6 @@ function nextTieBreakRandom(state) {
  * 2. If tied, most Prestige.
  * 3. If still tied, most Wealth generated in that Generation.
  * 4. If still tied, select randomly.
- *
- * The digital sandbox uses the same seeded pseudo-random stream as the rest of
- * the balance simulation for the final random tie-break so identical starting
- * states remain reproducible. On the tabletop this final step can be a die roll,
- * draw, or any other genuinely random selection method.
  */
 export function determineNextFirstPlayer(state) {
   const currentOrder = getTurnOrder(state);
@@ -134,7 +129,7 @@ export function grantGrossInfluenceIncome(state, amount = AUCTION_CONFIG.grossIn
   });
 }
 
-export function estimateNewYoungStakeMarket(state, sectorId) {
+export function estimateNewYoungStakeMarket(state, sectorId, additionalPendingSupply = 0) {
   applyAutoDemand(state);
   const sector = state.productionSectors.find(item => item.id === sectorId);
   if (!sector) return null;
@@ -143,15 +138,16 @@ export function estimateNewYoungStakeMarket(state, sectorId) {
     .flatMap(player => player.productionStakes)
     .filter(stake => stake.sectorId === sectorId).length;
   const resourceCapacity = sectorResourceCapacity(state, sectorId);
-  const potentialSupply = Math.min(currentStakes + 1, resourceCapacity);
-  if (potentialSupply <= currentStakes) return null;
+  const supplyBeforeThisSlot = currentStakes + Math.max(0, additionalPendingSupply);
+  const potentialSupply = Math.min(supplyBeforeThisSlot + 1, resourceCapacity);
+  if (potentialSupply <= supplyBeforeThisSlot) return null;
 
   const priorities = getDemandPriorityGroups(
     state.city.religionArcane,
     state.city.militaryMercantile,
   );
   const allocation = allocateDemand(potentialSupply, sector.demandThisGeneration, priorities);
-  return allocation.serviceSequence[currentStakes] ?? null;
+  return allocation.serviceSequence[supplyBeforeThisSlot] ?? null;
 }
 
 function categoryReward(category) {
@@ -160,8 +156,8 @@ function categoryReward(category) {
     + (category === "population" ? AUCTION_CONFIG.populationPrestigePerNeed : 0);
 }
 
-export function automatedBidCap(state, player, sectorId) {
-  const expectedCategory = estimateNewYoungStakeMarket(state, sectorId);
+export function automatedBidCap(state, player, sectorId, additionalPendingSupply = 0) {
+  const expectedCategory = estimateNewYoungStakeMarket(state, sectorId, additionalPendingSupply);
   const immediateReward = categoryReward(expectedCategory);
   const strategicValue = Math.max(
     0,
@@ -175,90 +171,223 @@ export function automatedBidCap(state, player, sectorId) {
   };
 }
 
-export function runYoungStakeAuction(state, sectorId) {
-  const capacity = getSectorStakeCapacity(state, sectorId);
-  const occupancy = getSectorStakeOccupancy(state, sectorId);
-  if (occupancy.young >= capacity.young) {
-    return { sectorId, skipped: true, reason: "Young slot already occupied", turns: [] };
-  }
+function createAuctionBoard(state) {
+  const auctions = [];
+  for (const sector of state.productionSectors) {
+    const capacity = getSectorStakeCapacity(state, sector.id);
+    const occupancy = getSectorStakeOccupancy(state, sector.id);
+    const openYoungSlots = Math.max(0, capacity.young - occupancy.young);
 
-  const turnOrder = getTurnOrder(state);
-  const caps = Object.fromEntries(
-    state.players.map(player => [player.id, automatedBidCap(state, player, sectorId)]),
-  );
-  const passed = new Set();
-  const turns = [];
-  let leaderId = null;
-  let currentBid = 0;
-  let cursor = 0;
-  let guard = 0;
-
-  while (guard++ < 200) {
-    const challengers = turnOrder.filter(player => !passed.has(player.id) && player.id !== leaderId);
-    if (leaderId && challengers.length === 0) break;
-    if (!leaderId && challengers.length === 0) break;
-
-    const player = turnOrder[cursor % turnOrder.length];
-    cursor += 1;
-    if (passed.has(player.id) || player.id === leaderId) continue;
-
-    const nextBid = currentBid + 1;
-    const cap = caps[player.id].maxBid;
-    if (nextBid <= cap && nextBid <= player.influence) {
-      currentBid = nextBid;
-      leaderId = player.id;
-      turns.push({ playerId: player.id, action: "bid", bid: currentBid });
-    } else {
-      passed.add(player.id);
-      turns.push({ playerId: player.id, action: "pass", bid: currentBid });
+    for (let slotIndex = 0; slotIndex < openYoungSlots; slotIndex += 1) {
+      const caps = Object.fromEntries(
+        state.players.map(player => [
+          player.id,
+          automatedBidCap(state, player, sector.id, slotIndex),
+        ]),
+      );
+      auctions.push({
+        auctionId: `${sector.id}:young:${occupancy.young + slotIndex + 1}`,
+        sectorId: sector.id,
+        slotNumber: occupancy.young + slotIndex + 1,
+        currentBid: 0,
+        leaderId: null,
+        passedPlayerIds: new Set(),
+        closed: false,
+        caps,
+        turns: [],
+      });
     }
   }
+  return auctions;
+}
 
-  if (!leaderId || currentBid <= 0) {
-    return {
-      sectorId,
-      skipped: false,
-      winnerId: null,
-      winningBid: 0,
-      expectedCategory: null,
-      turnOrder: turnOrder.map(player => player.id),
-      caps,
-      turns,
-    };
+function committedInfluence(auctions, playerId, exceptAuctionId = null) {
+  return auctions.reduce((sum, auction) => {
+    if (auction.auctionId === exceptAuctionId) return sum;
+    return auction.leaderId === playerId ? sum + auction.currentBid : sum;
+  }, 0);
+}
+
+function canAffordBid(state, auctions, player, auction, proposedBid) {
+  const committedElsewhere = committedInfluence(auctions, player.id, auction.auctionId);
+  return committedElsewhere + proposedBid <= player.influence;
+}
+
+function updateAuctionClosedState(state, auction) {
+  if (auction.closed) return;
+  if (!auction.leaderId) {
+    if (auction.passedPlayerIds.size >= state.players.length) auction.closed = true;
+    return;
   }
 
-  const winner = state.players.find(player => player.id === leaderId);
-  winner.influence -= currentBid;
-  const stake = addProductionStakeForTesting(state, leaderId, sectorId, "young");
+  const challengers = state.players.filter(player =>
+    player.id !== auction.leaderId && !auction.passedPlayerIds.has(player.id));
+  if (challengers.length === 0) auction.closed = true;
+}
 
-  return {
-    sectorId,
-    skipped: false,
-    winnerId: leaderId,
-    winningBid: currentBid,
-    stakeId: stake.id,
-    expectedCategory: caps[leaderId].expectedCategory,
-    turnOrder: turnOrder.map(player => player.id),
-    caps,
-    turns,
-  };
+function rankOpeningAuctions(player, auctions) {
+  return auctions
+    .filter(auction =>
+      !auction.closed
+      && auction.currentBid === 0
+      && !auction.passedPlayerIds.has(player.id)
+      && auction.caps[player.id].maxBid >= 1)
+    .sort((a, b) => {
+      const valueDiff = b.caps[player.id].strategicValue - a.caps[player.id].strategicValue;
+      if (valueDiff !== 0) return valueDiff;
+      return auctions.indexOf(a) - auctions.indexOf(b);
+    });
+}
+
+function rankRaiseAuctions(state, player, auctions) {
+  return auctions
+    .filter(auction => {
+      if (auction.closed || auction.currentBid <= 0) return false;
+      if (auction.leaderId === player.id || auction.passedPlayerIds.has(player.id)) return false;
+      const proposedBid = auction.currentBid + 1;
+      return proposedBid <= auction.caps[player.id].maxBid
+        && canAffordBid(state, auctions, player, auction, proposedBid);
+    })
+    .sort((a, b) => {
+      const aNext = a.currentBid + 1;
+      const bNext = b.currentBid + 1;
+      const aSurplus = a.caps[player.id].strategicValue - aNext;
+      const bSurplus = b.caps[player.id].strategicValue - bNext;
+      if (bSurplus !== aSurplus) return bSurplus - aSurplus;
+      const valueDiff = b.caps[player.id].strategicValue - a.caps[player.id].strategicValue;
+      if (valueDiff !== 0) return valueDiff;
+      return auctions.indexOf(a) - auctions.indexOf(b);
+    });
+}
+
+function choosePassAuction(player, auctions) {
+  const eligible = auctions.filter(auction =>
+    !auction.closed
+    && auction.leaderId !== player.id
+    && !auction.passedPlayerIds.has(player.id));
+  if (!eligible.length) return null;
+
+  eligible.sort((a, b) => {
+    const aRequired = Math.max(1, a.currentBid + 1);
+    const bRequired = Math.max(1, b.currentBid + 1);
+    const aMargin = a.caps[player.id].strategicValue - aRequired;
+    const bMargin = b.caps[player.id].strategicValue - bRequired;
+    if (aMargin !== bMargin) return aMargin - bMargin;
+    return auctions.indexOf(a) - auctions.indexOf(b);
+  });
+  return eligible[0];
+}
+
+function takeAutomatedAuctionTurn(state, player, auctions, sequence) {
+  // Portfolio-first heuristic: claim an untouched slot before escalating an
+  // auction somebody else has already opened. This is a simulation strategy,
+  // not a locked tabletop rule.
+  const openingChoices = rankOpeningAuctions(player, auctions)
+    .filter(auction => canAffordBid(state, auctions, player, auction, 1));
+  if (openingChoices.length) {
+    const auction = openingChoices[0];
+    auction.currentBid = 1;
+    auction.leaderId = player.id;
+    const action = {
+      sequence,
+      playerId: player.id,
+      action: "bid",
+      bid: 1,
+      openedEmptySlot: true,
+    };
+    auction.turns.push(action);
+    updateAuctionClosedState(state, auction);
+    return action;
+  }
+
+  const raiseChoices = rankRaiseAuctions(state, player, auctions);
+  if (raiseChoices.length) {
+    const auction = raiseChoices[0];
+    const proposedBid = auction.currentBid + 1;
+    auction.currentBid = proposedBid;
+    auction.leaderId = player.id;
+    const action = {
+      sequence,
+      playerId: player.id,
+      action: "bid",
+      bid: proposedBid,
+      openedEmptySlot: false,
+    };
+    auction.turns.push(action);
+    updateAuctionClosedState(state, auction);
+    return action;
+  }
+
+  const passAuction = choosePassAuction(player, auctions);
+  if (passAuction) {
+    passAuction.passedPlayerIds.add(player.id);
+    const action = {
+      sequence,
+      playerId: player.id,
+      action: "pass",
+      bid: passAuction.currentBid,
+    };
+    passAuction.turns.push(action);
+    updateAuctionClosedState(state, passAuction);
+    return action;
+  }
+
+  return null;
 }
 
 export function runAutomatedInvestment(state) {
   applyAutoDemand(state);
-  const auctions = [];
-  for (const sector of state.productionSectors) {
-    const capacity = getSectorStakeCapacity(state, sector.id);
-    let occupancy = getSectorStakeOccupancy(state, sector.id);
-    let slots = Math.max(0, capacity.young - occupancy.young);
-    while (slots-- > 0) {
-      auctions.push(runYoungStakeAuction(state, sector.id));
-      occupancy = getSectorStakeOccupancy(state, sector.id);
-      if (occupancy.young >= capacity.young) break;
-      if (!auctions[auctions.length - 1]?.winnerId) break;
-    }
+  const turnOrder = getTurnOrder(state);
+  const auctions = createAuctionBoard(state);
+  if (!auctions.length) return [];
+
+  let cursor = 0;
+  let sequence = 1;
+  let guard = 0;
+
+  while (auctions.some(auction => !auction.closed) && guard++ < 2000) {
+    const player = turnOrder[cursor % turnOrder.length];
+    cursor += 1;
+    takeAutomatedAuctionTurn(state, player, auctions, sequence++);
   }
-  return auctions;
+
+  for (const auction of auctions) updateAuctionClosedState(state, auction);
+
+  const results = [];
+  for (const auction of auctions) {
+    let winnerId = null;
+    let winningBid = 0;
+    let stakeId = null;
+    let expectedCategory = null;
+
+    if (auction.leaderId && auction.currentBid > 0) {
+      const winner = state.players.find(player => player.id === auction.leaderId);
+      winningBid = auction.currentBid;
+      winner.influence -= winningBid;
+      const stake = addProductionStakeForTesting(state, winner.id, auction.sectorId, "young");
+      winnerId = winner.id;
+      stakeId = stake.id;
+      expectedCategory = auction.caps[winner.id].expectedCategory;
+    }
+
+    results.push({
+      auctionId: auction.auctionId,
+      sectorId: auction.sectorId,
+      slotNumber: auction.slotNumber,
+      skipped: false,
+      winnerId,
+      winningBid,
+      stakeId,
+      expectedCategory,
+      turnOrder: turnOrder.map(player => player.id),
+      caps: auction.caps,
+      turns: auction.turns,
+      passedPlayerIds: [...auction.passedPlayerIds],
+      closed: auction.closed,
+    });
+  }
+
+  return results;
 }
 
 export function awardPopulationPrestige(state, economyReports) {
