@@ -12,6 +12,8 @@ export const AUCTION_CONFIG = {
   grossInfluenceIncome: 5,
   populationPrestigePerNeed: 1,
   valuationLifetimeGenerations: 3,
+  prototypeRenownGainEveryGenerations: 2,
+  prototypeRenownGainAmount: 1,
 };
 
 export function getTurnOrder(state) {
@@ -419,6 +421,13 @@ export function resolveAutomatedGeneration(state) {
   const auctions = runAutomatedInvestment(state);
   const summary = resolveGeneration(state);
   const populationPrestigeAwards = awardPopulationPrestige(state, summary.economyReports);
+
+  const renownBeforeGrowth = Math.max(0, Number(state.city.renown) || 0);
+  const shouldGainRenown = summary.generation % AUCTION_CONFIG.prototypeRenownGainEveryGenerations === 0;
+  const renownGain = shouldGainRenown ? AUCTION_CONFIG.prototypeRenownGainAmount : 0;
+  if (renownGain > 0) state.city.renown = renownBeforeGrowth + renownGain;
+  applyAutoDemand(state);
+
   const firstPlayerResolution = determineNextFirstPlayer(state);
 
   summary.firstPlayerBefore = firstPlayerBefore;
@@ -428,6 +437,9 @@ export function resolveAutomatedGeneration(state) {
   summary.influenceIncome = influenceIncome;
   summary.auctions = auctions;
   summary.populationPrestigeAwards = populationPrestigeAwards;
+  summary.renownBeforeGrowth = renownBeforeGrowth;
+  summary.renownGain = renownGain;
+  summary.renownAfterGrowth = state.city.renown;
   summary.prestigeAfter = Object.fromEntries(state.players.map(player => [player.id, player.prestige]));
   return summary;
 }
