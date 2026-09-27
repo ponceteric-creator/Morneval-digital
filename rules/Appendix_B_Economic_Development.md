@@ -1,7 +1,7 @@
-# Appendix B — Economic Development & Hinterland (v0.8)
+# Appendix B — Economic Development & Hinterland (v0.8.2)
 
 **Status:** current design reference for the v0.8 economic-development prototype.  
-**Relationship to master rules:** this appendix supplements `Morneval_Rules.md`; where it provides newer detail on Production-Sector development or Hinterland use, this appendix is the current specification until the next master-rule consolidation.
+**Relationship to master rules:** this appendix supplements `Morneval_Rules.md`; where it provides newer detail on Production-Sector development, market demand/rewards, or Hinterland use, this appendix is the current specification until the next master-rule consolidation.
 
 ## B.1 — Production-Sector development projects
 
@@ -31,7 +31,29 @@ When a Family funds a development phase or a Hinterland action requiring Wealth,
 
 Example: a Family generates 3 Wealth during the Generation and has committed 2 Wealth to a development project. It has 1 Wealth capacity remaining for other obligations.
 
-## B.3 — Hinterland map structure
+## B.3 — Active demand categories
+
+As of v0.8.2, **Institution demand is removed from the production economy**.
+
+Production Sectors now face only two demand categories:
+
+- **City / Population demand**;
+- **External Market demand**.
+
+Institutions may still exist as civic/political structures, but they no longer consume Production-Sector output through a separate Institution-demand category.
+
+Current direct rewards for a Stake that satisfies one need are:
+
+| Demand served | Wealth | Prestige |
+|---|---:|---:|
+| City / Population | 0 | 1 |
+| External Market | 1 | 0 |
+
+Therefore serving the city primarily produces **Prestige**, while serving external markets primarily produces **Wealth capacity**.
+
+The existing City Inclination system continues to determine priority between active demand categories where applicable. The Academic/Arcane ↔ Religion axis remains part of the city-state model for future institutional/political effects, but it no longer creates Institution demand.
+
+## B.4 — Hinterland map structure
 
 The current map abstraction contains **13 spaces**:
 
@@ -46,21 +68,25 @@ The 12 Hinterland spaces are currently divided equally:
 
 This 4/4/4 distribution is the current prototype map structure.
 
-## B.4 — Natural Hinterland production
+## B.5 — Natural Hinterland production
 
-Each natural Hinterland space currently provides **1 unit of raw-resource capacity** when developed/controlled for production.
+Each acquired natural Hinterland territory currently provides **2 units of raw-resource production capacity**.
+
+A later development system may improve an individual territory from **2 to 3 capacity**. The exact improvement action/cost is not yet defined.
+
+Natural terrain produces:
 
 - **Meadow → Wool → Textiles**;
 - **Hill → Ore → Smithing**;
 - **Forest → Wood → Construction Materials**.
 
-The v0.8 prototype therefore adds a fourth Production Sector: **Construction Materials**, supplied by Wood from Forests.
+The v0.8 prototype therefore includes a fourth Production Sector: **Construction Materials**, supplied by Wood from Forests.
 
 Construction Materials follows the same Production-Stake architecture as the other Production Sectors: each Tier supplies one Young, one Mature and one Elder Stake slot, and each occupied Stake can satisfy at most one need subject to raw-resource capacity.
 
 The exact demand curve and final content of the Construction Materials Sector remain balance/design work.
 
-## B.5 — Acquiring a Hinterland Stake
+## B.6 — Acquiring a Hinterland Stake
 
 A Family may acquire an unowned Hinterland space as a player action.
 
@@ -73,7 +99,7 @@ Ownership is persistent until a later rule explicitly changes it.
 
 The 3 Influence + 1 Wealth cost is **provisional** and is intended to reflect the long-term nature of Hinterland investment.
 
-## B.6 — Converting land to a Farm
+## B.7 — Converting land to a Farm
 
 A Family may convert a natural Hinterland space it owns into a **Farm**.
 
@@ -84,6 +110,8 @@ Current prototype cost:
 
 A Farm stops producing the natural resource of its original terrain and instead produces **Food raw-resource capacity**.
 
+Under the current v0.8.2 baseline, a converted Farm has the same **2-capacity** production value as the territory it replaced unless a later development improves it.
+
 Therefore:
 
 - a Meadow may be converted from Wool production to Food;
@@ -92,7 +120,7 @@ Therefore:
 
 The original terrain should remain recorded because clearing/conversion may later interact with External Powers, Events or environmental consequences (for example Elven relations).
 
-## B.7 — Productive Hinterland Prestige
+## B.8 — Productive Hinterland Prestige
 
 The existing productive-land scoring rule remains in force:
 
@@ -100,19 +128,21 @@ The existing productive-land scoring rule remains in force:
 
 Unused potential capacity does not score.
 
-## B.8 — v0.8 digital bootstrap assumption
+This Prestige is awarded per productive territory, not per capacity unit consumed.
 
-The v0.8 digital sandbox temporarily provides **3 units of city-adjacent base capacity for each implemented raw resource**: Food, Wool, Ore and Wood.
+## B.9 — v0.8 digital bootstrap assumption
+
+The v0.8 digital sandbox temporarily provides **3 units of city-adjacent base capacity for each implemented raw resource**: Food/Grain, Wool, Ore and Wood.
 
 This is **not a locked tabletop rule**. It exists to avoid a startup deadlock in the automated simulation: the first Families otherwise have no Wealth-producing economy with which to fund the first Hinterland acquisitions.
 
-Owned Hinterland capacity is added on top of this temporary base. The design should later decide what the physical tabletop equivalent of Morneval's starting raw-resource access actually is.
+Owned Hinterland capacity is added on top of this temporary base. Each acquired territory currently adds **2 capacity** of its active resource. The design should later decide what the physical tabletop equivalent of Morneval's starting raw-resource access actually is.
 
-## B.9 — Automated-player heuristic in v0.8
+## B.10 — Automated-player heuristic in v0.8
 
 The automated-player strategy is a test heuristic, not a player rule.
 
-The AI may now choose among:
+The AI may choose among:
 
 - bidding for a Young Production Stake;
 - funding the next available phase of a Production-Sector project;
@@ -121,3 +151,17 @@ The AI may now choose among:
 - passing on a Stake auction.
 
 For the current simulation, it prioritizes genuine raw-resource bottlenecks, then Sector-development pressure, then Stake investment. Wealth-funded actions are only taken against projected Wealth from positions already established before unresolved auction wins. This deliberately conservative behavior is intended to keep the balance test legible rather than to model optimal human play.
+
+Because External Market service now yields **1 Wealth instead of 2**, the automated investment model should be treated as newly rebalanced and may require further tuning after multi-generation tests.
+
+## B.11 — Digital balance graphs
+
+The v0.8.2 sandbox tracks the following across resolved Generations:
+
+- Population;
+- Renown;
+- gross Family Wealth generated in each Generation;
+- cumulative Family Prestige;
+- **available raw-material production capacity** for Food/Grain, Wool, Ore and Wood.
+
+The raw-material graph tracks available capacity rather than only consumed output. It therefore shows the economic effect of Hinterland acquisitions and Farm conversions even when some capacity remains unused.
