@@ -2,101 +2,85 @@
 
 Digital prototype of the Morneval strategy board game.
 
-Current deployed prototype: **Engine v0.8.2 — two-market economic development sandbox**.
+Current deployed prototype: **Engine v0.8.3 — urban-growth and economic development sandbox**.
 
 The current browser prototype supports:
 
 - multi-generation city simulation and Generation History
-- generation-by-generation charts for **Population, Renown, Family Wealth, Family Prestige and raw-material production capacity**
-- Population, Squalor and Renown-driven city evolution
-- editable **Renown** plus provisional automatic growth of **+1 every 2 resolved Generations**
-- editable **City Inclination** on the Academic/Arcane ↔ Religion and Military ↔ Commercial/Mercantile axes
+- charts for **Population vs Urban capacity, Squalor, Renown, Family Wealth, Family Prestige and raw-material potential**
 - four Production Sectors: **Food, Textiles, Smithing, Construction Materials**
-- **1 Production Stake = 1 unit of potential supply = 1 need that can be satisfied**, subject to raw-resource capacity
-- Stake aging: Young → Mature → Elder → removed
 - only two active demand categories: **City / Population** and **External Markets**
-- **Institution demand removed** from the production economy
-- serving **City / Population** demand awards **1 Prestige** and 0 Wealth
-- serving **External** demand awards **1 Wealth** and 0 direct Prestige
-- productive Hinterland Prestige
-- automated sequential bidding for empty Young Production Stake slots
-- Production-Sector development projects that require three funded phases before a Tier activates
-- automated acquisition and conversion of Hinterland tiles
-- dynamic First Player: **Influence → Prestige → Generation Wealth → random selection**
+- serving City demand gives **1 Prestige**; serving External demand gives **1 Wealth**
+- Institution demand removed from the production economy
+- Hinterland acquisition, Farm conversion and productive-land Prestige
+- three-phase Production-Sector development projects
+- automated sequential bidding and dynamic First Player
+- permanent urban expansion that progressively consumes Hinterland
 
-## v0.8.2 starting scenario
+## v0.8.3 urban-growth model
 
-- Population 1
-- Squalor 0
-- Renown 0
-- neutral City Inclination
-- Food, Textiles, Smithing and Construction Materials all at Tier I
-- no Production Stakes at setup
-- Institution demand inactive
-- Valenne starts as First Player
-- 13-space map abstraction: Morneval plus **12 Hinterland spaces**
-- Hinterland composition: **4 Forests, 4 Meadows, 4 Hills**
-- all 12 Hinterland spaces begin unowned
+Morneval begins with **1 Urban tile** and **Urban capacity 3**. Each additional Urban tile adds capacity for another 3 Population.
+
+After Food growth/famine, the prototype calculates:
+
+**Overcrowding = max(0, Population before disease − current Urban capacity)**
+
+Current Squalor target:
+
+**Squalor target = Overcrowding + 1 if any Population Food demand is unmet.**
+
+Squalor moves by at most **1 per Generation** toward that target. Disease is then checked using the existing provisional Squalor probability table.
+
+After final Population, including disease, the city permanently expands to the minimum footprint required:
+
+**Required Urban tiles = ceil(final Population / 3), minimum 1.**
+
+Automatic expansion chooses a random **unowned** non-urban Hinterland space first. Only when none remain does it randomly consume an owned territory. An owned territory is lost with **no compensation**. Urbanised terrain permanently loses its raw-resource production.
+
+This automatic expansion is a simulation stand-in. The intended tabletop design is for Families to be pressured to fund civic expansion themselves to relieve overcrowding/Squalor.
+
+## Renown
+
+The temporary simulation rule of **+1 Renown every 2 Generations** remains until Events become the real source of Renown.
+
+Sustainable Renown is now capped at:
+
+**Maximum Renown = final Population × 2.**
+
+If Population falls, excess Renown is immediately lost to the new cap. A direct Squalor → Renown penalty is deliberately parked for later testing.
 
 ## Demand and rewards
 
-The production economy now has only two customer categories:
+- **City / Population demand** — 1 Prestige per need served, 0 Wealth
+- **External Market demand** — 1 Wealth per need served, 0 direct Prestige
 
-- **City / Population demand** — each need served gives the serving Stake owner **1 Prestige** and no Wealth;
-- **External Market demand** — each need served gives the serving Stake owner **1 Wealth** and no direct Prestige.
-
-Institutions remain part of Morneval's broader design, but they no longer create their own Production-Sector demand category.
-
-## Generation charts
-
-The v0.8.2 dashboard tracks:
-
-- **Population** — city Population at the end of each resolved Generation
-- **Renown** — city Renown at the end of each resolved Generation
-- **Family Wealth** — gross Wealth generated by each Family during that Generation
-- **Family Prestige** — cumulative Prestige for each Family at Generation end
-- **Raw-material production capacity** — available Food/Grain, Wool, Ore and Wood capacity after the action phase
-
-The raw-material chart tracks available capacity rather than only consumed output, so Hinterland acquisitions and Farm conversions remain visible even when all capacity is not used.
-
-## Production-Sector development
-
-To activate the next Tier of a Production Sector, the city must complete three development phases. Contributions are first-come-first-served and different Families may fund successive phases.
-
-- Phase 1: **1 Influence + 1 Wealth capacity**, contributor gains **5 Prestige**
-- Phase 2: **2 Wealth capacity**, contributor gains **5 Prestige**
-- Phase 3: **2 Wealth capacity**, contributor gains **5 Prestige**; the new Tier becomes active
-- a given Sector project may advance by **at most one phase per Generation**
-
-The 5-Prestige value is currently an explicit balancing placeholder.
+The Academic/Arcane ↔ Religion inclination axis remains in the city model for future political/institutional effects, but no longer creates production demand.
 
 ## Hinterland
 
-Natural Hinterland output is currently:
+The 13-space test map contains Morneval plus **12 Hinterland spaces: 4 Forests, 4 Meadows and 4 Hills**.
+
+Natural terrain currently provides:
 
 - Meadow → **Wool** → Textiles
 - Hill → **Ore** → Smithing
 - Forest → **Wood** → Construction Materials
 
-A Family may acquire an unowned Hinterland space for **3 Influence + 1 Wealth capacity**. Ownership is persistent. Any owned natural tile may later be converted to a Farm for **2 Influence + 1 Wealth capacity**; a Farm stops producing its original resource and instead provides **Food raw-resource capacity**.
+Each acquired Hinterland territory has base production capacity **2**. A later development mechanism may improve a territory to **3**. A Family may acquire an unowned territory for **3 Influence + 1 Wealth capacity**, or convert owned natural land to a Farm for **2 Influence + 1 Wealth capacity**.
 
-Each acquired Hinterland territory now has a base production capacity of **2**. A later development rule may increase an individual territory to **3**.
+The digital sandbox still retains **3 units of city-adjacent bootstrap capacity per raw resource** so the early economy can function before Hinterland investment.
 
-Owned Hinterland whose capacity is actually consumed by a Production Sector awards the owner **1 Prestige per Generation**, following the existing productive-land rule.
+The raw-material graph now tracks **potential** capacity: city-base capacity plus all remaining non-urban terrain, including unowned land. This makes urban expansion visibly remove future productive potential.
 
-### v0.8.2 bootstrap assumption
+## Production-Sector development
 
-The digital simulation still retains **3 units of city-adjacent base capacity for each raw resource** (Food/Grain, Wool, Ore and Wood). This lets the early economy function before Families can generate enough Wealth to finance Hinterland acquisitions. This base capacity is a simulation aid, not a locked tabletop map rule.
+To activate the next Tier of a Production Sector, complete three phases. Different Families may fund successive phases, but a given Sector can advance at most one phase per Generation.
 
-## Automated action strategy
+- Phase 1: **1 Influence + 1 Wealth**, +5 Prestige
+- Phase 2: **2 Wealth**, +5 Prestige
+- Phase 3: **2 Wealth**, +5 Prestige and the new Tier activates
 
-The v0.8 AI chooses among several economic actions during the action phase rather than resolving Stake auctions in complete isolation. It can bid, advance a Sector-development phase, acquire Hinterland or convert owned land to a Farm.
-
-The AI currently prioritizes a genuine raw-resource bottleneck first, then Sector-development pressure, then Stake bidding. It only commits Wealth-funded actions against **projected Wealth from positions already in place**, so it does not borrow against a Stake auction that has not yet been resolved. This strategy is deliberately conservative and remains a simulation heuristic, not a tabletop rule.
-
-Influence income remains the provisional **+5 before actions followed by −2 erosion**, i.e. +3 net before spending and the Influence cap. Renown growth and the automated AI priorities are also prototype parameters.
-
-Because External demand now awards only 1 Wealth rather than 2, the AI's bidding behavior should be considered newly rebalanced and may need further tuning after multi-generation testing.
+The 5-Prestige reward remains a balance placeholder.
 
 ## GitHub Pages
 
