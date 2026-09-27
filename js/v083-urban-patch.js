@@ -79,6 +79,14 @@ function absorbLandIntoCity(state, generation) {
   return event;
 }
 
+function rawPotentialCapacity(state, resourceType) {
+  const cityBase = V08_CONFIG.cityBaseResourceCapacity[resourceType] ?? 0;
+  const hinterlandPotential = state.lands
+    .filter(land => land.development !== "urban" && land.resourceType === resourceType)
+    .reduce((sum, land) => sum + Math.max(0, Number(land.baseCapacity) || 0), 0);
+  return cityBase + hinterlandPotential;
+}
+
 export function createV083Game(familyNames = ["Valenne", "D'Arcy", "Corven"]) {
   const state = createV08Game(familyNames);
   state.institutions = [];
@@ -99,6 +107,15 @@ export function getUrbanStatus(state) {
     overcrowding: Math.max(0, population - urbanCapacity),
     requiredUrbanTiles: Math.max(1, Math.ceil(population / V083_CONFIG.populationPerUrbanTile)),
   };
+}
+
+export function getRawPotentialBySector(state) {
+  return Object.fromEntries(
+    state.productionSectors.map(sector => [
+      sector.id,
+      rawPotentialCapacity(state, sector.inputResourceType),
+    ]),
+  );
 }
 
 export function resolveAutomatedGenerationV083(state) {
@@ -162,12 +179,13 @@ export function resolveAutomatedGenerationV083(state) {
 
   applyAutoDemand(state);
 
-  const rawCapacityAfterExpansion = Object.fromEntries(
+  const rawUsableCapacityAfterExpansion = Object.fromEntries(
     state.productionSectors.map(sector => [
       sector.id,
       sectorResourceCapacity(state, sector.id),
     ]),
   );
+  const rawPotentialAfterExpansion = getRawPotentialBySector(state);
 
   Object.assign(summary, {
     populationBeforeDisease,
@@ -190,7 +208,8 @@ export function resolveAutomatedGenerationV083(state) {
     renownCap,
     renownLostToCap,
     renownAfterGrowth: state.city.renown,
-    rawCapacityAfterExpansion,
+    rawUsableCapacityAfterExpansion,
+    rawPotentialAfterExpansion,
   });
 
   return summary;
