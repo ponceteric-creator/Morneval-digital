@@ -1,12 +1,14 @@
 # Morneval — Indexed Rules Reference
 
-**Rules version:** 0.4  
-**Prototype alignment:** v0.7.2  
+**Rules version:** 0.5  
+**Prototype alignment:** v0.7.2 (Intrigue rules not yet implemented in the digital prototype)  
 **Status:** Consolidated design reference
 
 This is the master rules source for Morneval. It distinguishes **locked rules** from **current prototype balancing rules**. Numerical sandbox values remain provisional unless explicitly marked as locked.
 
-**v0.7.2 update:** locked the First Player tie-break hierarchy: highest remaining Influence, then highest Prestige, then highest Generation Wealth, then random selection if still tied. The digital sandbox uses seeded randomness only to keep repeated balance tests reproducible.
+**Rules v0.5 update:** added the locked Intrigue-card framework: Institution-specific decks, one card opportunity per Agent at the beginning of each Generation, Agent-seniority-based draw/keep selection, printed tactical effects, generic temporary city contributions with diminishing returns, public contribution pools, one-card retention at Generation end, and the locked Military contribution thresholds of 1 / 4 / 7 cards for +1 / +2 / +3 temporary Force.
+
+**v0.7.2 prototype update:** locked the First Player tie-break hierarchy: highest remaining Influence, then highest Prestige, then highest Generation Wealth, then random selection if still tied. The digital sandbox uses seeded randomness only to keep repeated balance tests reproducible.
 
 <a id="index"></a>
 ## Index
@@ -42,10 +44,12 @@ This is the master rules source for Morneval. It distinguishes **locked rules** 
 - [MOR-2.22 — Force](#mor-2-22)
 - [MOR-2.23 — City Economic Strength](#mor-2-23)
 - [MOR-2.24 — Renown](#mor-2-24)
+- [MOR-2.25 — Intrigue Cards](#mor-2-25)
 
 ### [MOR-3 — Turn / Generation Sequence](#mor-3)
 - [MOR-3.0 — Generation Structure](#mor-3-0)
   - [MOR-3.0.1 — First Player and Turn Order](#mor-3-0-1)
+  - [MOR-3.0.2 — Beginning-of-Generation Intrigue Acquisition](#mor-3-0-2)
 - [MOR-3.1 — Possible Player Actions](#mor-3-1)
   - [MOR-3.1.1 — Bid for / Place a Production-Sector Stake](#mor-3-1-1)
   - [MOR-3.1.2 — Replace an Existing Stake](#mor-3-1-2)
@@ -80,6 +84,7 @@ This is the master rules source for Morneval. It distinguishes **locked rules** 
   - [MOR-3.3.5 — Elder Character Scoring](#mor-3-3-5)
   - [MOR-3.3.6 — Event Scoring](#mor-3-3-6)
   - [MOR-3.3.7 — Immediate Development Prestige](#mor-3-3-7)
+- [MOR-3.4 — End-of-Generation Intrigue Cleanup](#mor-3-4)
 
 ### [MOR-4 — Other Systems](#mor-4)
 - [MOR-4.1 — External Powers](#mor-4-1)
@@ -98,6 +103,7 @@ This is the master rules source for Morneval. It distinguishes **locked rules** 
 - [MOR-4.14 — Provisional vs Locked](#mor-4-14)
 - [MOR-4.15 — Systems Still Requiring Design Completion](#mor-4-15)
 - [MOR-4.16 — Core Design Identity](#mor-4-16)
+- [MOR-4.17 — Intrigue Themes and Generic Contributions](#mor-4-17)
 
 ---
 
@@ -134,7 +140,7 @@ Morneval is both a shared engine and the principal competitive arena. A prospero
 <a id="mor-2-1"></a>
 ## MOR-2.1 — Generation
 
-A **Generation** is the fundamental turn. Broadly: reveal the generational context, take player actions, resolve production/demand and upkeep, score Prestige, then age generational elements.
+A **Generation** is the fundamental turn. Broadly: reveal the generational context, acquire beginning-of-Generation Intrigue opportunities, take player actions, resolve production/demand and upkeep, score Prestige, clean up Intrigue, then age generational elements as specified by the sequence.
 
 <a id="mor-2-2"></a>
 ## MOR-2.2 — Families
@@ -156,6 +162,8 @@ All three are active. At Generation end, the Elder leaves, Mature becomes Elder,
 
 **Prestige** is the primary victory-point currency. It is accumulated permanently and is not normally spent. This creates a current unresolved point for Stake replacement: the replacement **premium** is locked, but whether it is paid in Influence, Prestige or another cost has not been finally confirmed.
 
+Some particularly disreputable Intrigue-card effects may eventually carry a Prestige cost, but the exact Intrigue cost model is not yet locked.
+
 <a id="mor-2-5"></a>
 ## MOR-2.5 — Influence
 
@@ -175,6 +183,13 @@ For automated balance testing only, each Family receives **+5 Influence before b
 ## MOR-2.7 — Agents
 
 **Agents** represent persistent Family presence inside Institutions. They are not workers recalled each turn. Agents provide passive benefits and/or access to Minor Institutions and may create scoring opportunities. Maintaining many Agents should become progressively more expensive through an escalating Wealth-maintenance curve.
+
+Agents also generate **Intrigue opportunities**. At the beginning of each Generation, every Agent allows its Family to keep one card from that Agent's Institution-specific Intrigue deck. The number of cards drawn before choosing one depends on the **seniority of that Agent**, not on the Institution's level as an abstract city characteristic:
+- seniority 1: draw 1, keep 1;
+- seniority 2: draw 2, keep 1;
+- seniority 3: draw 3, keep 1.
+
+The draw/keep benefit of seniority is locked. The exact physical/progression rule by which an Agent advances through seniority levels remains to be fully consolidated with the final Institution layout.
 
 <a id="mor-2-8"></a>
 ## MOR-2.8 — Stakes
@@ -290,7 +305,7 @@ Within a priority group use the tie-breaker **Population > Institutions > Extern
 <a id="mor-2-15"></a>
 ## MOR-2.15 — Institutions
 
-Institutions are permanent civic, religious, military, economic, medical or scholarly structures. Families embed Agents within them. Institutions may grant passive benefits, access to Minor Institutions/actions and Prestige opportunities. Examples discussed include Merchant Guild, City Guard, Temple, Hospice, College of Medicine and scholarly Institutions.
+Institutions are permanent civic, religious, military, economic, medical or scholarly structures. Families embed Agents within them. Institutions may grant passive benefits, access to Minor Institutions/actions, Intrigue opportunities and Prestige opportunities. Examples discussed include Merchant Guild, City Guard, Temple, Hospice, College of Medicine and scholarly Institutions.
 
 <a id="mor-2-16"></a>
 ## MOR-2.16 — Developing Institutions
@@ -347,6 +362,22 @@ Morneval has a city-level economic condition distinct from individual Family Wea
 
 In the current v0.7.2 demand prototype, Renown also drives External Market demand using `ceil(Renown / 2)` for each implemented Sector. This formula is provisional. Automatic Renown growth is not yet defined; the sandbox allows manual editing.
 
+<a id="mor-2-25"></a>
+## MOR-2.25 — Intrigue Cards
+
+**Intrigue cards** represent favors, conspiracies, political connections, legal manoeuvres, commercial pressure, institutional leverage and other opportunities generated through a Family's embedded Agents.
+
+### Locked structure
+- Each major Institution has its **own Intrigue deck** with a distinct thematic identity.
+- At the **beginning of each Generation**, each Agent generates one Intrigue-card opportunity from the deck of the Institution it occupies.
+- Agent **seniority**, not Institution level by itself, determines selection quality: seniority 1 draws 1 / keeps 1; seniority 2 draws 2 / keeps 1; seniority 3 draws 3 / keeps 1.
+- Intrigue cards are held secretly by the Family that obtained them.
+- A card may be used for its **printed tactical effect**, or discarded for its Institution's **generic temporary city contribution**.
+- Generic contributions are public and may be combined across Families. Their effectiveness uses **diminishing-return thresholds** rather than scaling linearly with every additional card.
+- At Generation end, each Family may retain **1 Intrigue card total**. All other unplayed cards are discarded after all opportunities to play or contribute them have passed.
+
+The exact card lists and the cost model for printed effects remain unfinished. Printed effects are expected to bend or modify existing systems rather than replace them with a parallel action game. Influence and, for especially disreputable effects, Prestige remain possible play costs, but no universal cost is yet locked.
+
 ---
 
 <a id="mor-3"></a>
@@ -356,10 +387,11 @@ In the current v0.7.2 demand prototype, Renown also drives External Market deman
 ## MOR-3.0 — Generation Structure
 
 The intended structure is:
-1. **Beginning of Generation:** establish/reveal the long-term Event or context and apply any Generation-start income/effects;
-2. **Player Action Phase:** Families take economic, institutional and political actions, including sequential bidding for available Young Production Stakes;
+1. **Beginning of Generation:** establish/reveal the long-term Event or context, apply any Generation-start income/effects, then resolve Intrigue acquisition from Agents;
+2. **Player Action Phase:** Families take economic, institutional and political actions, including sequential bidding for available Young Production Stakes and playing Intrigue where applicable;
 3. **End-of-Generation Upkeep:** resolve pending Stake auctions, production/demand, city and Family economy, demographics, Events, relations, Influence erosion and aging;
-4. **End-of-Generation Scoring:** resolve Prestige sources.
+4. **End-of-Generation Scoring:** resolve Prestige sources;
+5. **Intrigue Cleanup:** after all opportunities to use Intrigue have passed, each Family keeps at most one Intrigue card and discards the rest.
 
 Exact general action count and non-auction action-round structure remain unfinished. First Player determination is defined in MOR-3.0.1.
 
@@ -375,6 +407,20 @@ Exact general action count and non-auction action-round structure remain unfinis
 Bidding and other sequential procedures begin with First Player and continue in normal seating/order around the table.
 
 For the tabletop, the final random step may be resolved by a die roll, random draw, or equivalent fair method. The digital sandbox uses a seeded pseudo-random selection so identical test setups remain reproducible; the seeded implementation is a testing aid, not a tabletop requirement.
+
+<a id="mor-3-0-2"></a>
+## MOR-3.0.2 — Beginning-of-Generation Intrigue Acquisition
+
+After the Generation's opening context and other start effects are established, resolve Intrigue acquisition for every Agent.
+
+For each Agent, draw from the Intrigue deck of the Institution occupied by that Agent:
+- **Seniority 1:** draw 1, keep 1;
+- **Seniority 2:** draw 2, keep 1;
+- **Seniority 3:** draw 3, keep 1.
+
+Return/discard the cards not kept according to the final deck-handling procedure. Each Agent generates exactly one kept Intrigue card at most, regardless of seniority; seniority improves **choice**, not card quantity.
+
+This acquisition is earned from the Agent and does not itself require a separate player action. The exact progression by which Agents advance in seniority remains to be integrated with the final Institution layout.
 
 <a id="mor-3-1"></a>
 # MOR-3.1 — POSSIBLE PLAYER ACTIONS
@@ -417,7 +463,7 @@ Advance a Sector by one tier. The acting Family pays the tier's Influence cost, 
 <a id="mor-3-1-5"></a>
 ## MOR-3.1.5 — Place an Agent in an Institution
 
-Establish Family presence inside an Institution where permitted. Agents provide persistent benefits but increase Wealth-maintenance burden.
+Establish Family presence inside an Institution where permitted. Agents provide persistent benefits, generate beginning-of-Generation Intrigue opportunities, and increase Wealth-maintenance burden.
 
 <a id="mor-3-1-6"></a>
 ## MOR-3.1.6 — Develop an Institution
@@ -462,7 +508,7 @@ For each Production Sector:
 4. determine Population, Institution and External Market demand;
 5. allocate supply according to City Inclination and the category tie-breaker.
 
-Each Production Stake can satisfy at most **1 need**. Current v0.7.2 demand quantities use the provisional scalable formulas in MOR-2.12.
+Each Production Stake can satisfy at most **1 need**. Current v0.7.2 demand quantities use the provisional scalable formulas in MOR-2.12. Temporary generic Intrigue contributions that modify Renown, Population Food Demand or Hinterland capacity are applied to the relevant calculation for that Generation only.
 
 <a id="mor-3-2-2"></a>
 ## MOR-3.2.2 — Determine Which Stakes Are Served
@@ -474,7 +520,7 @@ Each served Stake is paired with the customer category receiving its unit. Curre
 <a id="mor-3-2-3"></a>
 ## MOR-3.2.3 — Resolve Raw-Resource Usage
 
-Track how much raw-resource capacity is actually consumed by each Sector. Raw-resource capacity caps productive supply. Only lands with **used capacity > 0** count as productive for land Prestige; unused potential capacity does not score.
+Track how much raw-resource capacity is actually consumed by each Sector. Raw-resource capacity caps productive supply. Only lands with **used capacity > 0** count as productive for land Prestige; unused potential capacity does not score. Temporary Arcane Intrigue may eventually modify Hinterland production capacity for a Generation if that option becomes the finalized Arcane generic contribution.
 
 <a id="mor-3-2-4"></a>
 ## MOR-3.2.4 — Resolve Population Needs and Growth
@@ -483,6 +529,8 @@ Track how much raw-resource capacity is actually consumed by each Sector. Raw-re
 For Food:
 - if Population > 0, Food Population demand > 0 and **all Food Population demand is met**, Population **+1**;
 - if **any Food Population demand is unmet**, Population **-1** through famine.
+
+Temporary Religious Intrigue contributions reduce the Population's Food demand for this Generation before shortage/famine resolution, using the eventual diminishing-return threshold table.
 
 The Hospice is intended to prevent **1 Population loss from famine** when applicable; its final digital integration remains part of the Institution implementation.
 
@@ -517,7 +565,7 @@ The sandbox uses deterministic seeded pseudo-randomness for repeatable testing; 
 <a id="mor-3-2-7"></a>
 ## MOR-3.2.7 — Update Order and Other City Characteristics
 
-Apply changes to Order, Force, Economic Strength and other city parameters when caused by Institutions, Events, shortages or political/external effects. General automatic growth/update formulas for these tracks are not yet defined.
+Apply changes to Order, Force, Economic Strength and other city parameters when caused by Institutions, Events, shortages, political/external effects or temporary generic Intrigue contributions. General automatic growth/update formulas for these tracks are not yet defined.
 
 <a id="mor-3-2-8"></a>
 ## MOR-3.2.8 — Resolve External Relations
@@ -602,6 +650,16 @@ Generation Events may impose special scoring conditions visible early enough for
 
 Production-Sector and Institution development may award Prestige immediately during the Action Phase; those points remain part of cumulative Prestige.
 
+<a id="mor-3-4"></a>
+# MOR-3.4 — END-OF-GENERATION INTRIGUE CLEANUP
+
+After upkeep and scoring, and after all valid opportunities to play or generically contribute Intrigue cards have passed:
+1. each Family chooses **at most 1 Intrigue card total** to retain for the next Generation;
+2. all of that Family's other unplayed Intrigue cards are discarded;
+3. all temporary generic Intrigue bonuses and contribution pools reset unless a specific card explicitly states otherwise.
+
+This rule prevents long-term stockpiling while still allowing one deliberate opportunity to be carried across Generations.
+
 ---
 
 <a id="mor-4"></a>
@@ -683,11 +741,13 @@ During the final struggle, Squalor and Unrest should increasingly favor independ
 - **Growth vs sustainability:** Population expands opportunity and pressure simultaneously.
 - **Foreign friendship vs autonomy:** diplomacy grants benefits but may compromise independence.
 - **Influence vs initiative:** spending heavily can win investments now but may surrender First Player for the next Generation.
+- **Private intrigue vs public need:** a card can be exploited for a Family-specific tactical effect or sacrificed to help Morneval, creating bargaining and free-rider incentives.
+- **Institutional depth vs flexibility:** senior Agents provide better Intrigue selection, rewarding long-term institutional presence without directly increasing card quantity.
 
 <a id="mor-4-14"></a>
 ## MOR-4.14 — Provisional vs Locked
 
-### Locked structural rules reflected in v0.7.2
+### Locked structural rules
 - each Sector level provides **1 Young + 1 Mature + 1 Elder Production-Stake slot**;
 - each Production Stake represents exactly **1 unit of potential supply** and can satisfy exactly **1 need**;
 - Sector tier creates Stake capacity, not output;
@@ -696,7 +756,13 @@ During the final struggle, Squalor and Unrest should increasingly favor independ
 - older Stakes receive service before younger Stakes, with earlier placement breaking same-age ties;
 - available Young Production Stakes are allocated through **sequential Influence bidding**; only the winner pays the full winning bid;
 - a served **Population** need awards the serving Stake's owner **1 Prestige**;
-- after end-of-Generation Influence erosion, First Player is determined by **Influence → Prestige → Generation Wealth → random selection**.
+- after end-of-Generation Influence erosion, First Player is determined by **Influence → Prestige → Generation Wealth → random selection**;
+- every Agent generates **one Intrigue-card opportunity at the beginning of each Generation** from its Institution's deck;
+- Agent seniority determines Intrigue selection quality: **1 → draw 1/keep 1; 2 → draw 2/keep 1; 3 → draw 3/keep 1**;
+- every Intrigue card may be used for its printed effect or discarded for an Institution-specific **generic temporary city contribution**;
+- generic Intrigue contributions combine publicly and use **diminishing-return thresholds** rather than a linear bonus per card;
+- Military generic contribution uses the locked thresholds **1 card = +1 Force, 4 cards = +2 Force, 7 cards = +3 Force** for the Generation;
+- each Family may retain **1 Intrigue card total** at Generation end; other unused cards are discarded.
 
 ### Current balancing values/mechanisms — provisional
 - **+5 gross Influence income** in the automated sandbox and the maximum Influence cap;
@@ -704,6 +770,7 @@ During the final struggle, Squalor and Unrest should increasingly favor independ
 - Stake replacement cost/payment resource and replacement treatment of age/seniority;
 - Sector development costs, thresholds and Prestige rewards;
 - Agent maintenance curve;
+- exact Agent-seniority progression/layout inside Institutions;
 - Institution development costs/scoring;
 - scalable-demand divisors;
 - Institution/External Wealth values by demand category;
@@ -717,14 +784,17 @@ During the final struggle, Squalor and Unrest should increasingly favor independ
 - assassination probabilities;
 - Knowledge limits/uses;
 - Renown growth/endgame threshold;
-- endgame length and ending Prestige bonuses.
+- endgame length and ending Prestige bonuses;
+- exact Intrigue-card lists and printed-effect costs;
+- diminishing-return thresholds for Merchant and Religion generic contributions;
+- final standard Arcane generic contribution and its thresholds.
 
 <a id="mor-4-15"></a>
 ## MOR-4.15 — Systems Still Requiring Design Completion
 
 - **Character roster:** complete Young/Mature/Elder character set.
 - **Voting:** final procedure and vote-resolution mechanics.
-- **Institution tree:** definitive branches/Minor Institutions.
+- **Institution tree:** definitive branches/Minor Institutions and Agent-seniority progression/layout.
 - **Institution scoring:** exact asymmetric formulas.
 - **Institution capacity consequences:** final treatment if Population falls below developed levels.
 - **Stake replacement:** payment resource/premium and whether replacement preserves age/seniority.
@@ -732,10 +802,61 @@ During the final struggle, Squalor and Unrest should increasingly favor independ
 - **External Power tables:** exact benefits, penalties and relationship thresholds.
 - **Endgame thresholds:** exact trigger and final-window timing.
 - **Action structure:** number of non-auction actions and full passing/action-round structure.
+- **Intrigue decks:** exact card lists, individual costs, deck size/duplicates and timing windows.
+- **Intrigue generic scaling:** Merchant and Religion thresholds, plus the final Arcane generic effect and thresholds.
 
 <a id="mor-4-16"></a>
 ## MOR-4.16 — Core Design Identity
 
-Morneval is not a set of parallel individual engines. Families invest in the same Production Sectors and Institutions; Influence auctions determine contested investment; Inclination changes allocation; allocation changes Wealth and Prestige; Population and shortages change Squalor and stability; Institutions and External Powers react to city conditions; and accumulated development ultimately produces the political endgame.
+Morneval is not a set of parallel individual engines. Families invest in the same Production Sectors and Institutions; Influence auctions determine contested investment; Inclination changes allocation; allocation changes Wealth and Prestige; Population and shortages change Squalor and stability; Institutions and External Powers react to city conditions; Intrigue converts embedded institutional presence into tactical opportunities or temporary public-city support; and accumulated development ultimately produces the political endgame.
 
 The winner is the Family that best converts several centuries of Morneval's shared history into **Prestige**.
+
+<a id="mor-4-17"></a>
+## MOR-4.17 — Intrigue Themes and Generic Contributions
+
+Each Institution's Intrigue deck should have a recognizable mechanical identity. These themes are the blueprint for individual card design; cards should primarily **bend existing Morneval mechanisms** rather than create a separate card-combo game.
+
+### Merchant Intrigue
+**Theme:** commercial manipulation, privileged contracts, market pressure and economic capture.
+
+Candidate printed effects include hostile takeover of Production Stakes, preferential contracts, manipulation of demand allocation and reductions/modifiers to Stake-replacement costs.
+
+**Generic contribution — locked role:** discard Merchant Intrigue into the public Merchant contribution pool to **temporarily increase Renown for External Market demand purposes**, creating additional external demand and therefore potential Wealth opportunities. Multiple contributions stack with diminishing returns. Exact Merchant thresholds remain provisional.
+
+### Military Intrigue
+**Theme:** coercion, legal force, requisition, protection and suppression.
+
+Candidate printed effects include repossession of land, seizure/interference with assets, protection against assassination or other hostile actions, and coercive institutional actions.
+
+**Generic contribution — locked rule:** discard Military Intrigue into the public Military contribution pool to temporarily increase City Force against an external threat during that Generation. Total Military cards contributed across all Families produce:
+
+| Military cards contributed | Temporary Force bonus |
+|---:|---:|
+| 0 | +0 |
+| 1–3 | +1 |
+| 4–6 | +2 |
+| 7–9 | +3 |
+
+The pattern continues if needed: the first contributed card grants +1 Force, then each additional group of three contributed cards grants another +1 Force. Contributions are visible, allowing bargaining, cooperation, free-riding and brinkmanship between Families.
+
+### Religious Intrigue
+**Theme:** legitimacy, charity, social discipline, reputation and communal mobilization.
+
+Candidate printed effects include legitimacy/Prestige manipulation, influence on voting, protection of reputation and other religious-political interventions.
+
+**Generic contribution — locked role:** discard Religious Intrigue into the public Religious contribution pool to **temporarily reduce Population Food Demand** for the current Generation, representing charity, fasting, rationing, monastery stores or redistribution. This can prevent Food shortages and Population loss. Multiple contributions stack with diminishing returns; exact thresholds and any maximum reduction remain provisional and should be conservative because avoiding Population loss is powerful.
+
+### Arcane Intrigue
+**Theme:** knowledge, exceptional techniques, information and technological acceleration.
+
+Candidate printed effects include Knowledge generation, manipulation of Events/results, temporary production enhancement and unusual technological actions.
+
+**Generic contribution — locked role, exact implementation unresolved:** Arcane Intrigue provides a **temporary technological/productive boost** to Morneval. The final standard use will be selected between or may tightly combine:
+- reducing the cost of a technological or Production-Sector advancement for the Generation; and/or
+- temporarily increasing Hinterland production capacity for the Generation.
+
+Exact Arcane effect, scaling and thresholds remain provisional until the technology-development system is designed.
+
+### Public contribution principle
+Generic Intrigue is intentionally not a private resource conversion. Contributed cards are placed visibly into the appropriate Institution contribution pool. The city-level effect depends on total cards contributed by all Families, with diminishing returns. This creates a cooperative decision inside a competitive game: some Families may need Morneval to survive or prosper more than others, and later contributors may determine whether the next threshold is reached.
