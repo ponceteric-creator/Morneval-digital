@@ -4,13 +4,13 @@ import { getDemandPriorityGroups, resolveAllSectorEconomies } from "./economy.js
 import { applyAutoDemand, totalInstitutionLevels } from "./generation.js";
 import { AUCTION_CONFIG, getTurnOrder, resolveAutomatedGeneration } from "./auction.js";
 
-const VERSION = "0.7.3";
+const VERSION = "0.7.4";
 const root = document.querySelector("#app");
 if (!root) throw new Error("Missing #app root element");
 
 let game = createScenario();
 let reports = [];
-let message = `v${VERSION} ready. Automated Families now prefer untouched Young slots before escalating existing bids.`;
+let message = `v${VERSION} ready. Prototype Renown now rises automatically every second resolved Generation.`;
 
 function createScenario() {
   const state = createGame(["Valenne", "D'Arcy", "Corven"]);
@@ -119,7 +119,7 @@ function render() {
       <button class="secondary" id="reset">Reset simulation</button>
     </div>
 
-    <div class="notice"><b>v${VERSION} auction test:</b> each Generation every Family receives +${AUCTION_CONFIG.grossInfluenceIncome} Influence before bidding, then the normal −2 erosion occurs during upkeep. Only winning bids are spent. On each bidding turn the automated Family first looks for an <b>untouched Young slot</b>; only when every worthwhile empty slot already has a bid does it start raising existing bids. Each served Population need awards the Stake owner <b>+${AUCTION_CONFIG.populationPrestigePerNeed} Prestige</b>.</div>
+    <div class="notice"><b>v${VERSION} balance test:</b> automated Families prefer untouched Young slots before escalating bids. Each served Population need awards <b>+${AUCTION_CONFIG.populationPrestigePerNeed} Prestige</b>. Until the final Renown-growth rule is designed, Morneval gains <b>+${AUCTION_CONFIG.prototypeRenownGainAmount} Renown every ${AUCTION_CONFIG.prototypeRenownGainEveryGenerations} resolved Generations</b>; the increase happens after the Generation and affects External demand from the next Generation onward.</div>
     <div class="status">${message}</div>
 
     <h2 class="section-title">Morneval</h2>
@@ -139,7 +139,7 @@ function render() {
         <div class="field"><label>Squalor</label><input type="number" min="0" max="20" data-city="squalor" value="${game.city.squalor}"></div>
         <div class="field"><label>Renown — editable</label><input type="number" min="0" max="99" data-city="renown" value="${game.city.renown}"></div>
       </div>
-      <div class="prototype-rules"><b>Institutions:</b> City Guard 1; Merchant Guild 0; Temple 0. Total level ${totalInstitutionLevels(game)} / Population ${game.city.population}. <b>Renown ${game.city.renown}</b> currently drives External demand through the prototype demand formula.</div>
+      <div class="prototype-rules"><b>Institutions:</b> City Guard 1; Merchant Guild 0; Temple 0. Total level ${totalInstitutionLevels(game)} / Population ${game.city.population}. <b>Renown ${game.city.renown}</b> drives External demand. Manual edits remain available; the +1/every-2-Generations growth is only a temporary simulation rule.</div>
     </section>
 
     <section class="panel" style="margin-top:12px">
@@ -174,7 +174,7 @@ function render() {
     <h2 class="section-title">Generation History</h2>
     <section class="history-list">${game.history?.length ? [...game.history].reverse().map(renderHistory).join("") : '<div class="panel empty">No Generations resolved yet.</div>'}</section>
 
-    <p class="footer-note">Sector tiers and Institution levels are not automated in this test. Renown and both City Inclination axes are editable so their effects on demand and demand priority can be stress-tested across several Generations.</p>
+    <p class="footer-note">Sector tiers and Institution levels are not automated in this test. Renown and both City Inclination axes remain editable. Temporary automatic Renown growth exists only to create rising External demand during long simulations.</p>
   </main>`;
   bindEvents();
 }
@@ -253,7 +253,10 @@ function renderHistory(entry) {
   const wealth = game.players.map(player => `${player.familyName} ${entry.wealthAfter?.[player.id] ?? 0}`).join(" · ");
   const firstPlayerLine = `${playerName(entry.firstPlayerBefore)} → ${playerName(entry.nextFirstPlayerId)}`;
   const resolutionText = firstPlayerResolutionText(entry.firstPlayerResolution);
-  return `<article class="panel history-card"><div class="history-head"><h3>Generation ${entry.generation}</h3><span>${entry.diseaseOccurred ? "Disease" : "No disease"}</span></div><div class="history-grid"><div><b>${entry.populationBefore} → ${entry.populationAfter}</b><span>Population</span></div><div><b>${entry.foodServed}/${entry.foodRequested}</b><span>Food to Population</span></div><div><b>${entry.squalorBefore} → ${entry.squalorAfter}</b><span>Squalor</span></div><div><b>${winners}</b><span>Auction winners / bids</span></div><div><b>${firstPlayerLine}</b><span>First Player current → next</span></div></div><div class="history-notes"><b>Influence:</b> ${income}<br><b>Next First Player:</b> ${playerName(entry.nextFirstPlayerId)} with ${entry.firstPlayerResolution?.maxInfluence ?? "?"} Influence — ${resolutionText}<br><b>Wealth:</b> ${wealth}<br><b>Population Prestige:</b> ${popPrestige}<br><b>Land Prestige:</b> ${landPrestige}</div></article>`;
+  const renownBefore = entry.renownBeforeGrowth ?? entry.renown ?? 0;
+  const renownAfter = entry.renownAfterGrowth ?? renownBefore;
+  const renownNote = entry.renownGain > 0 ? ` (+${entry.renownGain} automatic)` : "";
+  return `<article class="panel history-card"><div class="history-head"><h3>Generation ${entry.generation}</h3><span>${entry.diseaseOccurred ? "Disease" : "No disease"}</span></div><div class="history-grid"><div><b>${entry.populationBefore} → ${entry.populationAfter}</b><span>Population</span></div><div><b>${entry.foodServed}/${entry.foodRequested}</b><span>Food to Population</span></div><div><b>${entry.squalorBefore} → ${entry.squalorAfter}</b><span>Squalor</span></div><div><b>${renownBefore} → ${renownAfter}</b><span>Renown${renownNote}</span></div><div><b>${winners}</b><span>Auction winners / bids</span></div><div><b>${firstPlayerLine}</b><span>First Player current → next</span></div></div><div class="history-notes"><b>Influence:</b> ${income}<br><b>Next First Player:</b> ${playerName(entry.nextFirstPlayerId)} with ${entry.firstPlayerResolution?.maxInfluence ?? "?"} Influence — ${resolutionText}<br><b>Wealth:</b> ${wealth}<br><b>Population Prestige:</b> ${popPrestige}<br><b>Land Prestige:</b> ${landPrestige}</div></article>`;
 }
 
 function syncCityInputs() {
@@ -271,8 +274,8 @@ function runGenerations(count) {
   for (let i = 0; i < count; i++) last = resolveAutomatedGeneration(game);
   reports = last?.economyReports ?? [];
   message = count === 1
-    ? `Generation ${start} resolved. ${playerName(game.firstPlayerId)} is First Player for Generation ${game.generation}.`
-    : `Generations ${start}–${game.generation - 1} resolved. ${playerName(game.firstPlayerId)} is now First Player.`;
+    ? `Generation ${start} resolved. Renown is ${game.city.renown}; ${playerName(game.firstPlayerId)} is First Player for Generation ${game.generation}.`
+    : `Generations ${start}–${game.generation - 1} resolved. Renown is now ${game.city.renown}; ${playerName(game.firstPlayerId)} is First Player.`;
   render();
 }
 
@@ -282,13 +285,13 @@ function bindEvents() {
   document.querySelector("#preview")?.addEventListener("click", () => {
     syncCityInputs();
     reports = resolveAllSectorEconomies(game);
-    message = "Current economy preview resolved. This preview does not run auctions or advance the Generation.";
+    message = "Current economy preview resolved. This preview does not run auctions, automatic Renown growth, or advance the Generation.";
     render();
   });
   document.querySelector("#reset")?.addEventListener("click", () => {
     game = createScenario();
     reports = [];
-    message = "Simulation reset to Population 1, Tier I sectors, City Guard 1, no Production Stakes. Valenne is First Player.";
+    message = "Simulation reset to Population 1, Renown 0, Tier I sectors, City Guard 1, no Production Stakes. Valenne is First Player.";
     render();
   });
   for (const input of document.querySelectorAll("[data-city]")) {
@@ -296,7 +299,7 @@ function bindEvents() {
       syncCityInputs();
       reports = [];
       message = input.dataset.city === "renown"
-        ? "Renown changed; External demand recalculated."
+        ? "Renown changed manually; External demand recalculated. The automatic +1 every two resolved Generations remains active from the next resolution."
         : "City value changed; automatic demand recalculated.";
       render();
     });
