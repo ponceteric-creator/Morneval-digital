@@ -2,13 +2,14 @@
 
 Digital prototype of the Morneval strategy board game.
 
-Current deployed prototype: **Engine v0.7.3 — automated investment sandbox**.
+Current deployed prototype: **Engine v0.7.4 — automated investment sandbox**.
 
 The current browser prototype supports:
 
 - multi-generation city simulation and Generation History
 - Population, Squalor, Renown and Institution-driven demand
 - editable **Renown** for External-demand testing
+- provisional automatic Renown growth: **+1 Renown every 2 resolved Generations**
 - editable **City Inclination** on the Academic/Arcane ↔ Religion and Military ↔ Commercial/Mercantile axes
 - Production Sectors with age-specific Stake capacity
 - **1 Production Stake = 1 unit of supply = 1 need that can be satisfied**, subject to raw-resource capacity
@@ -18,11 +19,12 @@ The current browser prototype supports:
 - **+1 Prestige to the Stake owner for each Population need served**
 - productive raw-resource land Prestige
 - automated bidding for empty Young Production Stake slots
+- portfolio-first automated bidding: Families prefer worthwhile untouched Young slots before escalating existing bids
 - sequential bids where only winning bids are spent
 - +5 gross Influence before bidding followed by normal −2 end-of-generation erosion, representing +3 net income before the Influence cap and auction spending
 - **dynamic First Player: Influence → Prestige → Generation Wealth → random selection**
 
-## v0.7.3 starting scenario
+## v0.7.4 starting scenario
 
 - Population 1
 - Squalor 0
@@ -36,13 +38,15 @@ The current browser prototype supports:
 - Valenne starts as First Player
 - Families begin with the existing prototype Influence value and maximum Influence cap
 
-The automated bidding AI now uses a **portfolio-first** heuristic. On its turn, a Family prefers to place an opening bid of 1 Influence on a worthwhile Young slot that has no bid yet before escalating an auction another Family already opened. Once every worthwhile empty slot has an opening bid, the AI considers raises. Active leading bids count as committed Influence, so a Family cannot finish the bidding phase with winning commitments above its available Influence.
+The automated bidding AI uses a **portfolio-first** heuristic. On its turn, a Family prefers to place an opening bid of 1 Influence on a worthwhile Young slot that has no bid yet before escalating an auction another Family already opened. Once every worthwhile empty slot has an opening bid, the AI considers raises. Active leading bids count as committed Influence, so a Family cannot finish the bidding phase with winning commitments above its available Influence.
 
-The AI still estimates which current demand category a new Young Stake would serve, values Population at 1 because it awards Prestige, Institutions at 1 Wealth, External Markets at 2 Wealth, and multiplies that immediate value by the three-generation lifetime of a Stake to determine a maximum bid.
+The AI estimates which current demand category a new Young Stake would serve, values Population at 1 because it awards Prestige, Institutions at 1 Wealth, External Markets at 2 Wealth, and multiplies that immediate value by the three-generation lifetime of a Stake to determine a maximum bid.
+
+Until a final Renown-growth rule is designed, the sandbox increases Morneval's Renown by **1 after every second resolved Generation** (Generations 2, 4, 6, etc.). The increase happens after that Generation's economy has resolved and therefore affects External demand beginning with the following Generation. Manual Renown editing remains enabled for stress-testing.
 
 At the end of each Generation, after the normal −2 Influence erosion, First Player is determined by: **most remaining Influence**, then **most Prestige**, then **most Wealth generated during that Generation**, then **random selection** among any Families still tied. The digital sandbox uses seeded randomness for the final step so identical balance tests remain reproducible.
 
-The AI bidding heuristic, +5 gross Influence income and maximum Influence cap remain simulation/balance parameters rather than locked numerical rules. The First Player hierarchy itself is locked.
+The AI bidding heuristic, +5 gross Influence income, maximum Influence cap and automatic Renown growth remain simulation/balance parameters rather than locked numerical rules. The First Player hierarchy itself is locked.
 
 The numerical values remain provisional and are intended for playtesting rather than final balance.
 
