@@ -1,7 +1,7 @@
-# Appendix B — Economic Development & Hinterland (v0.8.2)
+# Appendix B — Economic Development, Hinterland & Urban Growth (v0.8.3)
 
 **Status:** current design reference for the v0.8 economic-development prototype.  
-**Relationship to master rules:** this appendix supplements `Morneval_Rules.md`; where it provides newer detail on Production-Sector development, market demand/rewards, or Hinterland use, this appendix is the current specification until the next master-rule consolidation.
+**Relationship to master rules:** this appendix supplements `Morneval_Rules.md`; where it provides newer detail on Production-Sector development, market demand/rewards, Hinterland use, Squalor, Urban expansion or Renown, this appendix is the current specification until the next master-rule consolidation.
 
 ## B.1 — Production-Sector development projects
 
@@ -80,11 +80,9 @@ Natural terrain produces:
 - **Hill → Ore → Smithing**;
 - **Forest → Wood → Construction Materials**.
 
-The v0.8 prototype therefore includes a fourth Production Sector: **Construction Materials**, supplied by Wood from Forests.
+The v0.8 prototype includes a fourth Production Sector: **Construction Materials**, supplied by Wood from Forests.
 
 Construction Materials follows the same Production-Stake architecture as the other Production Sectors: each Tier supplies one Young, one Mature and one Elder Stake slot, and each occupied Stake can satisfy at most one need subject to raw-resource capacity.
-
-The exact demand curve and final content of the Construction Materials Sector remain balance/design work.
 
 ## B.6 — Acquiring a Hinterland Stake
 
@@ -110,15 +108,9 @@ Current prototype cost:
 
 A Farm stops producing the natural resource of its original terrain and instead produces **Food raw-resource capacity**.
 
-Under the current v0.8.2 baseline, a converted Farm has the same **2-capacity** production value as the territory it replaced unless a later development improves it.
+Under the current v0.8 baseline, a converted Farm has the same **2-capacity** production value as the territory it replaced unless a later development improves it.
 
-Therefore:
-
-- a Meadow may be converted from Wool production to Food;
-- a Hill may be converted from Ore production to Food;
-- a Forest may be cleared and converted from Wood production to Food.
-
-The original terrain should remain recorded because clearing/conversion may later interact with External Powers, Events or environmental consequences (for example Elven relations).
+The original terrain remains recorded because clearing/conversion may later interact with External Powers, Events or environmental consequences.
 
 ## B.8 — Productive Hinterland Prestige
 
@@ -126,42 +118,95 @@ The existing productive-land scoring rule remains in force:
 
 **A Family gains 1 Prestige for each Hinterland space it controls whose raw-resource capacity is actually consumed by a Production Sector during that Generation.**
 
-Unused potential capacity does not score.
-
-This Prestige is awarded per productive territory, not per capacity unit consumed.
+Unused potential capacity does not score. Prestige is awarded per productive territory, not per capacity unit consumed.
 
 ## B.9 — v0.8 digital bootstrap assumption
 
-The v0.8 digital sandbox temporarily provides **3 units of city-adjacent base capacity for each implemented raw resource**: Food/Grain, Wool, Ore and Wood.
+The digital sandbox temporarily provides **3 units of city-adjacent base capacity for each implemented raw resource**: Food/Grain, Wool, Ore and Wood.
 
-This is **not a locked tabletop rule**. It exists to avoid a startup deadlock in the automated simulation: the first Families otherwise have no Wealth-producing economy with which to fund the first Hinterland acquisitions.
+This is **not a locked tabletop rule**. It exists to avoid a startup deadlock in the automated simulation. Owned Hinterland capacity is added on top of this temporary base.
 
-Owned Hinterland capacity is added on top of this temporary base. Each acquired territory currently adds **2 capacity** of its active resource. The design should later decide what the physical tabletop equivalent of Morneval's starting raw-resource access actually is.
-
-## B.10 — Automated-player heuristic in v0.8
+## B.10 — Automated-player heuristic
 
 The automated-player strategy is a test heuristic, not a player rule.
 
-The AI may choose among:
+The AI may choose among bidding for a Young Production Stake, funding the next available phase of a Production-Sector project, acquiring an unowned Hinterland space, converting owned natural land to a Farm, or passing on a Stake auction.
 
-- bidding for a Young Production Stake;
-- funding the next available phase of a Production-Sector project;
-- acquiring an unowned Hinterland space;
-- converting owned natural land to a Farm;
-- passing on a Stake auction.
+It prioritizes genuine raw-resource bottlenecks, then Sector-development pressure, then Stake investment. Wealth-funded actions are only taken against projected Wealth from positions already established before unresolved auction wins.
 
-For the current simulation, it prioritizes genuine raw-resource bottlenecks, then Sector-development pressure, then Stake investment. Wealth-funded actions are only taken against projected Wealth from positions already established before unresolved auction wins. This deliberately conservative behavior is intended to keep the balance test legible rather than to model optimal human play.
+## B.11 — Balance graphs
 
-Because External Market service now yields **1 Wealth instead of 2**, the automated investment model should be treated as newly rebalanced and may require further tuning after multi-generation tests.
-
-## B.11 — Digital balance graphs
-
-The v0.8.2 sandbox tracks the following across resolved Generations:
+The sandbox tracks across resolved Generations:
 
 - Population;
+- Urban capacity / footprint;
+- Squalor;
 - Renown;
 - gross Family Wealth generated in each Generation;
 - cumulative Family Prestige;
-- **available raw-material production capacity** for Food/Grain, Wool, Ore and Wood.
+- raw-material potential for Food/Grain, Wool, Ore and Wood.
 
-The raw-material graph tracks available capacity rather than only consumed output. It therefore shows the economic effect of Hinterland acquisitions and Farm conversions even when some capacity remains unused.
+The raw-material graph now tracks **city-base capacity plus all remaining non-urban terrain potential**, including unowned land. This lets urbanisation visibly remove future production potential even when the swallowed land had not yet been acquired by a Family.
+
+## B.12 — Urban capacity and permanent expansion
+
+Morneval begins on **1 Urban tile**, supporting a comfortable **Urban capacity of 3 Population**.
+
+Each additional Urban tile supports another **3 Population**:
+
+**Urban capacity = number of Urban tiles × 3.**
+
+The original City space supports Population 1–3. If final Population requires more capacity, Morneval permanently absorbs enough Hinterland spaces to reach:
+
+**Required Urban tiles = ceil(final Population / 3), minimum 1.**
+
+Expansion is resolved **after the final Population calculation**, including disease. Urbanisation is permanent: if Population later falls, Urban tiles do not revert to Hinterland.
+
+### Territory selection in the automated prototype
+
+When automatic expansion is required:
+
+1. choose among **unowned non-urban Hinterland first**;
+2. choose randomly among those eligible unowned spaces;
+3. only when no unowned Hinterland remains, choose randomly among owned non-urban Hinterland;
+4. if an owned territory is absorbed, the Family loses it with **no compensation**.
+
+This ordering models Families avoiding investment in land most likely to be swallowed by the expanding city.
+
+An absorbed territory becomes Urban and permanently loses all raw-resource capacity. A current capacity-2 territory therefore removes 2 potential raw-resource capacity; a future improved capacity-3 territory would remove 3.
+
+In the final tabletop game, automatic expansion is intended to be replaced by a **player-funded civic expansion mechanism**. The current automatic step exists to test the demographic/resource feedback loop before the final action cost and incentives are designed.
+
+## B.13 — Overcrowding-driven Squalor
+
+As of v0.8.3, the previous provisional rule `ceil(Population / 3)` as an automatic Squalor baseline is replaced in the digital prototype.
+
+Squalor is now driven primarily by **overcrowding relative to existing Urban capacity**.
+
+Before disease, after Food-driven growth/famine:
+
+**Overcrowding = max(0, Population − current Urban capacity).**
+
+Current target:
+
+**Squalor target = Overcrowding + Food-shortage penalty.**
+
+The Food-shortage penalty is currently **+1** if any Population Food demand is unmet.
+
+Squalor remains persistent: it moves by at most **1 point per Generation** toward its target. Expansion removes the cause of overcrowding for future Generations, but accumulated Squalor does not disappear immediately.
+
+Disease is then checked against the resulting Squalor using the existing provisional disease table. The same deterministic seeded roll system is retained in the digital sandbox.
+
+The intended design role is that rising Population creates overcrowding and Squalor, which pressures players to fund City expansion. Expansion relieves overcrowding but permanently consumes productive Hinterland.
+
+## B.14 — Renown cap
+
+Until Events become the true source of Renown, the prototype keeps the temporary automatic **+1 Renown every 2 Generations**.
+
+However, sustainable Renown is now capped by City size:
+
+**Maximum Renown = final Population × 2.**
+
+At Generation end, after final Population is known, Renown cannot remain above this cap. If Population contracts, excess Renown is immediately lost down to the new cap.
+
+A direct Squalor-to-Renown penalty is deliberately **parked** for now. The Population-based cap will be tested first before adding another negative Renown mechanism.
