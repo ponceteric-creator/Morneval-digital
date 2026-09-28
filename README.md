@@ -2,20 +2,20 @@
 
 Digital prototype of the Morneval strategy board game.
 
-Current deployed prototype: **Engine v0.8.6 — direct-Squalor urban economy sandbox**.
+Current deployed prototype: **Engine v0.8.7 — raw-food-only subsistence economy**.
 
 The current browser prototype supports:
 
 - multi-generation city simulation and Generation History
 - charts for **Population vs Urban capacity, Squalor, Renown, Family Wealth, Family Prestige and raw-material production**
-- four refinement Sectors: **Refined Food, Textiles, Smithing, Construction Materials**
-- **City, Imperial and External** demand on non-Food Sectors
-- **City and External** demand on Refined Food; no Imperial demand for Food
+- three refinement Sectors: **Textiles, Smithing, Construction Materials**
+- **City, Imperial and External** demand on those three Production Sectors
+- **no Food Production Sector and no Food market demand**
+- Farms producing Raw Food only for Population subsistence
 - serving City demand gives **1 Prestige**; serving External demand gives **1 Wealth**
 - unmet Imperial demand gives every Family **−1 Prestige** for the Generation
 - permanent **base Wealth 1** for every Family
 - random finite-pool Hinterland exploration: exactly 4 Forests, 4 Meadows and 4 Hills
-- Farms feeding Population directly before any agricultural surplus can enter Refined Food production
 - Imperial Food aid that prevents famine but costs every Family **−1 Prestige** when used
 - three-phase Production-Sector development projects
 - automated sequential bidding and dynamic First Player
@@ -23,44 +23,27 @@ The current browser prototype supports:
 - direct Squalor calculation from **overcrowding + unmet City demand**
 - Population growth blocked while **Squalor ≥ Population**
 
-## v0.8.6 direct Squalor and Population growth
-
-Squalor no longer uses a target or gradual movement.
-
-At the relevant upkeep step, calculate:
-
-**Squalor = Overcrowding + total unmet City demand**
-
-where:
-
-**Overcrowding = max(0, current Population − current Urban capacity).**
-
-Every unmet **City demand** in a Production Sector contributes **+1 Squalor immediately**. Imperial and External unmet demand do not directly add Squalor.
-
-The previous rule where Squalor moved by at most 1 toward a target has been removed. Squalor can therefore rise or fall by several points from one Generation to the next.
-
-Population can grow by +1 only when both conditions are satisfied:
-
-1. local Farms fully feed the current Population without Imperial Food aid; and
-2. freshly calculated **Squalor < Population**.
-
-If **Squalor ≥ Population**, Population does not grow that Generation even if local Raw Food is sufficient. This is a growth brake, not an automatic Population loss.
-
-The current sequence is: refined production and demand → direct Squalor calculation → Population growth check → Disease → final Population → Urban expansion.
-
-## Food model
+## v0.8.7 Food model
 
 Each Farm produces **2 Raw Food**. Each Population consumes **1 Raw Food**.
 
-Raw Food feeds the City first. Any remaining Farm capacity can be used by the **Refined Food** Sector for City or External demand.
+Raw Food is used **only for Population subsistence**. It does not enter a Production Sector, does not satisfy City/Imperial/External market demand and does not generate Wealth through trade.
 
 If local Farms cannot feed the current Population, the Empire supplies all missing Food automatically. Population does not fall from famine and cannot fall below 1. If any Imperial Food aid is required, all Families lose 1 Prestige, minimum 0, and Population does not grow that Generation.
 
-## Imperial demand
+The automated player now considers Farm conversion only while local Raw Food capacity is below current Population need. This is intended to prevent the previous feedback loop in which market demand encouraged excessive conversion of Hinterland into Farms.
 
-Textiles, Smithing and Construction Materials each have constant **Imperial demand 1**.
+## Production economy
 
-Meeting Imperial demand gives no direct reward. If any Imperial demand remains unmet anywhere at Generation end, every Family loses **1 Prestige**, minimum 0.
+The active refinement chains are:
+
+- Meadow → Wool → **Textiles**
+- Hill → Ore → **Smithing**
+- Forest → Wood → **Construction Materials**
+
+Each active Sector has City, Imperial and External demand.
+
+Imperial demand is constant **1 per Sector**. Meeting it gives no direct reward. If any Imperial demand remains unmet anywhere at Generation end, every Family loses **1 Prestige**, minimum 0.
 
 Economic allocation priority is currently:
 
@@ -69,6 +52,25 @@ Economic allocation priority is currently:
 - Neutral: **Imperial → City → External**
 
 The Academic/Arcane ↔ Religion axis remains visible but has no production-allocation effect.
+
+## Squalor and Population growth
+
+Squalor has no target or gradual movement. Each Generation:
+
+**Squalor = Overcrowding + total unmet City demand**
+
+where:
+
+**Overcrowding = max(0, current Population − current Urban capacity).**
+
+Only unmet City demand from Textiles, Smithing and Construction Materials contributes to this calculation. Raw Food shortage is handled separately through Imperial Food aid.
+
+Population can grow by +1 only when both conditions are satisfied:
+
+1. local Farms fully feed the current Population without Imperial Food aid; and
+2. freshly calculated **Squalor < Population**.
+
+Disease then uses that same current Squalor value.
 
 ## Wealth
 
@@ -83,12 +85,6 @@ The 12 surrounding Hinterland spaces begin **unexplored**.
 Exploration costs **3 Influence + 1 Wealth capacity** and reveals one random terrain from a finite pool containing exactly 4 Forests, 4 Meadows and 4 Hills. The exploring Family immediately controls the revealed territory.
 
 Each revealed natural territory currently has capacity **2**. There is **no city-adjacent bootstrap raw production**.
-
-Natural terrain produces:
-
-- Meadow → Wool → Textiles
-- Hill → Ore → Smithing
-- Forest → Wood → Construction Materials
 
 A controlled natural territory can be converted to a Farm for **2 Influence + 1 Wealth capacity**.
 
