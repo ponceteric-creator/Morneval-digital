@@ -1,7 +1,7 @@
-# Appendix B — Economic Development, Hinterland & Urban Growth (v0.8.8)
+# Appendix B — Economic Development, Hinterland & Urban Growth (v0.8.9)
 
 **Status:** current design reference for the v0.8 economic-development prototype.  
-**Relationship to master rules:** this appendix supplements `Morneval_Rules.md`; where it provides newer detail on Production-Sector development, Food, Imperial demand, Hinterland exploration, Squalor, Urban expansion or Renown, this appendix is the current specification until the next master-rule consolidation.
+**Relationship to master rules:** this appendix supplements `Morneval_Rules.md`; where it provides newer detail on Production-Sector development, Food, Imperial demand, Hinterland exploration, Squalor or Renown, this appendix is the current specification until the next master-rule consolidation. **Urban expansion is now governed by [`Appendix_C_Civic_Expansion_Vote.md`](./Appendix_C_Civic_Expansion_Vote.md), which supersedes the former automatic-expansion procedure.**
 
 ## B.1 — Production-Sector development projects
 
@@ -67,7 +67,7 @@ The Academic / Arcane ↔ Religion axis currently has no production-allocation e
 
 Food is a **pure raw subsistence resource**.
 
-Each Farm produces **2 Raw Food**. Each Population consumes **1 Raw Food**.
+Each Civic Farm produces **2 Raw Food**. Each Population consumes **1 Raw Food**.
 
 Therefore:
 
@@ -80,14 +80,14 @@ Raw Food is used only to feed Population. Agricultural surplus is not refined, d
 
 Population grows by **+1** only if:
 
-1. local Farms fully feed the current Population without Imperial Food aid; and
+1. local Civic Farms fully feed the current Population without Imperial Food aid; and
 2. freshly calculated **Squalor is strictly lower than current Population**.
 
 If Squalor ≥ Population, Population does not grow that Generation.
 
 ## B.7 — Imperial Food aid
 
-If local Farms cannot feed the current Population, the **Empire automatically supplies all missing Raw Food**.
+If local Civic Farms cannot feed the current Population, the **Empire automatically supplies all missing Raw Food**.
 
 There is no famine Population loss from Food shortage and Morneval cannot fall below **Population 1**.
 
@@ -132,7 +132,7 @@ Natural terrain produces:
 
 There is no free city-adjacent base raw production.
 
-## B.10 — Civic Farm conversion — locked v0.8.8 rule
+## B.10 — Civic Farm conversion — locked rule
 
 A Family may convert one revealed natural territory it controls into a **Civic Farm**.
 
@@ -152,7 +152,7 @@ A Civic Farm:
 - has no Production-Sector Stake chain;
 - has no City, Imperial or External market demand;
 - generates **no recurring productive-land Prestige**;
-- may later be absorbed by Urban expansion like any other Hinterland territory.
+- may later be absorbed by an approved Urban-expansion vote like any other Hinterland territory.
 
 The original terrain remains recorded for future Events and External-Power interactions.
 
@@ -168,29 +168,32 @@ This applies to Wool, Ore and Wood used by Production Sectors.
 
 **Civic Farms never generate recurring productive-land Prestige**, because they cease to be Family property immediately upon conversion.
 
-## B.12 — Urban capacity and expansion
+## B.12 — Urban capacity and political expansion — v0.8.9
 
 Morneval begins with **1 Urban tile**, supporting **3 Population**.
 
 **Urban capacity = Urban tiles × 3.**
 
-After final Population is known, including Disease:
+Urban expansion is **not automatic**. When Population reaches or exceeds current Urban capacity, a Family may propose expansion through the Civic Expansion Vote defined in Appendix C.
 
-**Required Urban tiles = ceil(final Population / 3), minimum 1.**
+At most one Urban tile can be added in a Generation. If no proposal is made or the vote fails, Morneval remains at its current Urban capacity even if Population exceeds that capacity.
 
-If more Urban tiles are required, Morneval permanently absorbs Hinterland. Urbanisation is irreversible.
+This means Overcrowding may persist and directly contribute to Squalor.
 
-## B.13 — Which territory is absorbed
+## B.13 — Territory absorbed by an approved expansion
 
-The city absorbs the **oldest explored non-urban territory first**, according to recorded exploration order.
+If a Civic Expansion Vote passes, the city absorbs exactly **one** Hinterland territory: the **oldest explored non-urban territory**, according to recorded exploration order.
 
-When a territory is absorbed:
+When that territory is absorbed:
 
 - any Family ownership is lost;
 - public Civic Farms can also be absorbed;
 - no compensation is paid;
 - all raw production is permanently lost;
-- the territory becomes Urban permanently.
+- the territory becomes Urban permanently;
+- Urban capacity increases by **+3 Population**.
+
+For proposal eligibility, vote procedure and AI voting behaviour, see Appendix C.
 
 ## B.14 — Direct Squalor calculation — locked rule
 
@@ -228,15 +231,16 @@ Disease uses the current provisional table:
 
 Disease can reduce Population by 1, subject to the current minimum Population of 1.
 
-## B.15 — Current demographic sequence
+## B.15 — Current demographic / expansion sequence
 
-1. Resolve Raw Food availability and Imperial Food aid status.
-2. Resolve Textiles, Smithing and Construction Materials and their demand.
-3. Calculate Squalor directly from overcrowding + unmet City demand.
-4. Check Population growth using that freshly calculated Squalor.
-5. Resolve Disease using that same Squalor.
-6. Determine final Population.
-7. Resolve Urban expansion from final Population.
+1. At the beginning of the Generation, if `Population ≥ Urban capacity`, resolve at most one Civic Expansion proposal/vote under Appendix C.
+2. Resolve Raw Food availability and Imperial Food aid status using the post-vote map.
+3. Resolve Textiles, Smithing and Construction Materials and their demand.
+4. Calculate Squalor directly from Overcrowding + unmet City demand.
+5. Check Population growth using that freshly calculated Squalor.
+6. Resolve Disease using that same Squalor.
+7. Determine final Population.
+8. **Do not perform any automatic Urban expansion at Generation end.** A later expansion requires a future Civic Expansion Vote.
 
 ## B.16 — Renown cap
 
@@ -253,11 +257,16 @@ The automated strategy is a testing heuristic, not a tabletop rule.
 The AI can:
 
 - explore a random Hinterland territory;
-- convert controlled natural land into a Civic Farm;
+- convert controlled natural land into a Civic Farm when local food security requires it;
 - bid for Production Stakes in Textiles, Smithing and Construction Materials;
 - advance those Production Sectors;
-- pass.
+- pass;
+- propose, support, oppose or abstain on a Civic Expansion Vote.
 
-Farm conversion is treated as a food-security action. The AI considers it while local Raw Food capacity is below current Population need. Once converted, the Farm becomes public, the contributor receives the one-time +3 Prestige reward, and no recurring Farm Prestige exists.
+Farm conversion is treated as a food-security action. Once converted, the Farm becomes public, the contributor receives the one-time +3 Prestige reward, and no recurring Farm Prestige exists.
+
+For expansion voting, the AI compares civic benefits with the destruction of productive Hinterland. It values relief of Overcrowding and future population headroom, penalises loss of raw capacity, strongly penalises destruction of its own private productive territory, and accounts for Food-security consequences if the target is a Civic Farm. Higher estimated stakes can cause the AI to spend more Influence on YES or NO.
+
+The legacy automatic expansion routine remains present below the current wrapper for compatibility but its results are explicitly reversed; in v0.8.9 the Civic Expansion Vote is the **only** route to a new Urban tile.
 
 Imperial demand is valued by the AI as avoidance of the collective Prestige penalty; this remains a simulation heuristic only.
