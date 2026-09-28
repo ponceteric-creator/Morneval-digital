@@ -1,4 +1,4 @@
-# Appendix B — Economic Development, Hinterland & Urban Growth (v0.8.5)
+# Appendix B — Economic Development, Hinterland & Urban Growth (v0.8.6)
 
 **Status:** current design reference for the v0.8 economic-development prototype.  
 **Relationship to master rules:** this appendix supplements `Morneval_Rules.md`; where it provides newer detail on Production-Sector development, Food, Imperial demand, Hinterland exploration, Squalor, Urban expansion or Renown, this appendix is the current specification until the next master-rule consolidation.
@@ -98,12 +98,14 @@ Therefore:
 
 Raw Food is always allocated to **Population subsistence first**. Only Farm capacity left after feeding the Population can be used as raw input by the **Refined Food** Production Sector.
 
-### Population growth — v0.8.5
+### Population growth — v0.8.6
+
+Population growth is checked **after the current Generation's Squalor has been calculated directly** under B.14.
 
 Population grows by **+1** only if both conditions are true:
 
 1. local Farms fully feed the current Population without Imperial Food aid; and
-2. current **Squalor is strictly lower than Population**.
+2. freshly calculated **Squalor is strictly lower than current Population**.
 
 If **Squalor ≥ Population**, Population does not grow that Generation even when local Raw Food is sufficient. This is a growth brake only; it does not directly reduce Population.
 
@@ -202,29 +204,31 @@ When a territory is absorbed:
 - all of that territory's raw production capacity is permanently lost;
 - it becomes Urban and never returns to Hinterland.
 
-## B.14 — Overcrowding and unmet City demand drive Squalor
+## B.14 — Direct Squalor calculation — locked v0.8.6 rule
 
 Squalor represents both **urban overcrowding** and the degradation caused when the City cannot obtain the refined goods it demands.
 
-Before disease, after the Population-growth check:
+The previous **Squalor target** system is removed. Squalor has **no gradual movement and no inherent persistence**. It is recalculated directly each Generation from current conditions.
 
-**Overcrowding = max(0, Population − current Urban capacity).**
+After refined Production and demand have been resolved, but **before Population growth and Disease**, calculate:
 
-Count all unmet **City demand** across the Production Sectors:
+**Overcrowding = max(0, current Population − current Urban capacity).**
+
+Then total all unmet **City demand** across the Production Sectors:
 
 **Unmet City demand = sum of all City needs requested but not served.**
 
-Current v0.8.5 target:
+Set Squalor immediately to:
 
-**Squalor target = Overcrowding + Unmet City demand.**
+**Squalor = Overcrowding + Unmet City demand.**
 
-Each unmet City demand therefore contributes **+1 to the Squalor target** for that Generation.
-
-Squalor remains persistent and moves by at most **1 point per Generation** toward this target. Multiple unmet City needs may therefore create a high target without causing an instantaneous multi-point Squalor jump.
+Each unmet City need therefore creates **+1 Squalor immediately**. If overcrowding and unmet City demand total 4, Squalor is 4 that Generation regardless of its previous value. Conversely, if those pressures disappear, Squalor can fall immediately.
 
 Imperial demand and External demand do **not** directly add Squalor when unmet. Imperial production failure already has its separate Prestige penalty.
 
-Disease is then checked using the existing provisional table:
+The resulting Squalor is used immediately for both the Population-growth check and Disease.
+
+Disease is checked using the existing provisional table:
 
 | Squalor | Disease chance |
 |---:|---:|
@@ -238,6 +242,18 @@ Disease is then checked using the existing provisional table:
 
 Disease can reduce Population by 1, but Population has a hard minimum of 1 in the current prototype.
 
+### Current demographic sequence
+
+The current sequence is:
+
+1. resolve Raw Food availability and Imperial Food aid status;
+2. resolve refined Production and demand;
+3. calculate Squalor directly from overcrowding + unmet City demand;
+4. check Population growth using that freshly calculated Squalor;
+5. resolve Disease using that same Squalor;
+6. determine final Population;
+7. resolve Urban expansion from final Population.
+
 ## B.15 — Renown cap
 
 Until Events become the true source of Renown, the prototype keeps temporary automatic **+1 Renown every 2 Generations**.
@@ -250,7 +266,7 @@ A direct Squalor-to-Renown penalty remains parked.
 
 ## B.16 — Balance graphs
 
-The v0.8.5 dashboard tracks:
+The v0.8.6 dashboard tracks:
 
 - Population and Urban capacity;
 - Squalor;
@@ -259,7 +275,7 @@ The v0.8.5 dashboard tracks:
 - cumulative Family Prestige after Imperial penalties;
 - gross revealed raw production for Raw Food, Wool, Ore and Wood.
 
-The Squalor graph now reflects the combined pressure of overcrowding and unmet City demand.
+The Squalor graph now shows the **direct Generation-by-Generation value** resulting from overcrowding plus unmet City demand. There is no target track.
 
 The raw-production graph records actual revealed productive capacity after urban expansion. Hidden unexplored terrain does not appear as production.
 
