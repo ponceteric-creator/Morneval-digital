@@ -12,6 +12,27 @@ function replaceText(root, from, to) {
   }
 }
 
+function exposeVoteSummaries(root) {
+  for (const card of root.querySelectorAll(".history-card")) {
+    const notes = card.querySelector(".history-notes");
+    const actionLog = card.querySelector(".action-log");
+    if (!notes || !actionLog || notes.querySelector("[data-v089-vote-summary]")) continue;
+
+    const firstActionHtml = actionLog.innerHTML.split("<br>")[0] ?? "";
+    const firstActionText = firstActionHtml
+      .replace(/<[^>]*>/g, "")
+      .replace(/^\s*1\.\s*/, "")
+      .trim();
+    if (!firstActionText.startsWith("Civic expansion vote")) continue;
+
+    const line = document.createElement("div");
+    line.dataset.v089VoteSummary = "true";
+    line.style.marginTop = "6px";
+    line.innerHTML = `<b>Civic vote:</b> ${firstActionText.replace(/^Civic expansion vote\s*—\s*/, "")}`;
+    notes.appendChild(line);
+  }
+}
+
 function patchUi() {
   const root = document.querySelector("#app");
   if (!root) return;
@@ -47,6 +68,8 @@ function patchUi() {
       }
     }
   }
+
+  exposeVoteSummaries(root);
 
   const footer = root.querySelector(".footer-note");
   if (footer) {
