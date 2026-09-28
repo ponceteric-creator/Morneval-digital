@@ -2,7 +2,7 @@
 
 Digital prototype of the Morneval strategy board game.
 
-Current deployed prototype: **Engine v0.8.4 — Imperial outpost economy sandbox**.
+Current deployed prototype: **Engine v0.8.5 — Squalor-constrained urban economy sandbox**.
 
 The current browser prototype supports:
 
@@ -20,8 +20,31 @@ The current browser prototype supports:
 - three-phase Production-Sector development projects
 - automated sequential bidding and dynamic First Player
 - permanent urban expansion that consumes the oldest explored territory first
+- City shortages feeding directly into **Squalor pressure**
+- Population growth blocked while **Squalor ≥ Population**
 
-## v0.8.4 Food model
+## v0.8.5 Squalor and Population growth
+
+Every unmet **City demand** in a Production Sector contributes **+1 to the Squalor target** for that Generation.
+
+The current target is:
+
+**Squalor target = Overcrowding + total unmet City demand**
+
+where:
+
+**Overcrowding = max(0, Population before disease − current Urban capacity).**
+
+Squalor remains persistent and moves by at most **1 point per Generation** toward the target.
+
+Population can grow by +1 only when both conditions are satisfied:
+
+1. local Farms fully feed the current Population without Imperial Food aid; and
+2. current **Squalor < Population**.
+
+If **Squalor ≥ Population**, Population does not grow that Generation even if local Raw Food is sufficient. This is a growth brake, not an automatic Population loss.
+
+## Food model
 
 Each Farm produces **2 Raw Food**. Each Population consumes **1 Raw Food**.
 
@@ -55,7 +78,7 @@ The 12 surrounding Hinterland spaces begin **unexplored**.
 
 Exploration costs **3 Influence + 1 Wealth capacity** and reveals one random terrain from a finite pool containing exactly 4 Forests, 4 Meadows and 4 Hills. The exploring Family immediately controls the revealed territory.
 
-Each revealed natural territory currently has capacity **2**. There is **no city-adjacent bootstrap raw production** in v0.8.4.
+Each revealed natural territory currently has capacity **2**. There is **no city-adjacent bootstrap raw production**.
 
 Natural terrain produces:
 
@@ -65,13 +88,9 @@ Natural terrain produces:
 
 A controlled natural territory can be converted to a Farm for **2 Influence + 1 Wealth capacity**.
 
-## Urban growth and Squalor
+## Urban growth
 
 Morneval begins with Urban capacity 3. Each additional Urban tile supports another 3 Population.
-
-**Squalor target = max(0, Population before disease − current Urban capacity).**
-
-Squalor moves by at most 1 toward the target per Generation, then disease is checked.
 
 After final Population, Morneval expands to `ceil(Population / 3)` Urban tiles when possible. Expansion permanently absorbs the **oldest explored non-urban territory**. Its owner receives no compensation and all raw production is lost.
 
