@@ -1,3 +1,5 @@
+import "./balance-v084.js?v=0.8.5";
+
 const VERSION_FROM = "0.8.4";
 const VERSION_TO = "0.8.5";
 
