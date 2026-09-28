@@ -1,4 +1,4 @@
-# Appendix B — Economic Development, Hinterland & Urban Growth (v0.8.6)
+# Appendix B — Economic Development, Hinterland & Urban Growth (v0.8.7)
 
 **Status:** current design reference for the v0.8 economic-development prototype.  
 **Relationship to master rules:** this appendix supplements `Morneval_Rules.md`; where it provides newer detail on Production-Sector development, Food, Imperial demand, Hinterland exploration, Squalor, Urban expansion or Renown, this appendix is the current specification until the next master-rule consolidation.
@@ -27,32 +27,21 @@ Wealth committed to development, exploration, Farm conversion or other Wealth-fu
 
 ## B.3 — Production as refinement
 
-Production Sectors represent **refinement / finished production**, not extraction.
+Production Sectors represent **refinement / finished production**, not raw extraction.
 
-The current Sectors are:
+As of v0.8.7, **Food is no longer a Production Sector**. There is no Refined Food chain and no City, Imperial or External market demand for Food.
 
-- **Refined Food** — uses agricultural surplus after Population subsistence;
+The active Production Sectors are:
+
 - **Textiles** — uses Wool from Meadows;
 - **Smithing** — uses Ore from Hills;
 - **Construction Materials** — uses Wood from Forests.
 
 One Production Stake can satisfy at most one unit of demand, subject to the Sector's Stake slots and available raw input.
 
+This separation is deliberate: Farms exist to support Population, while the three refinement chains compete for economic and market development.
+
 ## B.4 — Demand categories and rewards
-
-### Refined Food
-
-Refined Food has:
-
-- **City demand**;
-- **External demand**;
-- **no Imperial demand**.
-
-City demand served awards **1 Prestige** to the serving Stake owner.
-
-External demand served awards **1 Wealth capacity** to the serving Stake owner.
-
-### Non-Food Sectors
 
 Textiles, Smithing and Construction Materials each have:
 
@@ -64,7 +53,15 @@ Imperial demand is permanently **1 per Sector per Generation**.
 
 Meeting Imperial demand gives **no direct reward**. If **any Imperial demand remains unmet anywhere at Generation end**, every Family loses **1 Prestige**, minimum 0. This is a single Generation-wide penalty, not one penalty per unmet Sector.
 
-External demand awards **1 Wealth** per need served. City demand awards **1 Prestige** per need served.
+Current direct rewards are:
+
+| Demand served | Reward to Stake owner |
+|---|---:|
+| City | +1 Prestige |
+| Imperial | none |
+| External | +1 Wealth capacity |
+
+Food has **no market-demand row at all** in v0.8.7.
 
 ## B.5 — Demand priority and City Inclination
 
@@ -81,11 +78,9 @@ The current deterministic residual order is:
 - Commercial: External → Imperial → City;
 - Neutral: Imperial → City → External.
 
-Refined Food has no Imperial demand, so the Imperial step is simply skipped.
-
 ## B.6 — Raw Food and Population subsistence
 
-Raw Food is **not** produced by the Refined Food Sector.
+Food is now a **pure raw subsistence resource**.
 
 Each Farm currently produces **2 Raw Food**, and each unit of Population consumes **1 Raw Food**.
 
@@ -96,11 +91,11 @@ Therefore:
 - 3 Farms support 6 Population;
 - and so on.
 
-Raw Food is always allocated to **Population subsistence first**. Only Farm capacity left after feeding the Population can be used as raw input by the **Refined Food** Production Sector.
+Raw Food is used **only to feed Population**. Agricultural surplus is not refined, does not satisfy market demand and does not create Wealth through a Production Sector.
 
-### Population growth — v0.8.6
+### Population growth — v0.8.7
 
-Population growth is checked **after the current Generation's Squalor has been calculated directly** under B.14.
+Population growth is checked after the current Generation's Squalor has been calculated directly under B.14.
 
 Population grows by **+1** only if both conditions are true:
 
@@ -169,13 +164,17 @@ A Family may convert a revealed natural territory it controls into a Farm for:
 
 The Farm retains the territory's current capacity value, currently 2, but stops producing its original resource and instead produces Raw Food.
 
+A Farm's Raw Food can only support Population. It cannot be routed into a Production Sector or External market.
+
 The original terrain remains recorded for future Events / External Power interactions.
 
 ## B.11 — Productive Hinterland Prestige
 
 The existing productive-land principle remains active: a controlled Hinterland territory whose output is actually used awards its Family **1 Prestige** for that Generation.
 
-The digital implementation counts Farm output used directly for Population subsistence as productive use as well as raw input consumed by a Production Sector. This is a **prototype interpretation** of the productive-land rule and should be revisited if it produces excessive Farm Prestige.
+The digital implementation counts Farm output used directly for Population subsistence as productive use, as well as Wool/Ore/Wood consumed by Production Sectors. This remains a **prototype interpretation** of the productive-land rule and should be revisited if it produces excessive Farm Prestige.
+
+Unused Farm capacity does not create additional Prestige or Wealth.
 
 ## B.12 — Urban capacity and expansion
 
@@ -204,19 +203,21 @@ When a territory is absorbed:
 - all of that territory's raw production capacity is permanently lost;
 - it becomes Urban and never returns to Hinterland.
 
-## B.14 — Direct Squalor calculation — locked v0.8.6 rule
+## B.14 — Direct Squalor calculation — locked rule
 
 Squalor represents both **urban overcrowding** and the degradation caused when the City cannot obtain the refined goods it demands.
 
-The previous **Squalor target** system is removed. Squalor has **no gradual movement and no inherent persistence**. It is recalculated directly each Generation from current conditions.
+Squalor has **no target, no gradual movement and no inherent persistence**. It is recalculated directly each Generation from current conditions.
 
-After refined Production and demand have been resolved, but **before Population growth and Disease**, calculate:
+After Production and demand have been resolved, but **before Population growth and Disease**, calculate:
 
 **Overcrowding = max(0, current Population − current Urban capacity).**
 
-Then total all unmet **City demand** across the Production Sectors:
+Then total all unmet **City demand** across the active Production Sectors — Textiles, Smithing and Construction Materials:
 
 **Unmet City demand = sum of all City needs requested but not served.**
+
+Food is not included because Raw Food is a subsistence requirement, not a Production-Sector City demand.
 
 Set Squalor immediately to:
 
@@ -224,7 +225,7 @@ Set Squalor immediately to:
 
 Each unmet City need therefore creates **+1 Squalor immediately**. If overcrowding and unmet City demand total 4, Squalor is 4 that Generation regardless of its previous value. Conversely, if those pressures disappear, Squalor can fall immediately.
 
-Imperial demand and External demand do **not** directly add Squalor when unmet. Imperial production failure already has its separate Prestige penalty.
+Imperial demand and External demand do **not** directly add Squalor when unmet.
 
 The resulting Squalor is used immediately for both the Population-growth check and Disease.
 
@@ -247,7 +248,7 @@ Disease can reduce Population by 1, but Population has a hard minimum of 1 in th
 The current sequence is:
 
 1. resolve Raw Food availability and Imperial Food aid status;
-2. resolve refined Production and demand;
+2. resolve the three non-Food Production Sectors and their demand;
 3. calculate Squalor directly from overcrowding + unmet City demand;
 4. check Population growth using that freshly calculated Squalor;
 5. resolve Disease using that same Squalor;
@@ -266,7 +267,7 @@ A direct Squalor-to-Renown penalty remains parked.
 
 ## B.16 — Balance graphs
 
-The v0.8.6 dashboard tracks:
+The v0.8.7 dashboard tracks:
 
 - Population and Urban capacity;
 - Squalor;
@@ -275,9 +276,7 @@ The v0.8.6 dashboard tracks:
 - cumulative Family Prestige after Imperial penalties;
 - gross revealed raw production for Raw Food, Wool, Ore and Wood.
 
-The Squalor graph now shows the **direct Generation-by-Generation value** resulting from overcrowding plus unmet City demand. There is no target track.
-
-The raw-production graph records actual revealed productive capacity after urban expansion. Hidden unexplored terrain does not appear as production.
+Raw Food on the graph represents Farm capacity for subsistence only. Wool, Ore and Wood feed the three active refinement Sectors.
 
 ## B.17 — Automated-player heuristic
 
@@ -287,10 +286,12 @@ The AI can:
 
 - explore a random Hinterland territory;
 - convert controlled natural land into a Farm;
-- bid for Production Stakes;
-- advance Production-Sector development;
+- bid for Production Stakes in Textiles, Smithing and Construction Materials;
+- advance those Production Sectors;
 - pass.
 
 The AI sees strategic pressure but **cannot choose the terrain revealed by exploration**.
 
-Imperial demand is valued by the AI as avoidance of its own 1-Prestige penalty; this is only a simulation heuristic for bidding decisions.
+To prevent the old all-Farm feedback loop, the v0.8.7 automated heuristic considers Farm conversion only while **local Raw Food capacity is below current Population need**. It converts at most one territory per Generation and only when a Family can pay the action cost. Once local subsistence is covered, Farms receive no market-demand incentive.
+
+Imperial demand is valued by the AI as avoidance of its own 1-Prestige penalty; this remains only a simulation heuristic for bidding decisions.
