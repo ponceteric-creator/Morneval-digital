@@ -2,7 +2,7 @@
 
 Digital prototype of the Morneval strategy board game.
 
-Current deployed prototype: **Engine v0.8.5 — Squalor-constrained urban economy sandbox**.
+Current deployed prototype: **Engine v0.8.6 — direct-Squalor urban economy sandbox**.
 
 The current browser prototype supports:
 
@@ -20,29 +20,33 @@ The current browser prototype supports:
 - three-phase Production-Sector development projects
 - automated sequential bidding and dynamic First Player
 - permanent urban expansion that consumes the oldest explored territory first
-- City shortages feeding directly into **Squalor pressure**
+- direct Squalor calculation from **overcrowding + unmet City demand**
 - Population growth blocked while **Squalor ≥ Population**
 
-## v0.8.5 Squalor and Population growth
+## v0.8.6 direct Squalor and Population growth
 
-Every unmet **City demand** in a Production Sector contributes **+1 to the Squalor target** for that Generation.
+Squalor no longer uses a target or gradual movement.
 
-The current target is:
+At the relevant upkeep step, calculate:
 
-**Squalor target = Overcrowding + total unmet City demand**
+**Squalor = Overcrowding + total unmet City demand**
 
 where:
 
-**Overcrowding = max(0, Population before disease − current Urban capacity).**
+**Overcrowding = max(0, current Population − current Urban capacity).**
 
-Squalor remains persistent and moves by at most **1 point per Generation** toward the target.
+Every unmet **City demand** in a Production Sector contributes **+1 Squalor immediately**. Imperial and External unmet demand do not directly add Squalor.
+
+The previous rule where Squalor moved by at most 1 toward a target has been removed. Squalor can therefore rise or fall by several points from one Generation to the next.
 
 Population can grow by +1 only when both conditions are satisfied:
 
 1. local Farms fully feed the current Population without Imperial Food aid; and
-2. current **Squalor < Population**.
+2. freshly calculated **Squalor < Population**.
 
 If **Squalor ≥ Population**, Population does not grow that Generation even if local Raw Food is sufficient. This is a growth brake, not an automatic Population loss.
+
+The current sequence is: refined production and demand → direct Squalor calculation → Population growth check → Disease → final Population → Urban expansion.
 
 ## Food model
 
