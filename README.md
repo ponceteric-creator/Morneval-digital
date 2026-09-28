@@ -2,7 +2,7 @@
 
 Digital prototype of the Morneval strategy board game.
 
-Current deployed prototype: **Engine v0.8.9 — civic expansion vote sandbox**.
+Current deployed prototype candidate: **Engine v0.9.0 — differentiated AI personalities and multi-Generation planning**.
 
 The current browser prototype supports:
 
@@ -19,14 +19,56 @@ The current browser prototype supports:
 - random finite-pool Hinterland exploration: exactly 4 Forests, 4 Meadows and 4 Hills
 - Imperial Food aid that prevents famine but costs every Family **−1 Prestige** when used
 - three-phase Production-Sector development projects
-- automated sequential bidding and dynamic First Player
+- dynamic First Player
 - direct Squalor calculation from **overcrowding + unmet City demand**
 - Population growth blocked while **Squalor ≥ Population**
 - **political urban expansion via civic vote rather than automatic expansion**
+- three differentiated automated-Family personalities with forward-looking valuation
 
-## v0.8.9 Civic expansion vote
+## v0.9.0 AI personalities
 
-Urban expansion is no longer automatic.
+The three automated Families now use different strategic profiles:
+
+- **Dynast** — short horizon, strongly values immediate Prestige;
+- **Merchant** — longer horizon, strongly values Wealth capacity and durable production engines;
+- **Opportunist** — balanced baseline that shifts toward Prestige, Wealth or civic stability depending on relative position and city pressure.
+
+Actions are no longer judged only by immediate payoff. The AI discounts benefits over approximately **2–4 Generations** depending on personality. Productive land therefore has a future engine value, External demand has a future Wealth-capacity value, and Production-Sector development can be justified by the additional supply it unlocks later.
+
+The automated Stake procedure is now personality-weighted for simulation purposes. This remains a digital heuristic and does not replace the intended tabletop sequential Influence-auction mechanism.
+
+See [`rules/Appendix_D_Automated_Player_Heuristics.md`](./rules/Appendix_D_Automated_Player_Heuristics.md).
+
+## Civic Farm decision rule
+
+The AI no longer creates Farms speculatively merely because conversion gives +3 Prestige.
+
+Its normal Food target is:
+
+**Target Raw Food = current Population.**
+
+It only plans one extra unit of future Food need when current Food already covers Population, Squalor allows growth, and Urban capacity has room for another Population. At most **one Civic Farm** may be created by the automated Families in a Generation.
+
+Before sacrificing private land, the AI now values the expected future Prestige, resource scarcity, Production-Stake opportunities and External-market Wealth that the Forest, Meadow or Hill could generate.
+
+## Generation History — Raw Food
+
+The Generation History now reports:
+
+**Raw Food consumed / Raw Food capacity**
+
+rather than consumed / Population requirement.
+
+For example:
+
+- Population 1 with one Civic Farm → **1 / 2**;
+- Population 3 with two Civic Farms → **3 / 4**.
+
+Imperial Food aid remains displayed separately.
+
+## Civic expansion vote
+
+Urban expansion is not automatic.
 
 A proposal becomes available when:
 
@@ -46,9 +88,9 @@ If approved, Morneval absorbs exactly one territory: the **oldest explored non-U
 
 If the proposal fails or nobody proposes it, the city does not expand. Population may therefore remain above Urban capacity and create political pressure through Overcrowding and Squalor.
 
-The digital AI evaluates expansion using Overcrowding relief, future population headroom, loss of private productive assets, loss of raw capacity and Food-security risk if a Civic Farm would be absorbed. This is a testing heuristic, not a tabletop rule.
+The v0.9.0 AI evaluates this vote through its personality weights, including the value of lost private production and Food-security risk when a Civic Farm would be absorbed.
 
-See [`rules/Appendix_C_Civic_Expansion_Vote.md`](./rules/Appendix_C_Civic_Expansion_Vote.md) for the current specification.
+See [`rules/Appendix_C_Civic_Expansion_Vote.md`](./rules/Appendix_C_Civic_Expansion_Vote.md).
 
 ## Food model
 
@@ -58,7 +100,7 @@ Raw Food is used **only for Population subsistence**. It does not enter a Produc
 
 A controlled natural territory may be converted into a Civic Farm for **2 Influence + 1 Wealth**. The contributing Family gains **+3 Prestige immediately**, then ownership transfers to Morneval. Civic Farms generate no recurring productive-land Prestige.
 
-If local Farms cannot feed the current Population, the Empire supplies all missing Food automatically. Population does not fall from famine and cannot fall below 1. If any Imperial Food aid is required, all Families lose 1 Prestige, minimum 0, and Population does not grow that Generation.
+If local Farms cannot feed current Population, the Empire supplies all missing Food automatically. Population does not fall from famine and cannot fall below 1. If any Imperial Food aid is required, all Families lose 1 Prestige, minimum 0, and Population does not grow that Generation.
 
 ## Production economy
 
@@ -94,7 +136,7 @@ Only unmet City demand from Textiles, Smithing and Construction Materials contri
 
 Population can grow by +1 only when both conditions are satisfied:
 
-1. local Farms fully feed the current Population without Imperial Food aid; and
+1. local Farms fully feed current Population without Imperial Food aid; and
 2. freshly calculated **Squalor < Population**.
 
 Disease then uses that same current Squalor value.
