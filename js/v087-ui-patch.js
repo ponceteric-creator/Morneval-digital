@@ -1,7 +1,7 @@
-import "./balance-v084.js?v=0.8.7";
+import "./balance-v084.js?v=0.8.7.1";
 
 const VERSION_FROM = "0.8.4";
-const VERSION_TO = "0.8.7";
+const VERSION_TO = "0.8.7.1";
 
 function replaceVersionText(root) {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
