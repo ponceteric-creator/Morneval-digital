@@ -256,13 +256,33 @@ function voteLogAction(vote) {
 
 export function resolveAutomatedGeneration(state) {
   // Expansion is now a political decision at the beginning of the Generation.
-  // Vote Influence is spent before the normal gross Influence income and action phase.
+  // Vote Influence is spent before normal actions. The temporary max-Influence
+  // reservation below prevents the subsequent gross-income step from erasing
+  // that cost merely because a Family was already close to its Influence cap.
   const urbanTilesAtGenerationStart = currentUrbanTiles(state);
   const urbanCapacityAtGenerationStart = currentUrbanCapacity(state);
   const vote = runExpansionVote(state);
   const urbanTilesAfterVote = currentUrbanTiles(state);
 
+  const originalMaxInfluence = Object.fromEntries(
+    state.players.map(player => [player.id, player.maxInfluence]),
+  );
+  for (const ballot of vote.ballots ?? []) {
+    const player = getPlayer(state, ballot.playerId);
+    if (!player || ballot.influenceSpent <= 0) continue;
+    player.maxInfluence = Math.max(
+      0,
+      (originalMaxInfluence[player.id] ?? player.maxInfluence) - ballot.influenceSpent,
+    );
+  }
+
   const summary = base.resolveAutomatedGeneration(state);
+
+  for (const player of state.players) {
+    if (originalMaxInfluence[player.id] !== undefined) {
+      player.maxInfluence = originalMaxInfluence[player.id];
+    }
+  }
 
   // The legacy engine still contains automatic end-of-Generation expansion.
   // Suppress every such expansion so that the single civic vote is the only route.
