@@ -2,75 +2,84 @@
 
 Digital prototype of the Morneval strategy board game.
 
-Current deployed prototype: **Engine v0.8.3 — urban-growth and economic development sandbox**.
+Current deployed prototype: **Engine v0.8.4 — Imperial outpost economy sandbox**.
 
 The current browser prototype supports:
 
 - multi-generation city simulation and Generation History
-- charts for **Population vs Urban capacity, Squalor, Renown, Family Wealth, Family Prestige and raw-material potential**
-- four Production Sectors: **Food, Textiles, Smithing, Construction Materials**
-- only two active demand categories: **City / Population** and **External Markets**
+- charts for **Population vs Urban capacity, Squalor, Renown, Family Wealth, Family Prestige and raw-material production**
+- four refinement Sectors: **Refined Food, Textiles, Smithing, Construction Materials**
+- **City, Imperial and External** demand on non-Food Sectors
+- **City and External** demand on Refined Food; no Imperial demand for Food
 - serving City demand gives **1 Prestige**; serving External demand gives **1 Wealth**
-- Institution demand removed from the production economy
-- Hinterland acquisition, Farm conversion and productive-land Prestige
+- unmet Imperial demand gives every Family **−1 Prestige** for the Generation
+- permanent **base Wealth 1** for every Family
+- random finite-pool Hinterland exploration: exactly 4 Forests, 4 Meadows and 4 Hills
+- Farms feeding Population directly before any agricultural surplus can enter Refined Food production
+- Imperial Food aid that prevents famine but costs every Family **−1 Prestige** when used
 - three-phase Production-Sector development projects
 - automated sequential bidding and dynamic First Player
-- permanent urban expansion that progressively consumes Hinterland
+- permanent urban expansion that consumes the oldest explored territory first
 
-## v0.8.3 urban-growth model
+## v0.8.4 Food model
 
-Morneval begins with **1 Urban tile** and **Urban capacity 3**. Each additional Urban tile adds capacity for another 3 Population.
+Each Farm produces **2 Raw Food**. Each Population consumes **1 Raw Food**.
 
-After Food growth/famine, the prototype calculates:
+Raw Food feeds the City first. Any remaining Farm capacity can be used by the **Refined Food** Sector for City or External demand.
 
-**Overcrowding = max(0, Population before disease − current Urban capacity)**
+If local Farms cannot feed the current Population, the Empire supplies all missing Food automatically. Population does not fall from famine and cannot fall below 1. If any Imperial Food aid is required, all Families lose 1 Prestige, minimum 0, and Population does not grow that Generation.
 
-Current Squalor target:
+## Imperial demand
 
-**Squalor target = Overcrowding + 1 if any Population Food demand is unmet.**
+Textiles, Smithing and Construction Materials each have constant **Imperial demand 1**.
 
-Squalor moves by at most **1 per Generation** toward that target. Disease is then checked using the existing provisional Squalor probability table.
+Meeting Imperial demand gives no direct reward. If any Imperial demand remains unmet anywhere at Generation end, every Family loses **1 Prestige**, minimum 0.
 
-After final Population, including disease, the city permanently expands to the minimum footprint required:
+Economic allocation priority is currently:
 
-**Required Urban tiles = ceil(final Population / 3), minimum 1.**
+- Military: **City → Imperial → External**
+- Commercial: **External → Imperial → City**
+- Neutral: **Imperial → City → External**
 
-Automatic expansion chooses a random **unowned** non-urban Hinterland space first. Only when none remain does it randomly consume an owned territory. An owned territory is lost with **no compensation**. Urbanised terrain permanently loses its raw-resource production.
+The Academic/Arcane ↔ Religion axis remains visible but has no production-allocation effect.
 
-This automatic expansion is a simulation stand-in. The intended tabletop design is for Families to be pressured to fund civic expansion themselves to relieve overcrowding/Squalor.
+## Wealth
+
+Every Family has permanent **base Wealth capacity 1** each Generation. External demand served adds 1 Wealth per need served for that Generation.
+
+Wealth remains capacity rather than banked currency and is committed by actions such as Sector development, Hinterland exploration and Farm conversion.
+
+## Hinterland exploration
+
+The 12 surrounding Hinterland spaces begin **unexplored**.
+
+Exploration costs **3 Influence + 1 Wealth capacity** and reveals one random terrain from a finite pool containing exactly 4 Forests, 4 Meadows and 4 Hills. The exploring Family immediately controls the revealed territory.
+
+Each revealed natural territory currently has capacity **2**. There is **no city-adjacent bootstrap raw production** in v0.8.4.
+
+Natural terrain produces:
+
+- Meadow → Wool → Textiles
+- Hill → Ore → Smithing
+- Forest → Wood → Construction Materials
+
+A controlled natural territory can be converted to a Farm for **2 Influence + 1 Wealth capacity**.
+
+## Urban growth and Squalor
+
+Morneval begins with Urban capacity 3. Each additional Urban tile supports another 3 Population.
+
+**Squalor target = max(0, Population before disease − current Urban capacity).**
+
+Squalor moves by at most 1 toward the target per Generation, then disease is checked.
+
+After final Population, Morneval expands to `ceil(Population / 3)` Urban tiles when possible. Expansion permanently absorbs the **oldest explored non-urban territory**. Its owner receives no compensation and all raw production is lost.
 
 ## Renown
 
-The temporary simulation rule of **+1 Renown every 2 Generations** remains until Events become the real source of Renown.
-
-Sustainable Renown is now capped at:
+The temporary test rule remains **+1 Renown every 2 Generations** until Events become the real source.
 
 **Maximum Renown = final Population × 2.**
-
-If Population falls, excess Renown is immediately lost to the new cap. A direct Squalor → Renown penalty is deliberately parked for later testing.
-
-## Demand and rewards
-
-- **City / Population demand** — 1 Prestige per need served, 0 Wealth
-- **External Market demand** — 1 Wealth per need served, 0 direct Prestige
-
-The Academic/Arcane ↔ Religion inclination axis remains in the city model for future political/institutional effects, but no longer creates production demand.
-
-## Hinterland
-
-The 13-space test map contains Morneval plus **12 Hinterland spaces: 4 Forests, 4 Meadows and 4 Hills**.
-
-Natural terrain currently provides:
-
-- Meadow → **Wool** → Textiles
-- Hill → **Ore** → Smithing
-- Forest → **Wood** → Construction Materials
-
-Each acquired Hinterland territory has base production capacity **2**. A later development mechanism may improve a territory to **3**. A Family may acquire an unowned territory for **3 Influence + 1 Wealth capacity**, or convert owned natural land to a Farm for **2 Influence + 1 Wealth capacity**.
-
-The digital sandbox still retains **3 units of city-adjacent bootstrap capacity per raw resource** so the early economy can function before Hinterland investment.
-
-The raw-material graph now tracks **potential** capacity: city-base capacity plus all remaining non-urban terrain, including unowned land. This makes urban expansion visibly remove future productive potential.
 
 ## Production-Sector development
 
