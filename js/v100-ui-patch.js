@@ -38,7 +38,8 @@ function syncCachesFromLatestHistory(root) {
   const card = root.querySelector('.history-list .history-card');
   if (!card) return;
   const generation = card.querySelector('.history-head h3')?.textContent?.trim() ?? 'unknown';
-  const log = card.querySelector('.action-log')?.textContent ?? '';
+  const logNode = card.querySelector('.action-log');
+  const log = logNode?.innerText ?? logNode?.textContent ?? '';
   const civic = log.match(/CIVIC STATE\s*—\s*Order\s*(\d+)→(\d+)\s*·\s*Force\s*(\d+)\s*\(Structure\s*(\d+)\s*\+\s*Manpower\s*(\d+)\)\s*·\s*Imperial Intervention\s*(\d+)→(\d+)/);
   if (civic) {
     const signature = `${generation}|${civic[0]}`;
@@ -154,7 +155,7 @@ function exposeV100History(root) {
     const log = card.querySelector('.action-log');
     if (!notes || !log) continue;
     notes.querySelectorAll('[data-v100-history]').forEach(node => node.remove());
-    const text = log.textContent ?? '';
+    const text = log.innerText ?? log.textContent ?? '';
     const civic = text.match(/CIVIC STATE\s*—\s*[^\n]+/);
     const institutions = text.match(/INSTITUTIONS\s*—\s*[^\n]+/);
     const chaos = text.match(/CHAOS\s*—\s*[^\n]+/);
