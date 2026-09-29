@@ -23,51 +23,33 @@ function imperialDemandPerSector(state) {
   return Math.floor(interventionValue(state) / demandThreshold(state));
 }
 
-function installImperialDemandOverlay(state) {
-  const records = [];
-
+function guardImperialDemand(state) {
   for (const sector of state.productionSectors ?? []) {
-    const backing = { ...(sector.demandThisGeneration ?? {}) };
-    const proxy = new Proxy(backing, {
-      set(target, property, value) {
-        if (property === "imperial" && sector.id !== "food") {
-          // The legacy engine writes a fixed Imperial baseline of 1 while it
-          // recalculates demand. v0.10.1 replaces that baseline entirely:
-          // Imperial demand is floor(Intervention / configurable threshold).
-          target[property] = imperialDemandPerSector(state);
-        } else {
-          target[property] = value;
-        }
-        return true;
+    if (sector.id === "food") continue;
+    const demand = sector.demandThisGeneration ?? {};
+    Object.defineProperty(demand, "imperial", {
+      enumerable: true,
+      configurable: true,
+      get() {
+        return imperialDemandPerSector(state);
+      },
+      set() {
+        // Ignore the legacy engine's fixed baseline write. The getter above
+        // is the single source of truth for Imperial production demand.
       },
     });
-    sector.demandThisGeneration = proxy;
-    records.push({ sector, proxy });
+    sector.demandThisGeneration = demand;
   }
-
-  return () => {
-    for (const { sector, proxy } of records) {
-      sector.demandThisGeneration = { ...proxy };
-    }
-  };
 }
 
 export function applyAutoDemand(state) {
   base.applyAutoDemand(state);
-  const imperialDemand = imperialDemandPerSector(state);
-  for (const sector of state.productionSectors ?? []) {
-    if (sector.id === "food") continue;
-    sector.demandThisGeneration.imperial = imperialDemand;
-  }
+  guardImperialDemand(state);
 }
 
 export function previewEconomy(state) {
-  const restore = installImperialDemandOverlay(state);
-  try {
-    return base.previewEconomy(state);
-  } finally {
-    restore();
-  }
+  guardImperialDemand(state);
+  return base.previewEconomy(state);
 }
 
 export function projectedWealthCapacity(state, playerId) {
