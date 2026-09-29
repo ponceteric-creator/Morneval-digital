@@ -26,13 +26,6 @@ export const V100_CONFIG = {
       "2": null,
     },
   },
-  fortificationTrack: [
-    { level: 0, label: "None", structuralForce: 0 },
-    { level: 1, label: "Palisades", structuralForce: 1 },
-    { level: 2, label: "Walls", structuralForce: 3 },
-    { level: 3, label: "Fortifications", structuralForce: 6 },
-    { level: 4, label: "Citadel", structuralForce: 10 },
-  ],
   institutions: {
     city_guard: { label: "City Guard", cap: 4 },
     temple: { label: "Temple", cap: 4 },
@@ -53,20 +46,38 @@ function nextRandom(state) {
   return state.rngState / 4294967296;
 }
 
+function intervention(state) {
+  return clampInt(state?.city?.imperialIntervention ?? 0);
+}
+
 function ensureV100State(state) {
-  state.city.order = clampInt(
-    state.city.order ?? V100_CONFIG.order.starting,
-    V100_CONFIG.order.minimum,
-    V100_CONFIG.order.maximum,
-  );
-  state.city.imperialIntervention = clampInt(state.city.imperialIntervention ?? 0);
-  state.city.fortificationLevel = clampInt(state.city.fortificationLevel ?? 0, 0, 4);
-  state.city.forceStructure = structuralForce(state.city.fortificationLevel);
+  state.city ??= {};
+  if (!state.city.v100CivicModelInitialized) {
+    // Legacy states started at Order 0 before Order became an active system.
+    state.city.order = state.city.order > 0
+      ? clampInt(state.city.order, V100_CONFIG.order.minimum, V100_CONFIG.order.maximum)
+      : V100_CONFIG.order.starting;
+    state.city.imperialIntervention = intervention(state);
+    state.city.forceStructure = clampInt(
+      state.city.forceStructure ?? state.city.structuralForce ?? state.city.force ?? 0,
+    );
+    state.city.v100CivicModelInitialized = true;
+  } else {
+    state.city.order = clampInt(
+      state.city.order,
+      V100_CONFIG.order.minimum,
+      V100_CONFIG.order.maximum,
+    );
+    state.city.imperialIntervention = intervention(state);
+    state.city.forceStructure = clampInt(state.city.forceStructure ?? 0);
+  }
 
   for (const player of state.players ?? []) {
     player.institutionAgents ??= {};
     for (const institutionId of INSTITUTION_IDS) {
-      player.institutionAgents[institutionId] = clampInt(player.institutionAgents[institutionId] ?? 0);
+      player.institutionAgents[institutionId] = clampInt(
+        player.institutionAgents[institutionId] ?? 0,
+      );
     }
   }
 
@@ -76,11 +87,6 @@ function ensureV100State(state) {
   }));
   refreshForce(state);
   return state;
-}
-
-export function structuralForce(level) {
-  const entry = V100_CONFIG.fortificationTrack.find(item => item.level === clampInt(level, 0, 4));
-  return entry?.structuralForce ?? 0;
 }
 
 export function manpowerForce(state) {
@@ -93,18 +99,47 @@ export function manpowerForce(state) {
 
 export function refreshForce(state) {
   if (!state?.city) return 0;
-  state.city.forceStructure = structuralForce(state.city.fortificationLevel ?? 0);
+  state.city.forceStructure = clampInt(state.city.forceStructure ?? 0);
   state.city.forceManpower = manpowerForce(state);
   state.city.force = state.city.forceStructure + state.city.forceManpower;
   return state.city.force;
 }
 
 function applyInterventionDemand(state) {
-  const intervention = clampInt(state?.city?.imperialIntervention ?? 0);
+  const extra = intervention(state);
   for (const sector of state.productionSectors ?? []) {
     if (sector.id === "food") continue;
-    sector.demandThisGeneration.imperial = 1 + intervention;
+    sector.demandThisGeneration.imperial = 1 + extra;
   }
+}
+
+// Legacy economy functions recalculate demand internally and hard-code Imperial
+// demand to 1. During v0.10 resolution we temporarily proxy each demand object
+// so every such internal write becomes 1 + current Imperial Intervention. This
+// keeps AI valuation, economy previews and final allocation on the same demand.
+function installImperialDemandOverlay(state) {
+  const records = [];
+  for (const sector of state.productionSectors ?? []) {
+    const backing = { ...(sector.demandThisGeneration ?? {}) };
+    const proxy = new Proxy(backing, {
+      set(target, property, value) {
+        if (property === "imperial" && sector.id !== "food") {
+          target[property] = clampInt(value) + intervention(state);
+        } else {
+          target[property] = value;
+        }
+        return true;
+      },
+    });
+    sector.demandThisGeneration = proxy;
+    records.push({ sector, proxy });
+  }
+
+  return () => {
+    for (const { sector, proxy } of records) {
+      sector.demandThisGeneration = { ...proxy };
+    }
+  };
 }
 
 export function applyAutoDemand(state) {
@@ -114,11 +149,26 @@ export function applyAutoDemand(state) {
   refreshForce(state);
 }
 
+export function previewEconomy(state) {
+  ensureV100State(state);
+  const restore = installImperialDemandOverlay(state);
+  try {
+    return base.previewEconomy(state);
+  } finally {
+    restore();
+  }
+}
+
+export function projectedWealthCapacity(state, playerId) {
+  return previewEconomy(state).familyWealth[playerId] ?? base.V084_CONFIG.familyBaseWealth;
+}
+
 export function createV084Game(familyNames = ["Valenne", "D'Arcy", "Corven"]) {
   const state = base.createV084Game(familyNames);
   state.city.order = V100_CONFIG.order.starting;
   state.city.imperialIntervention = 0;
-  state.city.fortificationLevel = 0;
+  state.city.forceStructure = 0;
+  state.city.v100CivicModelInitialized = true;
   for (const player of state.players) {
     player.institutionAgents = Object.fromEntries(INSTITUTION_IDS.map(id => [id, 0]));
   }
@@ -142,10 +192,7 @@ function cityGuardScore(state, orderOverride = null, forceOverride = null, popul
   );
   const force = Math.max(0, Number(forceOverride ?? state.city.force) || 0);
   const population = Math.max(1, clampInt(populationOverride ?? state.city.population, 1));
-
-  let orderPrestige = 0;
-  if (order === 2) orderPrestige = 1;
-  else if (order >= 3) orderPrestige = 2;
+  const orderPrestige = Math.min(2, Math.floor(order / 2));
 
   const onePointThreshold = Math.ceil(population / 3);
   const twoPointThreshold = Math.ceil(population / 2);
@@ -173,7 +220,7 @@ function templeScore(state, populationOverride = null) {
   const religiousPrestige = religionArcane === 2 ? 2 : religionArcane === 1 ? 1 : 0;
   let civicCoherence = 0;
   if (squalor === 0) civicCoherence = 2;
-  else if (squalor <= Math.floor(population / 3)) civicCoherence = 1;
+  else if (squalor * 3 <= population) civicCoherence = 1;
 
   return {
     score: Math.min(4, religiousPrestige + civicCoherence),
@@ -260,7 +307,7 @@ export function calculateInstitutionScores(
 export function getInstitutionPreview(state) {
   ensureV100State(state);
   applyAutoDemand(state);
-  const economy = base.previewEconomy(state);
+  const economy = previewEconomy(state);
   return calculateInstitutionScores(state, economy.reports, []);
 }
 
@@ -292,13 +339,18 @@ function resolveOrder(state, unmetCityDemand) {
   if (unmetCityDemand > 0) {
     afterPressure = Math.max(0, before - V100_CONFIG.order.unmetPopulationDemandLoss);
     reason = "unmet_population_demand";
-  } else if (before > 0 && before < V100_CONFIG.order.naturalRecoveryCeiling) {
+  } else if (before < V100_CONFIG.order.naturalRecoveryCeiling) {
     afterPressure = Math.min(V100_CONFIG.order.naturalRecoveryCeiling, before + 1);
     reason = "natural_recovery";
   }
 
   state.city.order = afterPressure;
-  return { before, afterPressure, reason, chaosTriggered: afterPressure <= 0 };
+  return {
+    before,
+    afterPressure,
+    reason,
+    chaosTriggered: unmetCityDemand > 0 && afterPressure === 0,
+  };
 }
 
 function applyChaos(state, summary) {
@@ -331,7 +383,7 @@ function applyChaos(state, summary) {
 
   state.city.population = populationAfter;
   state.city.order = V100_CONFIG.chaos.orderReset;
-  state.city.imperialIntervention = clampInt(state.city.imperialIntervention)
+  state.city.imperialIntervention = intervention(state)
     + V100_CONFIG.chaos.imperialInterventionGain;
 
   const renownCap = state.city.population * base.V084_CONFIG.renown.capPerPopulation;
@@ -343,6 +395,7 @@ function applyChaos(state, summary) {
     prestigeLosses,
     growthCancelled: Math.max(0, Number(summary.growth) || 0),
     populationLoss: actualChaosPopulationLoss,
+    populationAfter,
     orderResetTo: V100_CONFIG.chaos.orderReset,
     imperialInterventionGain: V100_CONFIG.chaos.imperialInterventionGain,
     imperialInterventionAfter: state.city.imperialIntervention,
@@ -392,74 +445,92 @@ export function resolveAutomatedGeneration(state) {
   const forceBefore = refreshForce(state);
   const imperialInterventionBefore = state.city.imperialIntervention;
 
-  const summary = base.resolveAutomatedGeneration(state);
+  const restoreDemand = installImperialDemandOverlay(state);
+  let summary;
+  try {
+    summary = base.resolveAutomatedGeneration(state);
 
-  // v0.9.0 has completed the economic resolution. Apply the new volatile Order
-  // state before institutional scoring, but keep Order 0 visible to the City
-  // Guard score for the Generation in which Chaos is triggered.
-  const orderResolution = resolveOrder(state, summary.unmetCityDemand || 0);
-  const populationForInstitutionScoring = state.city.population;
-  const forceForInstitutionScoring = refreshForce(state);
-
-  const institutionScores = calculateInstitutionScores(
-    state,
-    summary.economyReports,
-    summary.actions,
-    {
-      order: orderResolution.afterPressure,
-      force: forceForInstitutionScoring,
-      population: populationForInstitutionScoring,
-    },
-  );
-  const institutionPrestigeAwards = applyInstitutionPrestige(state, institutionScores);
-
-  let chaos = { triggered: false };
-  if (orderResolution.chaosTriggered) {
-    chaos = applyChaos(state, summary);
-    summary.growth = 0;
-    summary.growthBlockedByChaos = true;
-    summary.populationAfter = state.city.population;
-    summary.requiredUrbanTiles = Math.max(
-      1,
-      Math.ceil(state.city.population / base.V084_CONFIG.urban.populationPerTile),
+    const prestigeImmediatelyAfterBase = Object.fromEntries(
+      state.players.map(player => [player.id, player.prestige]),
     );
-    summary.expansionShortfall = Math.max(0, summary.requiredUrbanTiles - state.city.urbanTiles);
-    summary.renownCap = state.city.population * base.V084_CONFIG.renown.capPerPopulation;
-    summary.renownAfterGrowth = state.city.renown;
-    summary.renownLostToCap = Math.max(0, summary.renownBeforeCap - state.city.renown);
-  } else {
-    summary.growthBlockedByChaos = false;
+
+    const orderResolution = resolveOrder(state, summary.unmetCityDemand || 0);
+    const populationForInstitutionScoring = state.city.population;
+    const forceForInstitutionScoring = refreshForce(state);
+
+    const institutionScores = calculateInstitutionScores(
+      state,
+      summary.economyReports,
+      summary.actions,
+      {
+        order: orderResolution.afterPressure,
+        force: forceForInstitutionScoring,
+        population: populationForInstitutionScoring,
+      },
+    );
+    const institutionPrestigeAwards = applyInstitutionPrestige(state, institutionScores);
+
+    let chaos = { triggered: false };
+    if (orderResolution.chaosTriggered) {
+      chaos = applyChaos(state, summary);
+      summary.growth = 0;
+      summary.growthBlockedByChaos = true;
+      summary.populationAfter = state.city.population;
+      summary.requiredUrbanTiles = Math.max(
+        1,
+        Math.ceil(state.city.population / base.V084_CONFIG.urban.populationPerTile),
+      );
+      summary.expansionShortfall = Math.max(
+        0,
+        summary.requiredUrbanTiles - state.city.urbanTiles,
+      );
+      summary.renownCap = state.city.population * base.V084_CONFIG.renown.capPerPopulation;
+      summary.renownAfterGrowth = state.city.renown;
+      summary.renownLostToCap = Math.max(0, summary.renownBeforeCap - state.city.renown);
+    } else {
+      summary.growthBlockedByChaos = false;
+    }
+
+    refreshForce(state);
+    // Refresh next-Generation demand while the proxy is still installed, so an
+    // Intervention gained from Chaos is immediately visible after resolution.
+    base.applyAutoDemand(state);
+
+    const postBasePrestigeChanged = state.players.some(
+      player => player.prestige !== prestigeImmediatelyAfterBase[player.id],
+    );
+    if (postBasePrestigeChanged) {
+      const firstPlayerResolution = determineNextFirstPlayer(state);
+      summary.firstPlayerResolution = firstPlayerResolution;
+      summary.nextFirstPlayerId = firstPlayerResolution.nextFirstPlayerId;
+    }
+
+    Object.assign(summary, {
+      orderBefore,
+      orderAfterPressure: orderResolution.afterPressure,
+      orderAfter: state.city.order,
+      orderChangeReason: orderResolution.reason,
+      forceBefore,
+      forceForInstitutionScoring,
+      forceAfter: state.city.force,
+      forceStructureAfter: state.city.forceStructure,
+      forceManpowerAfter: state.city.forceManpower,
+      imperialInterventionBefore,
+      imperialInterventionAfter: state.city.imperialIntervention,
+      imperialDemandPerSector: 1 + imperialInterventionBefore,
+      imperialDemandPerSectorNextGeneration: 1 + state.city.imperialIntervention,
+      chaos,
+      institutionScores,
+      institutionPrestigeAwards,
+      institutionPrestigeTotal: institutionPrestigeAwards.reduce(
+        (sum, award) => sum + award.amount,
+        0,
+      ),
+      prestigeAfter: Object.fromEntries(state.players.map(player => [player.id, player.prestige])),
+    });
+  } finally {
+    restoreDemand();
   }
-
-  refreshForce(state);
-  applyAutoDemand(state);
-
-  // Institution scoring and Chaos Prestige losses are End-of-Generation effects,
-  // so they must be visible to the First Player Prestige tie-break.
-  const firstPlayerResolution = determineNextFirstPlayer(state);
-
-  Object.assign(summary, {
-    orderBefore,
-    orderAfterPressure: orderResolution.afterPressure,
-    orderAfter: state.city.order,
-    orderChangeReason: orderResolution.reason,
-    forceBefore,
-    forceForInstitutionScoring,
-    forceAfter: state.city.force,
-    forceStructureAfter: state.city.forceStructure,
-    forceManpowerAfter: state.city.forceManpower,
-    fortificationLevelAfter: state.city.fortificationLevel,
-    imperialInterventionBefore,
-    imperialInterventionAfter: state.city.imperialIntervention,
-    imperialDemandPerSector: 1 + imperialInterventionBefore,
-    chaos,
-    institutionScores,
-    institutionPrestigeAwards,
-    institutionPrestigeTotal: institutionPrestigeAwards.reduce((sum, award) => sum + award.amount, 0),
-    firstPlayerResolution,
-    nextFirstPlayerId: firstPlayerResolution.nextFirstPlayerId,
-    prestigeAfter: Object.fromEntries(state.players.map(player => [player.id, player.prestige])),
-  });
 
   return summary;
 }
@@ -478,8 +549,8 @@ export function setCityValue(state, key, value) {
     state.city.order = clampInt(value, V100_CONFIG.order.minimum, V100_CONFIG.order.maximum);
   } else if (key === "imperialIntervention") {
     state.city.imperialIntervention = clampInt(value);
-  } else if (key === "fortificationLevel") {
-    state.city.fortificationLevel = clampInt(value, 0, 4);
+  } else if (key === "forceStructure" || key === "structuralForce" || key === "force") {
+    state.city.forceStructure = clampInt(value);
   } else {
     base.setCityValue(state, key, value);
   }
