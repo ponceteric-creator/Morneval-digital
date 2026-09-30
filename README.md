@@ -2,7 +2,7 @@
 
 Digital prototype of the Morneval strategy board game.
 
-Current deployed prototype candidate: **Engine v0.10.1 — Order recalculation & Imperial Intervention rebalance**.
+Current deployed prototype candidate: **Engine v0.10.2 — Agent AI & Influence Economy**.
 
 The current browser prototype supports:
 
@@ -14,9 +14,48 @@ The current browser prototype supports:
 - three differentiated automated-Family personalities with forward-looking valuation
 - political Urban expansion through a civic vote
 - four major Institutions with public Generation Prestige scores
+- **AI-controlled persistent Institution Agents** with seniority, Wealth reservation, recall and Influence income
 - recalculated **Order**, structural + demographic **Force**, **Chaos**, and persistent **Imperial Intervention**
 
-## v0.10.1 — Order & Imperial Intervention rebalance
+## v0.10.2 — Agent AI & Influence Economy
+
+### Institution Agents
+
+Every Family starts with **0 deployed Agents**.
+
+Placing an Agent is now a normal automated-player action competing with exploration, Farms and Production-Sector development. Placement costs no Influence, but requires and permanently reserves **1 free Wealth capacity** while that Agent remains deployed.
+
+Agents may be placed in any major Institution, in any order. There is currently no per-Institution capacity and no Family Agent limit beyond available Wealth.
+
+Agents persist between Generations. Recall is free, immediately releases the reserved Wealth, but destroys accumulated seniority. A later placement starts again at Seniority 1 and consumes a normal player action.
+
+If a Family's Wealth capacity falls below its number of deployed Agents, enough Agents are recalled immediately to restore the Wealth constraint.
+
+### Seniority and Influence
+
+A newly placed Agent enters at **Seniority 1**. At the end of each Generation it:
+
+1. contributes normally to Institution Prestige scoring;
+2. generates Influence equal to its current seniority;
+3. then gains +1 seniority, maximum **3**.
+
+Therefore a persistent Agent generates **1 → 2 → 3 → 3... Influence** across successive Generations.
+
+The normal **−2 Influence erosion resolves before Agent Influence income**. Agent income is then added and the Family Influence cap remains **10**.
+
+The former prototype rule granting every Family **+5 automatic Influence per Generation has been removed**.
+
+Full Agent rules and AI valuation notes: [`rules/Appendix_G_Institution_Agents.md`](./rules/Appendix_G_Institution_Agents.md).
+
+### Agent AI valuation
+
+Agent placement has no quota or special priority. Each AI compares it against its other candidate actions.
+
+The Agent valuation combines expected Institution Prestige with the future economic value of seniority-based Influence. Influence is treated as an investment currency rather than a fixed Prestige equivalent. The AI also evaluates voluntary recall when freeing Wealth enables a sufficiently better action, while forced recalls remove the lowest estimated continuation-value Agent first.
+
+The exact utility coefficients are simulation tuning parameters rather than tabletop rules.
+
+## v0.10.1 / v0.10.2 — Order & Imperial Intervention
 
 ### Order
 
@@ -36,7 +75,7 @@ Current implemented modifier:
 
 Repeated unmet demand therefore does not accumulate permanent damage. The browser also exposes a manual **Order modifier** as a benchmark hook for future Intrigue, Events, Institutions or political effects.
 
-Population may grow only if the existing Food and Squalor conditions are satisfied **and Final Order is at least 2**. At Population 15+, active positive Order support is therefore required for further growth.
+Below Population 15, there is **no independent Order ≥ 2 growth requirement**. From Population 15 onward, otherwise-valid Population growth requires **Final Order ≥ 2**. Since Base Order falls to 1 at Population 15+, further large-city growth therefore needs positive Order support.
 
 ### Chaos
 
@@ -76,15 +115,13 @@ At the default threshold:
 
 If any Imperial demand remains unmet, every Family still loses 1 Prestige once for the Generation.
 
-Full v0.10.1 details: [`rules/Appendix_F_Order_Imperial_Rebalance.md`](./rules/Appendix_F_Order_Imperial_Rebalance.md).
+Full Order / Intervention details: [`rules/Appendix_F_Order_Imperial_Rebalance.md`](./rules/Appendix_F_Order_Imperial_Rebalance.md).
 
-## v0.10.0 — Institutions retained
+## Institutions
 
 Every Generation, each Institution calculates a public Institution Prestige score. A Family gains:
 
 **Institution Prestige × number of that Family's Agents in the Institution.**
-
-Agent placement, cost and maintenance are not yet automated; Agent counts remain manual benchmark controls.
 
 ### City Guard
 
