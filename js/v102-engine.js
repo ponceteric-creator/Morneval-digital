@@ -141,6 +141,99 @@ function reverseLegacyInstitutionPrestige(state, summary) {
   }
 }
 
+function forcedRecallValue(player, agent, institutionScores, aiProfile) {
+  const institutionScore = Math.max(0, Number(institutionScores?.[agent.institutionId]?.score) || 0);
+  const seniority = clampInt(agent.seniority ?? 1, 1, V100_CONFIG.agents.maximumSeniority);
+  const prestigeWeight = Math.max(0, Number(aiProfile?.prestigeWeight) || 1);
+  const influenceShadow = Math.max(0.1,
+    (Number(aiProfile?.prestigeWeight) || 1) * 0.20
+    + (Number(aiProfile?.wealthWeight) || 1) * 0.30
+    + (Number(aiProfile?.engineWeight) || 1) * 0.35
+    + (Number(aiProfile?.civicWeight) || 1) * 0.15
+  );
+  return institutionScore * prestigeWeight + seniority * influenceShadow;
+}
+
+function reconcileResolvedAgentCapacity(state, summary, institutionScores) {
+  ensureV102State(state);
+  const recalls = [];
+  const wealthByPlayer = summary.wealthAfter ?? {};
+  const commitmentByPlayer = new Map(
+    (summary.wealthCommitments ?? []).map(entry => [entry.playerId, entry]),
+  );
+  let sequence = (summary.actions ?? []).reduce(
+    (max, action) => Math.max(max, Number(action?.sequence) || 0),
+    0,
+  ) + 1;
+
+  for (const player of state.players) {
+    const commitment = commitmentByPlayer.get(player.id) ?? null;
+    const gross = Math.max(
+      0,
+      Math.floor(Number(wealthByPlayer[player.id]) || base.V084_CONFIG.familyBaseWealth || 0),
+    );
+    const actionCommitted = Math.max(
+      0,
+      Number(commitment?.actionCommitted)
+        || Math.max(0, (Number(commitment?.committed) || 0) - (Number(commitment?.agentCommitted) || 0)),
+    );
+    const supportableAgentWealth = Math.max(0, gross - actionCommitted);
+    const maximumAgents = Math.floor(
+      supportableAgentWealth / Math.max(1, V100_CONFIG.agents.wealthCommitment),
+    );
+    const roster = Array.isArray(player.institutionAgentRoster)
+      ? player.institutionAgentRoster
+      : (player.institutionAgentRoster = []);
+    const aiProfile = summary.aiProfiles?.[player.id] ?? null;
+
+    while (roster.length > maximumAgents) {
+      const weakest = roster
+        .map(agent => ({
+          agent,
+          value: forcedRecallValue(player, agent, institutionScores, aiProfile),
+        }))
+        .sort((a, b) => a.value - b.value
+          || clampInt(a.agent.seniority ?? 1, 1, 3) - clampInt(b.agent.seniority ?? 1, 1, 3)
+          || (Number(b.agent.placementOrder) || 0) - (Number(a.agent.placementOrder) || 0))[0];
+      if (!weakest) break;
+      const index = roster.findIndex(agent => agent.id === weakest.agent.id);
+      if (index < 0) break;
+      const [recalled] = roster.splice(index, 1);
+      recalls.push({
+        sequence: sequence++,
+        type: `Forced Agent recall: ${player.familyName} withdrew seniority ${recalled.seniority} from ${V100_CONFIG.institutions[recalled.institutionId]?.label ?? recalled.institutionId}`,
+        actionKind: "agent_recall",
+        freeAction: true,
+        forced: true,
+        reason: "resolved_wealth_capacity_shortfall",
+        playerId: player.id,
+        agentId: recalled.id,
+        institutionId: recalled.institutionId,
+        seniorityLost: recalled.seniority,
+        wealthReleased: V100_CONFIG.agents.wealthCommitment,
+        estimatedContinuationValue: weakest.value,
+      });
+    }
+
+    syncAgentCounts(player);
+    if (commitment) {
+      commitment.agentCommitted = roster.length * V100_CONFIG.agents.wealthCommitment;
+      commitment.committed = actionCommitted + commitment.agentCommitted;
+      commitment.available = Math.max(0, gross - commitment.committed);
+      commitment.shortfall = Math.max(0, commitment.committed - gross);
+      player.lastWealthCommitted = commitment.committed;
+      player.lastWealthAvailable = commitment.available;
+      player.lastWealthShortfall = commitment.shortfall;
+    }
+  }
+
+  if (recalls.length) {
+    summary.forcedAgentRecalls = [...(summary.forcedAgentRecalls ?? []), ...recalls];
+    summary.actions = [...(summary.actions ?? []), ...recalls];
+  }
+  return recalls;
+}
+
 function cancelGrowthForOrder(state, summary) {
   if ((Number(summary.growth) || 0) <= 0) return 0;
   const minimumPopulation = base.V084_CONFIG.population.minimum;
@@ -360,6 +453,15 @@ export function resolveAutomatedGeneration(state) {
       population: populationForInstitutionScoring,
     },
   );
+
+  // Wealth is a capacity, not a debt account. If production resolution leaves
+  // less Wealth than this Generation's action commitments + persistent Agents,
+  // recall the lowest-value Agents before they score or produce Influence.
+  const forcedAgentRecallsAfterProduction = reconcileResolvedAgentCapacity(
+    state,
+    summary,
+    institutionScores,
+  );
   const institutionPrestigeAwards = applyInstitutionPrestige(state, institutionScores);
 
   // The Order growth gate applies only once Morneval reaches Population 15.
@@ -432,6 +534,7 @@ export function resolveAutomatedGeneration(state) {
     institutionScores,
     institutionPrestigeAwards,
     institutionPrestigeTotal: institutionPrestigeAwards.reduce((sum, award) => sum + award.amount, 0),
+    forcedAgentRecallsAfterProduction,
     agentInfluenceAwards: agentResolution.awards,
     agentSeniorityBeforeAging: agentResolution.seniorityBefore,
     agentSeniorityAfterAging: agentResolution.seniorityAfter,
