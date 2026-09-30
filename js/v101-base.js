@@ -2,6 +2,18 @@ import * as base from "./v089-engine.js?real=0.8.9-v101";
 
 export * from "./v089-engine.js?real=0.8.9-v101";
 
+// v0.10.1 override: Families no longer receive the legacy automatic +5
+// Influence at the beginning of each Generation. Influence remains capped
+// and subject to end-of-Generation erosion; future Agent income is handled
+// separately by the Agent system.
+export const V084_CONFIG = {
+  ...base.V084_CONFIG,
+  influence: {
+    ...base.V084_CONFIG.influence,
+    grossIncome: 0,
+  },
+};
+
 const DEFAULT_IMPERIAL_DEMAND_THRESHOLD = 3;
 
 function clampInt(value, minimum = 0) {
