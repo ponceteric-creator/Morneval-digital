@@ -1,9 +1,9 @@
 import * as legacy from "./v110-engine.js?real=0.11.0-v111";
 import * as ai from "./v111-ai-engine.js?direct=0.11.1";
-import * as economy from "./v111-base.js?direct=0.11.1";
+import * as economy from "./v089-engine.js?base=0.8.9";
 
 export * from "./v110-engine.js?real=0.11.0-v111";
-export { V084_CONFIG } from "./v111-base.js?direct=0.11.1";
+export const V084_CONFIG = economy.V084_CONFIG;
 
 export const V100_CONFIG = {
   ...legacy.V100_CONFIG,
