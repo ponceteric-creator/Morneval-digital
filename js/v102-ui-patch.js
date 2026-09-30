@@ -117,10 +117,20 @@ function patchInstitutionRules(root) {
   replaceText(root, 'institution test Agents', 'Institution Agents');
 }
 
+function patchRenownRules(root) {
+  const heading = [...root.querySelectorAll('.chart-card h3')]
+    .find(node => node.textContent?.trim() === 'Renown');
+  const chart = heading?.closest('.chart-card');
+  const subtitle = chart?.querySelector('.chart-head span');
+  if (subtitle) {
+    subtitle.textContent = 'Recalculated from board state: floor(Population ÷ 2) + Production tiers + Institution tiers; +1 per 5 completed Generations is simulation-only. External demand = floor(Renown ÷ 4).';
+  }
+}
+
 function patchNotice(root) {
   const notice = root.querySelector('.notice');
   if (notice) {
-    notice.innerHTML = `<b>v${VERSION_TO}:</b> automated Families can now place persistent Institution Agents as normal actions. Each Agent reserves 1 Wealth and generates 1/2/3 Influence as seniority rises. Influence erosion (−2) resolves before Agent income and the old automatic +5 income is removed. Order blocks Population growth only from Population 15 onward when final Order is below 2.`;
+    notice.innerHTML = `<b>v${VERSION_TO}:</b> automated Families can now place persistent Institution Agents as normal actions. Each Agent reserves 1 Wealth and generates 1/2/3 Influence as seniority rises. Influence erosion (−2) resolves before Agent income and the old automatic +5 income is removed. Renown is now recalculated from visible city development; External demand is floor(Renown ÷ 4).`;
   }
 }
 
@@ -142,12 +152,13 @@ function patchUi() {
   patchCityMetrics(root);
   patchImperialPanel(root);
   patchInstitutionRules(root);
+  patchRenownRules(root);
   patchNotice(root);
   patchHistory(root);
 
   const footer = root.querySelector('.footer-note');
   if (footer) {
-    footer.textContent = 'v0.10.2 adds persistent AI-controlled Institution Agents, seniority-based Influence income, Wealth reservation and recall logic. Automatic +5 Influence income is removed; Order only gates growth from Population 15 onward.';
+    footer.textContent = 'v0.10.2 uses structural Renown (Population, Production tiers and Institution tiers) with External demand = floor(Renown / 4). The temporary +1 Renown per 5 completed Generations exists only for simulation until Intrigue cards are implemented.';
   }
 }
 
