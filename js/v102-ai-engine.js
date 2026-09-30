@@ -46,6 +46,7 @@ export const V090_CONFIG = {
   },
   agents: {
     wealthCommitment: 1,
+    liquidityReserve: 1,
     minimumUtility: 0.50,
     reallocationThreshold: 0.75,
   },
@@ -287,6 +288,11 @@ function freeProjectedWealth(state, player) {
 
 function canPay(state, player, influenceCost, wealthCost) {
   return player.influence >= influenceCost && freeProjectedWealth(state, player) >= wealthCost;
+}
+
+function canPlaceAgentWithLiquidity(state, player) {
+  return freeProjectedWealth(state, player)
+    >= V090_CONFIG.agents.wealthCommitment + V090_CONFIG.agents.liquidityReserve;
 }
 
 function sumEconomyDemand(reports, bucket, category) {
@@ -702,7 +708,7 @@ function explorationCandidate(state, player) {
 }
 
 function agentCandidate(state, player, institutionId) {
-  if (freeProjectedWealth(state, player) < V090_CONFIG.agents.wealthCommitment) return null;
+  if (!canPlaceAgentWithLiquidity(state, player)) return null;
   const provisional = {
     id: null,
     institutionId,
@@ -773,7 +779,7 @@ function chooseNonAuctionAction(state, player, farmAlreadyBuilt) {
 }
 
 function executeAgentPlacement(state, player, candidate, sequence) {
-  if (freeProjectedWealth(state, player) < V090_CONFIG.agents.wealthCommitment) return null;
+  if (!canPlaceAgentWithLiquidity(state, player)) return null;
   const agent = addInstitutionAgent(state, player, candidate.institutionId);
   if (!agent) return null;
   return {
@@ -785,6 +791,7 @@ function executeAgentPlacement(state, player, candidate, sequence) {
     institutionId: candidate.institutionId,
     seniority: 1,
     wealthReserved: V090_CONFIG.agents.wealthCommitment,
+    liquidityReserveAfterPlacement: V090_CONFIG.agents.liquidityReserve,
     estimatedInstitutionScore: candidate.estimatedInstitutionScore,
     aiUtility: candidate.score,
     aiPersonality: player.aiPersonality,
