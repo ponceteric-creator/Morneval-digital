@@ -1,6 +1,6 @@
 # Appendix E — Institution Prestige, Order, Force & Imperial Intervention
 
-Status: **v0.10.0 simulation model**. Core formulas below reflect the currently locked design. Parameters explicitly labelled *simulation tuning parameter* are provisional and should be adjusted through benchmarks.
+Status: **v0.10.2 reference**. Institution and Force formulas below remain active. For current Order and Imperial Intervention timing/scaling, Appendix F supersedes Sections 7–9 where they conflict. For Agent placement, Wealth commitment, seniority and Influence income, see Appendix G.
 
 ## 1. Institution Prestige — universal rule
 
@@ -10,7 +10,7 @@ For each Family:
 
 **Prestige gained = Institution Prestige score × number of that Family's Agents in the Institution.**
 
-The current v0.10.0 digital sandbox does **not** automate Agent placement, cost or maintenance. Agent counts are manual test controls so that Institution scoring can be benchmarked without inventing the remaining Agent rules.
+As of v0.10.2, Agent placement and persistence are automated. Each deployed Agent reserves 1 Wealth, enters at Seniority 1, generates seniority-based Influence at Generation end, and persists until recalled. Full Agent rules are defined in [`Appendix_G_Institution_Agents.md`](./Appendix_G_Institution_Agents.md).
 
 ## 2. City Guard
 
@@ -34,7 +34,7 @@ Current score:
 
 These readiness thresholds are a **simulation tuning parameter** until threat/event benchmarks exist.
 
-Future Events may add punctual City Guard achievements such as repelling raids or controlling unrest. They are not implemented in v0.10.0.
+Future Events may add punctual City Guard achievements such as repelling raids or controlling unrest. They are not implemented in v0.10.2.
 
 ## 3. Temple
 
@@ -54,7 +54,7 @@ The Temple represents religious legitimacy plus notarial, administrative and soc
 - Squalor ≤ `floor(Population / 3)`: **+1**
 - otherwise: **0**
 
-Future Events may add contextual Temple achievements. They are not implemented in v0.10.0.
+Future Events may add contextual Temple achievements. They are not implemented in v0.10.2.
 
 ## 4. Merchant Guild
 
@@ -124,7 +124,7 @@ Manpower Force is capped at **+4**.
 
 ### Structural Force — sequential fortification track
 
-The fortification track is sequential. Construction costs and automated build decisions are not yet defined, so v0.10.0 exposes the level as a manual benchmark control.
+The fortification track is sequential. Construction costs and automated build decisions are not yet defined, so v0.10.2 exposes the level as a manual benchmark control.
 
 Current structural values are a **simulation tuning parameter**:
 
@@ -136,48 +136,34 @@ Current structural values are a **simulation tuning parameter**:
 
 The full track therefore gives 10 structural Force versus at most 4 Manpower Force, keeping mature Force roughly 71% structural at maximum mobilisation.
 
-## 7. Order
+## 7. Legacy Order reference
 
-Order is a volatile, persistent city characteristic on a **0–4** scale.
+This section records the earlier v0.10.0 model only. **Appendix F is authoritative for current Order rules.**
 
-- 0: Chaos
-- 1: instability
-- 2: normal order
-- 3: strong order
-- 4: exceptional control
+Earlier model: Order was a volatile persistent city characteristic on a 0–4 scale, starting at 2, losing 1 for unmet City demand and recovering toward 2. This persistent-erosion model is no longer used.
 
-Starting Order is **2**.
+Current v0.10.2 Order is recalculated from Population-based Base Order each Generation; see Appendix F.
 
-At Generation end:
+## 8. Chaos
 
-- if **any** Population/City demand remains unmet, Order falls by exactly **1**, regardless of how many units are unmet;
-- if no Order loss occurs and Order is below 2, it recovers by **+1**, only up to 2;
-- ordinary calm never raises Order above 2.
-
-Future Events, Intrigues and Institutions can create additional positive or negative Order changes. Random recovery is intentionally absent.
-
-## 8. Chaos — Order 0
-
-When Order reaches **0**, resolve Chaos:
+When current calculated Order reaches **0**, resolve Chaos:
 
 1. each Family loses **20% of its current Prestige, rounded up**;
 2. Population growth for that Generation is cancelled;
 3. Morneval loses **1 Population** where possible, respecting the minimum Population of 1;
 4. **Imperial Intervention +1**;
-5. Order resets to **1**.
+5. displayed Order resets to **1**.
 
 The percentage Prestige loss is intentionally asymmetric in absolute points and therefore compresses score gaps, allowing Chaos to function as a risky destabilisation/catch-up weapon.
 
 ## 9. Imperial Intervention
 
-Imperial Intervention is persistent and begins at **0**.
+**Appendix F is authoritative for current Imperial Intervention scaling.**
 
-Each Chaos adds **+1 Imperial Intervention**.
+Imperial Intervention is persistent and begins at **0**. Imperial Raw Food aid and Chaos can each add +1. There is no automatic decay.
 
-For every active Production Sector:
+Current production demand is:
 
-**Imperial demand = 1 + Imperial Intervention**
+**Imperial demand per Production Sector = floor(Imperial Intervention / Imperial Demand Threshold)**
 
-Thus one Chaos raises total Imperial demand by three units across the three active Production Sectors. This is intentionally severe and is a balance parameter to monitor in tests.
-
-Imperial Intervention has no automatic decay in v0.10.0. Future political, diplomatic or Event mechanisms may reduce it.
+with a default threshold of 3. See Appendix F for the complete current rule.
