@@ -1,6 +1,6 @@
 # Appendix F — Order Recalculation & Imperial Intervention Rebalance
 
-Status: **v0.10.1 simulation model**. This appendix supersedes the Order and Imperial Intervention timing/scaling in Appendix E where the two conflict.
+Status: **v0.10.2 simulation model**. This appendix supersedes the Order and Imperial Intervention timing/scaling in Appendix E where the two conflict.
 
 ## 1. Order is recalculated, not eroded persistently
 
@@ -24,14 +24,16 @@ The digital sandbox also exposes a **manual Order modifier** for benchmark purpo
 
 Order remains bounded to 0–4.
 
-## 2. Population growth requires Order 2+
+## 2. Order only gates growth from Population 15 onward
 
-Population may grow only if the existing Food and Squalor requirements are met **and Final Order is at least 2**.
+Below Population 15, there is **no independent Order ≥ 2 requirement** for Population growth. Food, Squalor and other existing growth conditions still apply normally.
 
-This creates the intended city-size pressure:
+From **Population 15 onward**, Population may grow only if the existing Food and Squalor requirements are met **and Final Order is at least 2**.
 
-- Population 1–3 is naturally stable;
-- Population 4–14 has neutral Base Order 2;
+This creates the intended city-size pressure without producing an artificial growth wall in the middle game:
+
+- Population 1–3 has Base Order 3;
+- Population 4–14 has Base Order 2, but temporary Order 1 does not by itself cancel otherwise-valid growth;
 - at Population 15+, Base Order falls to 1, so further growth requires at least +1 active Order support.
 
 ## 3. Chaos
