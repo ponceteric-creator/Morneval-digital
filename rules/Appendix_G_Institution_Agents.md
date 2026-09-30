@@ -93,6 +93,14 @@ Example: a Family has 7 Influence before erosion and its Agents generate 7 Influ
 
 Agent placement is evaluated as one candidate action among the same pool as exploration, Farms and Production-Sector development. There is no artificial Agent quota and no rule requiring an AI to place an Agent each Generation.
 
+### AI liquidity reserve
+
+The automated-player model applies a **1 Wealth liquidity reserve** when considering a new Agent. An AI may only place an Agent if, after reserving that Agent's 1 Wealth, it would still retain at least **1 Wealth free** for productive or civic actions.
+
+This is an **AI guardrail, not a tabletop rule**. A human player remains free to mobilise all available Wealth into Agents if the rules otherwise allow it.
+
+The guardrail prevents the automated Families from using their only starting Wealth on an Institution Agent and thereby locking themselves out of exploration, Farms and other economy-building actions. In practice, a Family with only 1 free Wealth cannot place a new Agent; with 2 free Wealth it may reserve 1 for an Agent and retain 1 liquid.
+
 The AI evaluates an Agent through two main sources of value:
 
 - expected **Institution Prestige** over that AI personality's planning horizon;
@@ -122,4 +130,4 @@ This means the AI does not mechanically recall the youngest Agent: a young Agent
 
 ### Simulation-tuning note
 
-The exact AI utility coefficients, the expected Scholarium-breakthrough forecast, and the reallocation margin are **simulation tuning parameters**, not tabletop rules. The structural rules above do not depend on those coefficients.
+The exact AI utility coefficients, the expected Scholarium-breakthrough forecast, the reallocation margin, and the automated liquidity reserve are **simulation tuning parameters**, not tabletop rules. The structural rules above do not depend on those coefficients.
