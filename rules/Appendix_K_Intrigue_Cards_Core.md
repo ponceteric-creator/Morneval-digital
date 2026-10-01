@@ -172,6 +172,53 @@ Choose an eligible Forest you control. The improvement is attached to that terri
 
 ---
 
+## K.7A — Locked City Guard / Military Non-Permanent Cards
+
+### Assassination
+
+**Timing:** Action  
+**Type:** Non-Permanent  
+**Cost:** variable by target
+
+- **Agent:** 3 Influence
+- **Elder Dynasty Member:** 5 Influence
+- **Mature Dynasty Member:** 6 Influence
+- **Young Dynasty Member:** 7 Influence
+
+The chosen target is eliminated automatically; no die roll is used.
+
+### Bodyguards
+
+**Timing:** Reaction  
+**Type:** Non-Permanent  
+**Cost:** 2 Influence
+
+Play when an opponent uses **Assassination** against one of your Dynasty Members. The Assassination is cancelled. The attacker still loses the Assassination card, the Player Action used to play it, and the Influence paid for the attempted Assassination.
+
+Bodyguards does not protect Institution Agents.
+
+### Hostile Land Takeover
+
+**Timing:** Action  
+**Type:** Non-Permanent  
+**Cost:** **3 Influence + the acting Family's current next-territory claim cost**
+
+The card enables the acting Family to seize an eligible natural Hinterland territory controlled by another Family. The variable claim component follows the normal Domain-track acquisition cost already defined in Appendix I.
+
+### Martial Law
+
+**Timing:** Action  
+**Type:** Non-Permanent  
+**Cost:** 1 Influence
+
+Morneval receives **+1 Order until the end of the Generation**, subject to the normal Order maximum.
+
+### Military Academy — Shelved
+
+The previously proposed **Military Academy** Intrigue card is **not retained in the current deck design**. Its value was judged too low relative to the opportunity cost of drawing and playing an Intrigue card. The concept remains in the historical design appendix only and may be revisited later if Institution-development rules create a stronger use case.
+
+---
+
 ## K.8 — Current Simulation Status
 
 The generic Intrigue engine supports:
@@ -206,11 +253,15 @@ This is deliberate: the full initial composition of the Scholarium and City Guar
 - **Resolution** cards consume no Player Action during their resolution window; initiating a Vote still requires a Player Action.
 - Every Intrigue card has a printed Influence cost.
 - The four Scholarium Patents and three City Guard / Military land-Wealth discoveries are **Action / Permanent** cards costing **4 Influence each**.
+- Assassination is Action / non-Permanent with target costs Agent 3, Elder 5, Mature 6, Young 7.
+- Bodyguards is Reaction / non-Permanent / 2 Influence and protects Dynasty Members from Assassination.
+- Hostile Land Takeover is Action / non-Permanent and costs 3 Influence plus the acting Family's current next-territory claim cost.
+- Martial Law is Action / non-Permanent / 1 Influence and gives +1 Order until the end of the Generation.
+- Military Academy is shelved and is not part of the current deck design.
 
 ### Still Open / Future Design
 
 - Full deck composition and number of copies of non-unique cards.
-- Influence costs for all other Intrigue cards.
-- Timing categories for all other Intrigue cards.
+- Influence costs and timing categories for remaining Intrigue cards not explicitly locked above.
 - AI valuation and play heuristics for individual Intrigue effects.
 - Specific contest / theft / counter-card procedures for Patents and land ownership.
