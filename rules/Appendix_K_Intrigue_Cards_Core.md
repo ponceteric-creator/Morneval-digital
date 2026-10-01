@@ -407,6 +407,18 @@ The Prestige option is available only if the targeted Family can lose the full *
 
 Immediately reduce Morneval's **Squalor by 1**, to a minimum of 0. The Family that plays Alms for the Poor immediately gains **+1 Prestige**.
 
+### Ecclesiastical Confiscation
+
+**Timing:** Action  
+**Type:** Non-Permanent  
+**Cost:** the normal Influence cost of converting a Hinterland territory into a Civic Farm, paid by the Family playing this card
+
+Choose one eligible natural Hinterland territory owned by an opposing Family. The territory is permanently **donated to the City**: remove the target Family's ownership marker and return that marker to its Domain track.
+
+The territory continues to produce its normal Raw Resources, but it is permanently municipal: it has no Family owner, cannot be claimed by a Family, and can never be converted into a Civic Farm.
+
+The former owner immediately gains **+2 Prestige**, representing public credit for the donation.
+
 ---
 
 ## K.7F — Shelved and Parked Temple Concepts
@@ -478,6 +490,7 @@ This is deliberate: the full initial composition of the Scholarium and City Guar
 - Threat of Excommunication is Action / non-Permanent / 1 Influence; the target chooses to lose 2 Influence or 1 Prestige.
 - Anathema is Action / non-Permanent / 3 Influence; the target chooses to lose 4 Prestige or remove one of its Agents, with the Prestige option available only if the full 4 Prestige can be lost.
 - Alms for the Poor is Action / non-Permanent / 1 Influence; it reduces Squalor by 1, minimum 0, and grants +1 Prestige to the acting Family.
+- Ecclesiastical Confiscation is Action / non-Permanent; its Influence cost equals the normal Civic Farm conversion cost paid by the acting Family; it permanently donates an opposing natural Hinterland territory to the City, returns the former owner's Domain marker, preserves normal Raw Resource production, permanently prevents Family ownership and Civic Farm conversion, and grants the former owner +2 Prestige.
 - Ecclesiastical Reform is shelved and is not part of the current deck design.
 - Religious Mobilization / Sermon is parked until the City Inclination system is redesigned.
 
