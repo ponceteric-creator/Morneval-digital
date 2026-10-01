@@ -1,4 +1,4 @@
-import "./v112-ui-patch.js?v=0.11.2-ui";
+import "./v112-ui-patch.js?v=0.11.4-stable-ui";
 
 let cleanupQueued = false;
 
