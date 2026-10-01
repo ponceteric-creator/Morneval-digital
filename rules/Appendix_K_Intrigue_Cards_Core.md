@@ -77,7 +77,7 @@ The player must also pay the card's printed Influence cost.
 
 ## K.5 — Influence Costs
 
-Every Intrigue card has a printed Influence cost.
+Every Intrigue card has a printed Influence cost, which may be **0**.
 
 There is no universal cost for the entire Intrigue system: the value is defined card by card according to effect strength and will be calibrated through playtesting.
 
@@ -301,6 +301,40 @@ The additional capacity follows the normal production and allocation rules. It d
 
 The Family that plays Experimental Methods immediately gains **+1 Prestige**, reflecting credit for a temporary productivity improvement that can benefit the city more broadly.
 
+### Purge of Charlatans
+
+**Timing:** Action  
+**Type:** Non-Permanent  
+**Cost:** 2 Influence
+
+Each opposing Family must pay **1 Influence for each Agent it has in the Scholarium**. For each payment that is refused or cannot be made, that Family chooses one of its own Scholarium Agents and removes it.
+
+Agent seniority does not modify this payment.
+
+### Insider Information / Bid Advantage
+
+**Timing:** Reaction  
+**Type:** Non-Permanent  
+**Cost:** 0 Influence
+
+Gain **2 bid-only Influence** for the current Generation. These points may be used only to increase bids for Production-Sector Stakes.
+
+The two points may either be added together to **one bid**, or split as **+1 Influence on each of two different bids**.
+
+Bid-only Influence never becomes normal stored Influence, cannot be spent on any other cost, and any unused amount disappears at the end of the Generation.
+
+---
+
+## K.7D — Shelved and Parked Scholarium Concepts
+
+### Conclave Development — Shelved
+
+The previously proposed **Conclave Development** card is not retained in the current deck design. Its narrow Institution-development discount was judged too low-value and too utilitarian relative to the opportunity cost of drawing and playing an Intrigue card. **Technological Acceleration** now fills the Scholarium's development-acceleration role more effectively.
+
+### Arcane Political Manipulation — Parked
+
+The previously proposed **Arcane Political Manipulation** card is parked pending redesign of the City Inclination system. Its timing, Influence cost and Vote effect will be reconsidered together with the equivalent Institution political-mobilization cards once Inclinations are redesigned.
+
 ---
 
 ## K.8 — Current Simulation Status
@@ -313,7 +347,7 @@ The generic Intrigue engine supports:
 - discard and reshuffle;
 - end-of-Generation expiration;
 - Action / Reaction / Resolution timing metadata;
-- Influence costs;
+- Influence costs, including a printed cost of 0;
 - Permanent cards leaving the normal deck cycle.
 
 The seven cards in K.7 are recorded in the simulation card catalogue with their locked metadata, but are **not yet inserted into the active simulation decks** and their individual effects are not yet executed by the simulation.
@@ -335,7 +369,7 @@ This is deliberate: the full initial composition of the Scholarium and City Guar
 - **Action** cards consume 1 Player Action.
 - **Reaction** cards consume no Player Action.
 - **Resolution** cards consume no Player Action during their resolution window; initiating a Vote still requires a Player Action.
-- Every Intrigue card has a printed Influence cost.
+- Every Intrigue card has a printed Influence cost, which may be 0.
 - The four Scholarium Patents and three City Guard / Military land-Wealth discoveries are **Action / Permanent** cards costing **4 Influence each**.
 - Assassination is Action / non-Permanent with target costs Agent 3, Elder 5, Mature 6, Young 7.
 - Bodyguards is Reaction / non-Permanent / 2 Influence and protects Dynasty Members from Assassination.
@@ -349,6 +383,10 @@ This is deliberate: the full initial composition of the Scholarium and City Guar
 - Counter-Intelligence is Reaction / non-Permanent / 2 Influence; it cancels a targeted opposing Intrigue effect against the acting Family or one of its listed assets, but cannot counter Assassination.
 - Technological Acceleration is Action / non-Permanent / 1 Influence; it permits one additional normally paid Production-Sector development phase in a Sector already developed that Generation and grants the acting Family +1 Prestige.
 - Experimental Methods is Action / non-Permanent / 1 Influence; it gives one natural Hinterland territory +1 Raw Resource capacity until the end of the Generation and grants the acting Family +1 Prestige.
+- Purge of Charlatans is Action / non-Permanent / 2 Influence; opposing Families pay 1 Influence per Scholarium Agent or remove an Agent for each unpaid amount.
+- Insider Information / Bid Advantage is Reaction / non-Permanent / 0 Influence; it provides 2 bid-only Influence for the Generation, usable as +2 on one Stake bid or +1 on each of two different Stake bids.
+- Conclave Development is shelved and is not part of the current deck design.
+- Arcane Political Manipulation is parked until the City Inclination system is redesigned.
 
 ### Still Open / Future Design
 
@@ -356,4 +394,4 @@ This is deliberate: the full initial composition of the Scholarium and City Guar
 - Influence costs and timing categories for remaining Intrigue cards not explicitly locked above.
 - AI valuation and play heuristics for individual Intrigue effects.
 - Specific contest / theft / counter-card procedures for Patents and land ownership.
-- City Inclination redesign, including the eventual fate and implementation of Military Political Mobilization and equivalent Inclination cards.
+- City Inclination redesign, including the eventual fate and implementation of parked political-mobilization cards.
