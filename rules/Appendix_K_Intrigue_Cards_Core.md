@@ -419,6 +419,16 @@ The territory continues to produce its normal Raw Resources, but it is permanent
 
 The former owner immediately gains **+2 Prestige**, representing public credit for the donation.
 
+### Public Absolution
+
+**Timing:** Reaction  
+**Type:** Non-Permanent  
+**Cost:** 1 Influence
+
+Play when an opposing effect would cause your Family to lose Prestige. Reduce that Prestige loss by **2**, to a minimum loss of 0.
+
+Public Absolution cannot reduce a voluntary Prestige loss or a Prestige loss paid as a cost to play or resolve one of your own cards. In particular, it cannot reduce the Prestige costs of **Dark Magic** or **Infernal Pact**.
+
 ---
 
 ## K.7F — Shelved and Parked Temple Concepts
@@ -491,6 +501,7 @@ This is deliberate: the full initial composition of the Scholarium and City Guar
 - Anathema is Action / non-Permanent / 3 Influence; the target chooses to lose 4 Prestige or remove one of its Agents, with the Prestige option available only if the full 4 Prestige can be lost.
 - Alms for the Poor is Action / non-Permanent / 1 Influence; it reduces Squalor by 1, minimum 0, and grants +1 Prestige to the acting Family.
 - Ecclesiastical Confiscation is Action / non-Permanent; its Influence cost equals the normal Civic Farm conversion cost paid by the acting Family; it permanently donates an opposing natural Hinterland territory to the City, returns the former owner's Domain marker, preserves normal Raw Resource production, permanently prevents Family ownership and Civic Farm conversion, and grants the former owner +2 Prestige.
+- Public Absolution is Reaction / non-Permanent / 1 Influence; it reduces a Prestige loss caused by an opposing effect by 2, but cannot reduce voluntary Prestige losses or Prestige paid as the cost of the acting Family's own cards.
 - Ecclesiastical Reform is shelved and is not part of the current deck design.
 - Religious Mobilization / Sermon is parked until the City Inclination system is redesigned.
 
