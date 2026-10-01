@@ -287,6 +287,20 @@ The Family that plays Technological Acceleration also immediately gains **+1 Pre
 
 Technological Acceleration does not reduce or replace the normal cost of the development phase. Its benefit is to bypass the normal limit of one development phase per Production Sector per Generation. The additional Prestige rewards the acting Family for accelerating a structural improvement whose resulting higher Production Tier benefits the city more broadly.
 
+### Experimental Methods
+
+**Timing:** Action  
+**Type:** Non-Permanent  
+**Cost:** 1 Influence
+
+Choose one natural Hinterland territory. Until the end of the Generation, its Raw Resource capacity increases by **+1**.
+
+The effect represents temporary experimental techniques — for example improved cultivation, extraction, irrigation, selective breeding, alchemical treatment or other Scholarium-led field methods — rather than a permanent structural improvement.
+
+The additional capacity follows the normal production and allocation rules. It does not create an additional Stake and does not cause the territory to score its productive-land Prestige more than once.
+
+The Family that plays Experimental Methods immediately gains **+1 Prestige**, reflecting credit for a temporary productivity improvement that can benefit the city more broadly.
+
 ---
 
 ## K.8 — Current Simulation Status
@@ -334,6 +348,7 @@ This is deliberate: the full initial composition of the Scholarium and City Guar
 - Spy Network / Intelligence is Action / non-Permanent with staged cost: 1 Influence to inspect an opposing hand, +2 to discard one inspected card, or +4 to steal one inspected card, for totals of 1 / 3 / 5 Influence respectively.
 - Counter-Intelligence is Reaction / non-Permanent / 2 Influence; it cancels a targeted opposing Intrigue effect against the acting Family or one of its listed assets, but cannot counter Assassination.
 - Technological Acceleration is Action / non-Permanent / 1 Influence; it permits one additional normally paid Production-Sector development phase in a Sector already developed that Generation and grants the acting Family +1 Prestige.
+- Experimental Methods is Action / non-Permanent / 1 Influence; it gives one natural Hinterland territory +1 Raw Resource capacity until the end of the Generation and grants the acting Family +1 Prestige.
 
 ### Still Open / Future Design
 
