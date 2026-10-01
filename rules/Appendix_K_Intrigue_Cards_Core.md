@@ -211,7 +211,7 @@ The card enables the acting Family to seize an eligible natural Hinterland terri
 **Type:** Non-Permanent  
 **Cost:** 1 Influence
 
-Morneval receives **+1 Order until the end of the Generation**, subject to the normal Order maximum.
+Morneval receives **+1 Order until the end of the Generation**, subject to the normal Order maximum. The Family that plays Martial Law immediately gains **+1 Prestige**.
 
 ### Military Academy — Shelved
 
@@ -256,7 +256,7 @@ This is deliberate: the full initial composition of the Scholarium and City Guar
 - Assassination is Action / non-Permanent with target costs Agent 3, Elder 5, Mature 6, Young 7.
 - Bodyguards is Reaction / non-Permanent / 2 Influence and protects Dynasty Members from Assassination.
 - Hostile Land Takeover is Action / non-Permanent and costs 3 Influence plus the acting Family's current next-territory claim cost.
-- Martial Law is Action / non-Permanent / 1 Influence and gives +1 Order until the end of the Generation.
+- Martial Law is Action / non-Permanent / 1 Influence, gives +1 Order until the end of the Generation, and grants +1 Prestige to the Family that plays it.
 - Military Academy is shelved and is not part of the current deck design.
 
 ### Still Open / Future Design
