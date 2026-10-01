@@ -275,6 +275,18 @@ If the triggering Intrigue card affects several Families, it continues to resolv
 
 **Counter-Intelligence cannot counter Assassination.** Bodyguards remains the dedicated defence against Assassination targeting Dynasty Members.
 
+### Technological Acceleration
+
+**Timing:** Action  
+**Type:** Non-Permanent  
+**Cost:** 1 Influence
+
+Choose one Production Sector. Immediately perform **one additional development phase** in that Sector, paying that phase's normal Influence cost and gaining its normal Prestige reward, even if that Sector has already received a development phase during the current Generation.
+
+The Family that plays Technological Acceleration also immediately gains **+1 Prestige**.
+
+Technological Acceleration does not reduce or replace the normal cost of the development phase. Its benefit is to bypass the normal limit of one development phase per Production Sector per Generation. The additional Prestige rewards the acting Family for accelerating a structural improvement whose resulting higher Production Tier benefits the city more broadly.
+
 ---
 
 ## K.8 — Current Simulation Status
@@ -321,6 +333,7 @@ This is deliberate: the full initial composition of the Scholarium and City Guar
 - Food Requisition is obsolete under the current Raw Food rules and is removed from the current deck design.
 - Spy Network / Intelligence is Action / non-Permanent with staged cost: 1 Influence to inspect an opposing hand, +2 to discard one inspected card, or +4 to steal one inspected card, for totals of 1 / 3 / 5 Influence respectively.
 - Counter-Intelligence is Reaction / non-Permanent / 2 Influence; it cancels a targeted opposing Intrigue effect against the acting Family or one of its listed assets, but cannot counter Assassination.
+- Technological Acceleration is Action / non-Permanent / 1 Influence; it permits one additional normally paid Production-Sector development phase in a Sector already developed that Generation and grants the acting Family +1 Prestige.
 
 ### Still Open / Future Design
 
