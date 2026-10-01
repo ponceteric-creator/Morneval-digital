@@ -219,18 +219,19 @@ function patchSqualorDisease(root) {
   const card = [...root.querySelectorAll(".chart-card")]
     .find(item => item.querySelector("h3")?.textContent?.trim() === "Squalor");
   if (!card) return;
-  card.querySelector("[data-v112-disease-strip]")?.remove();
-  const strip = document.createElement("div");
-  strip.dataset.v112DiseaseStrip = "true";
-  strip.className = "v112-disease-strip";
-  if (!snapshots.length) {
-    strip.innerHTML = `<b>Disease 1/0:</b><span>no resolved Generation yet</span>`;
-  } else {
-    strip.innerHTML = `<b>Disease 1/0:</b>${snapshots.map(item => `<span class="v112-disease-cell"><span class="g">G${item.generation}</span><span class="v">${item.diseaseOccurred ? 1 : 0}</span></span>`).join("")}`;
+  const html = !snapshots.length
+    ? `<b>Disease 1/0:</b><span>no resolved Generation yet</span>`
+    : `<b>Disease 1/0:</b>${snapshots.map(item => `<span class="v112-disease-cell"><span class="g">G${item.generation}</span><span class="v">${item.diseaseOccurred ? 1 : 0}</span></span>`).join("")}`;
+  let strip = card.querySelector("[data-v112-disease-strip]");
+  if (!strip) {
+    strip = document.createElement("div");
+    strip.dataset.v112DiseaseStrip = "true";
+    strip.className = "v112-disease-strip";
+    const latest = card.querySelector(".chart-latest");
+    if (latest) latest.insertAdjacentElement("beforebegin", strip);
+    else card.append(strip);
   }
-  const latest = card.querySelector(".chart-latest");
-  if (latest) latest.insertAdjacentElement("beforebegin", strip);
-  else card.append(strip);
+  if (strip.innerHTML !== html) strip.innerHTML = html;
 }
 
 function patchNotice(root) {
