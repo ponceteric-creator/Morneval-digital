@@ -323,6 +323,16 @@ The two points may either be added together to **one bid**, or split as **+1 Inf
 
 Bid-only Influence never becomes normal stored Influence, cannot be spent on any other cost, and any unused amount disappears at the end of the Generation.
 
+### Dark Magic
+
+**Timing:** Action  
+**Type:** Non-Permanent  
+**Cost:** 0 Influence
+
+Lose **1 Prestige** and gain **2 Influence** immediately.
+
+The Prestige loss is a mandatory cost of playing the card and cannot be prevented or ignored. The gained Influence is normal stored Influence and remains subject to the normal Family Influence ceiling.
+
 ---
 
 ## K.7D — Shelved and Parked Scholarium Concepts
@@ -334,6 +344,26 @@ The previously proposed **Conclave Development** card is not retained in the cur
 ### Arcane Political Manipulation — Parked
 
 The previously proposed **Arcane Political Manipulation** card is parked pending redesign of the City Inclination system. Its timing, Influence cost and Vote effect will be reconsidered together with the equivalent Institution political-mobilization cards once Inclinations are redesigned.
+
+### Knowledge / Event Manipulation — Parked
+
+The historical **Knowledge / Event Manipulation** concept is parked until the Event system is sufficiently detailed to define a safe and meaningful scope for player manipulation. Direct cancellation or replacement of a Generation Event is not currently retained.
+
+When revisited, the design should preferentially explore **prediction, constrained choice or limited mitigation** rather than unrestricted Event cancellation, so that Events continue to create a common generational situation to which all Families must adapt.
+
+---
+
+## K.7E — Locked Temple Non-Permanent Cards
+
+### Infernal Pact
+
+**Timing:** Action  
+**Type:** Non-Permanent  
+**Cost:** 0 Influence
+
+Lose **2 Prestige** and gain **4 Influence** immediately.
+
+The Prestige loss is a mandatory cost of playing the card and cannot be prevented or ignored. The gained Influence is normal stored Influence and remains subject to the normal Family Influence ceiling.
 
 ---
 
@@ -385,8 +415,11 @@ This is deliberate: the full initial composition of the Scholarium and City Guar
 - Experimental Methods is Action / non-Permanent / 1 Influence; it gives one natural Hinterland territory +1 Raw Resource capacity until the end of the Generation and grants the acting Family +1 Prestige.
 - Purge of Charlatans is Action / non-Permanent / 2 Influence; opposing Families pay 1 Influence per Scholarium Agent or remove an Agent for each unpaid amount.
 - Insider Information / Bid Advantage is Reaction / non-Permanent / 0 Influence; it provides 2 bid-only Influence for the Generation, usable as +2 on one Stake bid or +1 on each of two different Stake bids.
+- Dark Magic is Action / non-Permanent / 0 Influence; it costs 1 Prestige and grants 2 normal Influence, subject to the normal Influence ceiling.
 - Conclave Development is shelved and is not part of the current deck design.
 - Arcane Political Manipulation is parked until the City Inclination system is redesigned.
+- Knowledge / Event Manipulation is parked pending further Event-system design.
+- Infernal Pact is Action / non-Permanent / 0 Influence; it costs 2 Prestige and grants 4 normal Influence, subject to the normal Influence ceiling.
 
 ### Still Open / Future Design
 
