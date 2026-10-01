@@ -263,6 +263,18 @@ Choose one opposing Family.
 
 A stolen card enters the acting Family's hand and thereafter follows its normal timing, Influence-cost and end-of-Generation expiration rules. Spy Network itself still consumes only the single Player Action used to play it; the optional additional payment does not consume another Action.
 
+### Counter-Intelligence
+
+**Timing:** Reaction  
+**Type:** Non-Permanent  
+**Cost:** 2 Influence
+
+Play when an opposing Intrigue card specifically targets **your Family, one of your Agents, one of your territories, one of your Stakes, or a card in your hand**. Cancel that card's effect against you.
+
+If the triggering Intrigue card affects several Families, it continues to resolve normally against all other affected Families.
+
+**Counter-Intelligence cannot counter Assassination.** Bodyguards remains the dedicated defence against Assassination targeting Dynasty Members.
+
 ---
 
 ## K.8 — Current Simulation Status
@@ -308,6 +320,7 @@ This is deliberate: the full initial composition of the Scholarium and City Guar
 - Military Political Mobilization is parked until the City Inclination system is redesigned.
 - Food Requisition is obsolete under the current Raw Food rules and is removed from the current deck design.
 - Spy Network / Intelligence is Action / non-Permanent with staged cost: 1 Influence to inspect an opposing hand, +2 to discard one inspected card, or +4 to steal one inspected card, for totals of 1 / 3 / 5 Influence respectively.
+- Counter-Intelligence is Reaction / non-Permanent / 2 Influence; it cancels a targeted opposing Intrigue effect against the acting Family or one of its listed assets, but cannot counter Assassination.
 
 ### Still Open / Future Design
 
