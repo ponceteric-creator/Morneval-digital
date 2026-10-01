@@ -1,5 +1,5 @@
 import * as legacy from "./v110-engine.js?real=0.11.0-v111";
-import * as ai from "./v111-ai-engine.js?direct=0.11.2";
+import * as ai from "./v111-ai-engine.js?direct=0.11.1";
 import * as economy from "./v089-engine.js?base=0.8.9";
 
 export * from "./v110-engine.js?real=0.11.0-v111";
