@@ -225,7 +225,7 @@ Agent seniority does not modify this payment.
 
 ---
 
-## K.7B — Parked City Guard / Military Concepts
+## K.7B — Shelved, Parked and Obsolete City Guard / Military Concepts
 
 ### Military Academy — Shelved
 
@@ -236,6 +236,12 @@ The previously proposed **Military Academy** Intrigue card is **not retained in 
 The previously proposed **Military Political Mobilization** card is **parked pending a proper redesign of the City Inclination system**. No timing, Influence cost, Vote modifier or final effect is currently locked.
 
 The concept may be revisited once the City Inclination rules, their strategic consequences, and the relationship between Inclination and Votes have been redesigned.
+
+### Food Requisition — Obsolete
+
+The previously proposed **Food Requisition** card is **removed from the current deck design**. Its original purpose relied on Raw Food being diverted between population supply and commercial sale. Under the current Raw Food rules, Raw Food is no longer sold, so that opportunity-cost mechanism no longer exists and the card no longer creates a meaningful decision.
+
+The historical concept remains in the design archive only; it should not be included in the current City Guard / Military deck unless the Raw Food economy is materially redesigned again.
 
 ---
 
@@ -280,6 +286,7 @@ This is deliberate: the full initial composition of the Scholarium and City Guar
 - Officer Purge / Loyalty Commission is Action / non-Permanent / 2 Influence; opposing Families pay 1 Influence per City Guard / Military Agent or remove an Agent for each unpaid amount.
 - Military Academy is shelved and is not part of the current deck design.
 - Military Political Mobilization is parked until the City Inclination system is redesigned.
+- Food Requisition is obsolete under the current Raw Food rules and is removed from the current deck design.
 
 ### Still Open / Future Design
 
