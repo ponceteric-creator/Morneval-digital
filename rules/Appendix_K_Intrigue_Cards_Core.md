@@ -365,6 +365,16 @@ Lose **2 Prestige** and gain **4 Influence** immediately.
 
 The Prestige loss is a mandatory cost of playing the card and cannot be prevented or ignored. The gained Influence is normal stored Influence and remains subject to the normal Family Influence ceiling.
 
+### Hunt the Heretics
+
+**Timing:** Action  
+**Type:** Non-Permanent  
+**Cost:** 2 Influence
+
+Each opposing Family must pay **1 Influence for each Agent it has in the Temple**. For each payment that is refused or cannot be made, that Family chooses one of its own Temple Agents and removes it.
+
+Agent seniority does not modify this payment.
+
 ---
 
 ## K.8 — Current Simulation Status
@@ -420,6 +430,7 @@ This is deliberate: the full initial composition of the Scholarium and City Guar
 - Arcane Political Manipulation is parked until the City Inclination system is redesigned.
 - Knowledge / Event Manipulation is parked pending further Event-system design.
 - Infernal Pact is Action / non-Permanent / 0 Influence; it costs 2 Prestige and grants 4 normal Influence, subject to the normal Influence ceiling.
+- Hunt the Heretics is Action / non-Permanent / 2 Influence; opposing Families pay 1 Influence per Temple Agent or remove an Agent for each unpaid amount.
 
 ### Still Open / Future Design
 
