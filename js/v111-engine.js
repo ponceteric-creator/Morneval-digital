@@ -45,6 +45,7 @@ function emitGenerationTelemetry(state, summary, before) {
   const influenceAfter = Object.fromEntries((state.players ?? []).map(player => [player.id, Number(player.influence) || 0]));
   const familyNames = Object.fromEntries((state.players ?? []).map(player => [player.id, player.familyName ?? player.id]));
   const generation = Number(summary?.generation ?? before.generation ?? ((Number(state.generation) || 1) - 1)) || 0;
+  const urbanStatus = typeof legacy.getUrbanStatus === "function" ? legacy.getUrbanStatus(state) : null;
 
   window.dispatchEvent(new CustomEvent("morneval:generation-resolved", {
     detail: {
@@ -56,6 +57,9 @@ function emitGenerationTelemetry(state, summary, before) {
       agentsByInstitutionAfter: agentsAfter.byInstitution,
       institutionPrestigeAfter: captureInstitutionPrestige(state),
       diseaseOccurred: Boolean(summary?.diseaseOccurred),
+      populationBefore: Number(summary?.populationBefore ?? before.population ?? 0),
+      populationAfter: Number(summary?.populationAfter ?? state.city?.population ?? 0),
+      urbanCapacityAfter: Number(summary?.urbanCapacityAfter ?? urbanStatus?.urbanCapacity ?? 0),
       squalorAfter: Number(summary?.squalorAfter ?? state.city?.squalor ?? 0),
     },
   }));
@@ -83,6 +87,7 @@ export function resolveAutomatedGeneration(state) {
   ai.prepareV111State(state);
   const before = {
     generation: Number(state.generation) || 0,
+    population: Number(state.city?.population) || 0,
     influence: Object.fromEntries((state.players ?? []).map(player => [player.id, Number(player.influence) || 0])),
   };
   const summary = ai.resolveAutomatedGeneration(state);
