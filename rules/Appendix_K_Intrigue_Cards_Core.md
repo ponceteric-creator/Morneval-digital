@@ -213,9 +213,29 @@ The card enables the acting Family to seize an eligible natural Hinterland terri
 
 Morneval receives **+1 Order until the end of the Generation**, subject to the normal Order maximum. The Family that plays Martial Law immediately gains **+1 Prestige**.
 
+### Officer Purge / Loyalty Commission
+
+**Timing:** Action  
+**Type:** Non-Permanent  
+**Cost:** 2 Influence
+
+Each opposing Family must pay **1 Influence for each Agent it has in the City Guard / Military Institution**. For each payment that is refused or cannot be made, that Family chooses one of its own City Guard / Military Agents and removes it.
+
+Agent seniority does not modify this payment.
+
+---
+
+## K.7B — Parked City Guard / Military Concepts
+
 ### Military Academy — Shelved
 
 The previously proposed **Military Academy** Intrigue card is **not retained in the current deck design**. Its value was judged too low relative to the opportunity cost of drawing and playing an Intrigue card. The concept remains in the historical design appendix only and may be revisited later if Institution-development rules create a stronger use case.
+
+### Military Political Mobilization — Parked
+
+The previously proposed **Military Political Mobilization** card is **parked pending a proper redesign of the City Inclination system**. No timing, Influence cost, Vote modifier or final effect is currently locked.
+
+The concept may be revisited once the City Inclination rules, their strategic consequences, and the relationship between Inclination and Votes have been redesigned.
 
 ---
 
@@ -257,7 +277,9 @@ This is deliberate: the full initial composition of the Scholarium and City Guar
 - Bodyguards is Reaction / non-Permanent / 2 Influence and protects Dynasty Members from Assassination.
 - Hostile Land Takeover is Action / non-Permanent and costs 3 Influence plus the acting Family's current next-territory claim cost.
 - Martial Law is Action / non-Permanent / 1 Influence, gives +1 Order until the end of the Generation, and grants +1 Prestige to the Family that plays it.
+- Officer Purge / Loyalty Commission is Action / non-Permanent / 2 Influence; opposing Families pay 1 Influence per City Guard / Military Agent or remove an Agent for each unpaid amount.
 - Military Academy is shelved and is not part of the current deck design.
+- Military Political Mobilization is parked until the City Inclination system is redesigned.
 
 ### Still Open / Future Design
 
@@ -265,3 +287,4 @@ This is deliberate: the full initial composition of the Scholarium and City Guar
 - Influence costs and timing categories for remaining Intrigue cards not explicitly locked above.
 - AI valuation and play heuristics for individual Intrigue effects.
 - Specific contest / theft / counter-card procedures for Patents and land ownership.
+- City Inclination redesign, including the eventual fate and implementation of Military Political Mobilization and equivalent Inclination cards.
