@@ -375,6 +375,38 @@ Each opposing Family must pay **1 Influence for each Agent it has in the Temple*
 
 Agent seniority does not modify this payment.
 
+### Threat of Excommunication
+
+**Timing:** Action  
+**Type:** Non-Permanent  
+**Cost:** 1 Influence
+
+Choose one opposing Family. That Family chooses one of the following losses:
+
+- lose **2 Influence**;
+- lose **1 Prestige**.
+
+### Anathema
+
+**Timing:** Action  
+**Type:** Non-Permanent  
+**Cost:** 3 Influence
+
+Choose one opposing Family. That Family chooses one of the following losses:
+
+- lose **4 Prestige**;
+- remove **1 of its Agents**, chosen by that Family, from any Institution.
+
+The Prestige option is available only if the targeted Family can lose the full **4 Prestige**. Otherwise it must choose the Agent-removal option.
+
+### Alms for the Poor
+
+**Timing:** Action  
+**Type:** Non-Permanent  
+**Cost:** 1 Influence
+
+Immediately reduce Morneval's **Squalor by 1**, to a minimum of 0. The Family that plays Alms for the Poor immediately gains **+1 Prestige**.
+
 ---
 
 ## K.7F — Shelved and Parked Temple Concepts
@@ -443,6 +475,9 @@ This is deliberate: the full initial composition of the Scholarium and City Guar
 - Knowledge / Event Manipulation is parked pending further Event-system design.
 - Infernal Pact is Action / non-Permanent / 0 Influence; it costs 2 Prestige and grants 4 normal Influence, subject to the normal Influence ceiling.
 - Hunt the Heretics is Action / non-Permanent / 2 Influence; opposing Families pay 1 Influence per Temple Agent or remove an Agent for each unpaid amount.
+- Threat of Excommunication is Action / non-Permanent / 1 Influence; the target chooses to lose 2 Influence or 1 Prestige.
+- Anathema is Action / non-Permanent / 3 Influence; the target chooses to lose 4 Prestige or remove one of its Agents, with the Prestige option available only if the full 4 Prestige can be lost.
+- Alms for the Poor is Action / non-Permanent / 1 Influence; it reduces Squalor by 1, minimum 0, and grants +1 Prestige to the acting Family.
 - Ecclesiastical Reform is shelved and is not part of the current deck design.
 - Religious Mobilization / Sermon is parked until the City Inclination system is redesigned.
 
