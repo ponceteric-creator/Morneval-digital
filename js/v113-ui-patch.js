@@ -1,4 +1,4 @@
-import "./v112-ui-patch.js?v=0.11.3-base";
+import "./v112-history-fix.js?v=0.11.3-base";
 
 const SERIES_COLORS = ["#315e43", "#815e2f", "#8b4c2e", "#4d5f7a", "#6f4d70", "#5f6840"];
 let patchScheduled = false;
