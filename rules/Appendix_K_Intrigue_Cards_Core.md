@@ -245,6 +245,26 @@ The historical concept remains in the design archive only; it should not be incl
 
 ---
 
+## K.7C — Locked Scholarium Non-Permanent Cards
+
+### Spy Network / Intelligence
+
+**Timing:** Action  
+**Type:** Non-Permanent  
+**Cost:** variable, resolved in stages
+
+Choose one opposing Family.
+
+1. Pay **1 Influence** and look at all Intrigue cards currently in that Family's hand.
+2. After seeing the hand, choose one of the following:
+   - take no further effect; total cost remains **1 Influence**;
+   - pay **+2 Influence** to choose and discard one card from that hand; total cost **3 Influence**;
+   - pay **+4 Influence** to choose and steal one card from that hand; total cost **5 Influence**.
+
+A stolen card enters the acting Family's hand and thereafter follows its normal timing, Influence-cost and end-of-Generation expiration rules. Spy Network itself still consumes only the single Player Action used to play it; the optional additional payment does not consume another Action.
+
+---
+
 ## K.8 — Current Simulation Status
 
 The generic Intrigue engine supports:
@@ -287,6 +307,7 @@ This is deliberate: the full initial composition of the Scholarium and City Guar
 - Military Academy is shelved and is not part of the current deck design.
 - Military Political Mobilization is parked until the City Inclination system is redesigned.
 - Food Requisition is obsolete under the current Raw Food rules and is removed from the current deck design.
+- Spy Network / Intelligence is Action / non-Permanent with staged cost: 1 Influence to inspect an opposing hand, +2 to discard one inspected card, or +4 to steal one inspected card, for totals of 1 / 3 / 5 Influence respectively.
 
 ### Still Open / Future Design
 
