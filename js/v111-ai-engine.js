@@ -138,21 +138,6 @@ function instrumentDevelopmentSector(sector) {
   });
 }
 
-function captureAgents(state) {
-  const byFamily = {};
-  const byInstitution = {};
-  for (const player of state.players ?? []) {
-    let total = 0;
-    for (const [institutionId, rawCount] of Object.entries(player.institutionAgents ?? {})) {
-      const count = Math.max(0, Number(rawCount) || 0);
-      total += count;
-      byInstitution[institutionId] = (byInstitution[institutionId] || 0) + count;
-    }
-    byFamily[player.id] = total;
-  }
-  return { byFamily, byInstitution };
-}
-
 export function prepareV111State(state, { resetStartingInfluence = false } = {}) {
   installDomainCost();
   installDevelopmentCostProxy();
@@ -199,10 +184,6 @@ export function resolveAutomatedGeneration(state) {
   const trueInfluenceBefore = Object.fromEntries(
     (state.players ?? []).map(player => [player.id, player.influence]),
   );
-  const agentsBefore = captureAgents(state);
-  const familyNames = Object.fromEntries(
-    (state.players ?? []).map(player => [player.id, player.familyName ?? player.id]),
-  );
   for (const player of state.players ?? []) player.influence += 1;
 
   const summary = engine.resolveAutomatedGeneration(state);
@@ -219,32 +200,5 @@ export function resolveAutomatedGeneration(state) {
   summary.influenceErosionMode = "threshold_clip_only";
   summary.domainCostTrack = [...DOMAIN_COSTS];
   summary.productionDevelopmentCosts = DEVELOPMENT_COSTS;
-
-  const agentsAfter = captureAgents(state);
-  const influenceAfter = Object.fromEntries(
-    (state.players ?? []).map(player => [player.id, player.influence]),
-  );
-  summary.influenceAfter = influenceAfter;
-  summary.agentTotalsBefore = agentsBefore.byFamily;
-  summary.agentTotalsAfter = agentsAfter.byFamily;
-  summary.agentsByInstitutionAfter = agentsAfter.byInstitution;
-
-  if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
-    const generation = Number(summary.generation ?? state.generation - 1) || 0;
-    window.dispatchEvent(new CustomEvent("morneval:generation-resolved", {
-      detail: {
-        generation,
-        familyNames,
-        influenceBefore: { ...trueInfluenceBefore },
-        influenceAfter: { ...influenceAfter },
-        agentTotalsBefore: { ...agentsBefore.byFamily },
-        agentTotalsAfter: { ...agentsAfter.byFamily },
-        agentsByInstitutionAfter: { ...agentsAfter.byInstitution },
-        diseaseOccurred: Boolean(summary.diseaseOccurred),
-        squalorAfter: Number(summary.squalorAfter ?? state.city?.squalor ?? 0),
-      },
-    }));
-  }
-
   return summary;
 }
