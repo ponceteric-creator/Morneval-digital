@@ -377,6 +377,18 @@ Agent seniority does not modify this payment.
 
 ---
 
+## K.7F — Shelved and Parked Temple Concepts
+
+### Ecclesiastical Reform — Shelved
+
+The previously proposed **Ecclesiastical Reform** card is not retained in the current deck design. Like Military Academy and Conclave Development, its narrow Institution-development role is judged too utilitarian and too low-value relative to the opportunity cost of drawing and playing an Intrigue card.
+
+### Religious Mobilization / Sermon — Parked
+
+The previously proposed **Religious Mobilization / Sermon** card is parked pending redesign of the City Inclination system. Its timing, Influence cost and Vote effect will be reconsidered together with the equivalent political-mobilization cards for the other Institutions once Inclinations are redesigned.
+
+---
+
 ## K.8 — Current Simulation Status
 
 The generic Intrigue engine supports:
@@ -431,6 +443,8 @@ This is deliberate: the full initial composition of the Scholarium and City Guar
 - Knowledge / Event Manipulation is parked pending further Event-system design.
 - Infernal Pact is Action / non-Permanent / 0 Influence; it costs 2 Prestige and grants 4 normal Influence, subject to the normal Influence ceiling.
 - Hunt the Heretics is Action / non-Permanent / 2 Influence; opposing Families pay 1 Influence per Temple Agent or remove an Agent for each unpaid amount.
+- Ecclesiastical Reform is shelved and is not part of the current deck design.
+- Religious Mobilization / Sermon is parked until the City Inclination system is redesigned.
 
 ### Still Open / Future Design
 
