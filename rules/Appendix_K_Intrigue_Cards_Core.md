@@ -449,13 +449,43 @@ The previously proposed **Religious Mobilization / Sermon** card is parked pendi
 
 **Timing:** Action  
 **Type:** Non-Permanent  
-**Cost:** 0 Influence
+**Cost:** 1 Influence
 
 Choose one **Mature or Elder Production Stake** occupied by an opposing Family. Remove that Stake immediately, leaving its existing age slot vacant.
 
-The Family playing Hostile Takeover must immediately submit an **opening bid of 1 Influence** for the newly vacant slot. This opening bid is part of resolving the Hostile Takeover action and does **not** consume an additional Player Action.
+The Family playing Hostile Takeover must immediately submit an **opening bid of 1 additional Influence** for the newly vacant slot. This opening bid is part of resolving the Hostile Takeover action and does **not** consume an additional Player Action.
 
-The 1 Influence is an auction bid, not a separate card fee: it is reserved and resolved under the normal universal auction rules. The auction for that specific Mature or Elder slot then remains open under those normal rules.
+The opening bid is reserved and resolved under the normal universal auction rules. The auction for that specific Mature or Elder slot then remains open under those normal rules.
+
+### Binding Bids / All Bidders Pay
+
+**Timing:** Action  
+**Type:** Non-Permanent  
+**Cost:** 1 Influence
+
+Choose one eligible vacant **Young Production Stake slot** before any bid has been submitted for that slot. The Family playing Binding Bids must immediately submit an **opening bid of 1 additional Influence**. This opening bid is part of resolving the card and consumes no additional Player Action.
+
+For this auction only, **every Family that submits a bid pays its final committed bid at Auction Resolution, whether it wins or loses**. A Family pays only its final committed bid, not the sum of its successive raises. This rule applies equally to the Family that played Binding Bids.
+
+### Line of Credit
+
+**Timing:** Action  
+**Type:** Non-Permanent  
+**Cost:** variable
+
+Choose one of the following credit levels when playing the card:
+
+- pay **1 Influence**, requiring at least **10 Prestige**, and gain **5 temporary Influence**;
+- pay **2 Influence**, requiring at least **20 Prestige**, and gain **10 temporary Influence**;
+- pay **3 Influence**, requiring at least **30 Prestige**, and gain **15 temporary Influence**.
+
+The Prestige requirement is checked when the card is played. The temporary Influence may exceed the normal Family Influence ceiling and may be spent or committed like normal Influence during the remainder of the Player Actions phase.
+
+Resolve all auctions normally. Winning bids are paid and losing bids are refunded under the normal auction rules.
+
+**Immediately after all auctions have been resolved**, the Family must repay the full amount of temporary Influence received: 5, 10 or 15. Repayment is made from the Influence the Family then has available.
+
+For each point of temporary Influence that the Family cannot repay, it loses **2 Prestige**. This means a Family may win several auctions using borrowed Influence and then suffer a substantial Prestige loss when the credit falls due.
 
 ---
 
@@ -520,7 +550,9 @@ This is deliberate: the full initial composition of the Scholarium and City Guar
 - Public Absolution is Reaction / non-Permanent / 1 Influence; it reduces a Prestige loss caused by an opposing effect by 2, but cannot reduce voluntary Prestige losses or Prestige paid as the cost of the acting Family's own cards.
 - Ecclesiastical Reform is shelved and is not part of the current deck design.
 - Religious Mobilization / Sermon is parked until the City Inclination system is redesigned.
-- Hostile Takeover is Action / non-Permanent / 0 Influence; it removes one opposing Mature or Elder Production Stake and immediately opens an auction for that same age slot with a mandatory 1-Influence opening bid from the acting Family; that opening bid is part of the card action and follows normal auction rules.
+- Hostile Takeover is Action / non-Permanent / 1 Influence; it removes one opposing Mature or Elder Production Stake and immediately opens an auction for that same age slot with a mandatory 1-Influence opening bid from the acting Family; the opening bid is additional to the card cost and is part of the card action.
+- Binding Bids / All Bidders Pay is Action / non-Permanent / 1 Influence; it opens an auction for an eligible vacant Young slot with a mandatory 1-Influence opening bid from the acting Family, and every bidder pays its final committed bid at resolution whether it wins or loses.
+- Line of Credit is Action / non-Permanent with three credit levels: 1/2/3 Influence cost for 5/10/15 temporary Influence, requiring 10/20/30 Prestige respectively when played; after all auctions resolve, the full temporary amount is repaid, and each unpaid point costs 2 Prestige.
 
 ### Still Open / Future Design
 
