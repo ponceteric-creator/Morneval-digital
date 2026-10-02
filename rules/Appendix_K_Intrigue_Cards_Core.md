@@ -33,9 +33,9 @@ An Agent placed during the current Generation does **not** generate an Intrigue 
 
 When a deck is exhausted, shuffle its discard pile to form a new draw pile, excluding cards that have permanently entered play or otherwise left the deck.
 
-### K.2A — Deck Composition Target
+### K.2A — Deck Composition / Early Setup Target
 
-The founding cadence target is **table-wide**, not per Family: in a standard **3-player game**, the Intrigue decks should collectively support approximately **one powerful Intrigue card costing 4 Influence or more being played by at least one of the three Families every two Generations**.
+The **LOW / MID / HIGH** labels used during deck balancing are **design and playtest metadata**, not gameplay rules and not fixed card properties for rules purposes.
 
 For composition calculations, use the **mid-game reference profile** of approximately 4 Agents per Family:
 
@@ -45,22 +45,13 @@ For composition calculations, use the **mid-game reference profile** of approxim
 
 Each player therefore sees approximately **7 Intrigue cards per Generation**. Across 3 players, the table sees approximately **21 cards per Generation**, or **42 card opportunities over two Generations**.
 
-If `p` is the share of 4+ Influence cards among those opportunities, the approximate chance that the table sees at least one such card over two Generations is:
+The working design target is that, during the opening and build-up phase of a standard **3-player game**, the table should generally encounter and have the opportunity to play approximately **one HIGH-impact Intrigue card every two Generations**.
 
-> **1 − (1 − p)^42**
+This cadence exists primarily to help the game establish its structural Permanents quickly, especially **Scholarium Patents** and **Military land enhancements**. It is **not** intended to remain constant throughout the whole game.
 
-Reference points:
+As Unique Permanents enter play, they leave their source decks and the density of HIGH-impact cards naturally falls. This decline is intentional. Scholarium Patents can later circulate between Families through Temple effects such as **Legal Contestation** and **Crooked Notary**.
 
-- **3%** powerful cards → about **72%** chance of seeing at least one over two Generations;
-- **4%** → about **82%**;
-- **5%** → about **88%**;
-- **6%** → about **93%**;
-- **7.5%** → about **96%**;
-- **10%** → about **99%**.
-
-Because **seeing** a 4+ card does not guarantee that it can or will actually be **played** — the Family may lack Influence, fail another requirement, discard it in favour of another option, or prefer not to spend the required resources — the initial balancing target should be approximately **6–8% of the active deck mix at 4+ Influence**, with **about 7.5%** as the working reference point.
-
-This remains a composition target rather than a guaranteed draw or guaranteed play. Unique Permanent cards should not be the sole means of meeting it because they progressively leave circulation once played. The final percentage must be validated through 3-player playtesting using actual Agent counts, seniority, affordability and card-play rates.
+Exact copy counts and LOW / MID / HIGH assessments remain balancing parameters to be adjusted through playtesting rather than hard rules.
 
 ---
 
@@ -202,13 +193,13 @@ Eliminate the chosen target automatically. No die roll is used.
 **Timing:** Reaction  
 **Nature:** Defense  
 **Type:** Non-Permanent  
-**Cost:** **3 Influence**
+**Cost:** **2 Influence**
 
 Play when an opponent uses **Assassination** against one of your Dynasty Members. Cancel the Assassination. The attacker still loses the Assassination card, the Player Action used to play it, and the Influence paid for it.
 
 Bodyguards does not protect Institution Agents.
 
-#### Hostile Land Takeover
+#### Land Seizure
 
 **Timing:** Action  
 **Nature:** Attack  
@@ -236,6 +227,21 @@ Morneval receives **+1 Order until the end of the Generation**, subject to the n
 Each opposing Family must pay **1 Influence for each Agent it has in the City Guard / Military Institution**. For each payment refused or impossible, that Family removes one of its own City Guard / Military Agents.
 
 Agent seniority does not modify this payment.
+
+#### Contingency Reserves
+
+**Timing:** Action  
+**Nature:** Bonus  
+**Type:** Non-Permanent  
+**Cost:** **1 Influence**
+
+Until the end of the current Generation, if Morneval finishes normal Food resolution with at least **1 excess Food**, place **1 Food** into the City's **Contingency Reserve** instead of losing that excess Food. The acting Family gains **+1 Prestige only if the Reserve is actually created**.
+
+Morneval may hold a maximum of **1 Contingency Reserve Food** at a time. The Reserve belongs to the **City**, not to the acting Family.
+
+During the **following Generation**, if Morneval would suffer a Food shortage, automatically consume the Contingency Reserve to satisfy **1 Food Demand before Imperial Aid is requested**.
+
+If the Reserve is not consumed during that following Generation, discard it at the end of that Generation.
 
 ---
 
@@ -398,7 +404,7 @@ Immediately reduce Morneval's **Squalor by 1**, minimum 0. The acting Family imm
 **Timing:** Action  
 **Nature:** Attack  
 **Type:** Non-Permanent  
-**Cost:** the normal Influence cost of converting a Hinterland territory into a Civic Farm
+**Cost:** **2 Influence**
 
 Choose one eligible natural Hinterland territory owned by an opposing Family. Permanently donate it to the City: remove the target Family's ownership marker and return that marker to its Domain track.
 
@@ -627,14 +633,18 @@ Individual card effects are not necessarily implemented in the digital prototype
 - The generic Intrigue acquisition, timing, cost, expiration and Permanent-card rules in this appendix.
 - The **Bonus / Attack / Defense Nature classification** of each active card as written above.
 - The seven Permanent cards and all **Active** card parameters written above.
+- **Bodyguards** costs **2 Influence** and protects only Dynasty Members, not Institution Agents.
+- The Military territory-seizure card is named **Land Seizure**.
+- **Contingency Reserves** is Action / Bonus / non-Permanent / 1 Influence. It can preserve one excess City Food for the following Generation, grants +1 Prestige only when the Reserve is actually created, is capped at one City Reserve, is consumed automatically before Imperial Aid if needed, and expires after the following Generation if unused.
 - **Legal Contestation** is Action / Attack / non-Permanent / 2 Influence plus a mandatory 1-Influence opening bid; it auctions an opposing Patent, the current owner may bid to retain it, and ownership transfers to the highest valid bidder without compensation.
 - **Crooked Notary** is Action / Attack / non-Permanent / 4 Influence; it immediately transfers an opposing Patent to the acting Family without auction or compensation.
 - The parked / shelved / obsolete status of the concepts in K.8.
-- In a standard **3-player game**, deck composition should support approximately **one 4+ Influence powerful card being played by at least one Family every two Generations** at the table level, not once per Family. Under the mid-game reference profile of **2 Seniority-1, 1 Seniority-2 and 1 Seniority-3 Agents per player**, the table sees about **42 card opportunities over two Generations**. The initial balancing target is therefore approximately **6–8% 4+ Influence cards**, with **about 7.5%** as the working reference before accounting for affordability, requirements and player choice.
+- LOW / MID / HIGH ratings and exact physical copy counts are **playtest balancing parameters**, not hard gameplay rules. The early-game HIGH-card cadence exists primarily to bring Patents and Military land enhancements into play quickly; it is not intended to remain constant once those Permanents have entered play.
 
 ### Still Open / Future Design
 
-- Exact physical deck composition and copy counts for non-unique cards.
+- Final tuning of physical deck composition and copy counts for non-unique cards.
+- Final LOW / MID / HIGH balance assessments after playtesting.
 - AI valuation and play heuristics for individual Intrigue effects.
 - Any additional contest / theft procedures for Patents or land ownership beyond the locked cards above.
 - City Inclination redesign and the final implementation of parked political-mobilization cards.
