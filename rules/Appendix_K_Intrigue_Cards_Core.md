@@ -406,6 +406,34 @@ The territory continues producing its normal Raw Resources but becomes permanent
 
 The former owner immediately gains **+2 Prestige**.
 
+#### Legal Contestation
+
+**Timing:** Action  
+**Nature:** Attack  
+**Type:** Non-Permanent  
+**Cost:** **2 Influence + mandatory opening bid of 1 Influence**
+
+Choose any **Patent already in play and controlled by an opposing Family**.
+
+After paying the card's 2-Influence cost, the acting Family must immediately submit an **opening bid of 1 additional Influence** for that Patent. This opening bid is part of resolving Legal Contestation and consumes no additional Player Action.
+
+The Patent then enters an auction under the normal universal auction rules. **All Families may participate, including the Patent's current owner.** The current owner may therefore spend Influence normally to defend and retain the Patent.
+
+At Auction Resolution, the highest valid bidder becomes the Patent's owner. If the current owner wins, ownership does not change. If another Family wins, transfer the Patent to that Family. The former owner receives **no compensation**.
+
+The Patent's permanent citywide effect remains active without interruption. Any owner-specific benefit, including the Patent's **+1 Wealth**, transfers to the new owner.
+
+#### Crooked Notary
+
+**Timing:** Action  
+**Nature:** Attack  
+**Type:** Non-Permanent  
+**Cost:** **4 Influence**
+
+Choose any **Patent already in play and controlled by an opposing Family**. Immediately take ownership of that Patent.
+
+No auction is held and the former owner receives **no compensation**. The Patent's permanent citywide effect remains active without interruption, while any owner-specific benefit, including the Patent's **+1 Wealth**, transfers to the acting Family.
+
 #### Public Absolution
 
 **Timing:** Reaction  
@@ -599,6 +627,8 @@ Individual card effects are not necessarily implemented in the digital prototype
 - The generic Intrigue acquisition, timing, cost, expiration and Permanent-card rules in this appendix.
 - The **Bonus / Attack / Defense Nature classification** of each active card as written above.
 - The seven Permanent cards and all **Active** card parameters written above.
+- **Legal Contestation** is Action / Attack / non-Permanent / 2 Influence plus a mandatory 1-Influence opening bid; it auctions an opposing Patent, the current owner may bid to retain it, and ownership transfers to the highest valid bidder without compensation.
+- **Crooked Notary** is Action / Attack / non-Permanent / 4 Influence; it immediately transfers an opposing Patent to the acting Family without auction or compensation.
 - The parked / shelved / obsolete status of the concepts in K.8.
 - In a standard **3-player game**, deck composition should support approximately **one 4+ Influence powerful card being played by at least one Family every two Generations** at the table level, not once per Family. Under the mid-game reference profile of **2 Seniority-1, 1 Seniority-2 and 1 Seniority-3 Agents per player**, the table sees about **42 card opportunities over two Generations**. The initial balancing target is therefore approximately **6–8% 4+ Influence cards**, with **about 7.5%** as the working reference before accounting for affordability, requirements and player choice.
 
@@ -606,5 +636,5 @@ Individual card effects are not necessarily implemented in the digital prototype
 
 - Exact physical deck composition and copy counts for non-unique cards.
 - AI valuation and play heuristics for individual Intrigue effects.
-- Specific contest / theft / counter-card procedures for Patents and land ownership.
+- Any additional contest / theft procedures for Patents or land ownership beyond the locked cards above.
 - City Inclination redesign and the final implementation of parked political-mobilization cards.
