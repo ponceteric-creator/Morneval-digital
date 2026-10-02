@@ -37,23 +37,30 @@ When a deck is exhausted, shuffle its discard pile to form a new draw pile, excl
 
 The founding cadence target is **table-wide**, not per Family: in a standard **3-player game**, the Intrigue decks should collectively support approximately **one powerful Intrigue card costing 4 Influence or more being played by at least one of the three Families every two Generations**.
 
-For composition calculations, use the baseline assumption that each of the three players has normal Intrigue access equivalent to **one Seniority-2 Agent**: each player therefore sees **2 cards per Generation**. Across 3 players and 2 Generations, the table sees approximately **12 card opportunities**.
+For composition calculations, use the **mid-game reference profile** of approximately 4 Agents per Family:
+
+- **2 Seniority-1 Agents** → 2 cards seen;
+- **1 Seniority-2 Agent** → 2 cards seen;
+- **1 Seniority-3 Agent** → 3 cards seen.
+
+Each player therefore sees approximately **7 Intrigue cards per Generation**. Across 3 players, the table sees approximately **21 cards per Generation**, or **42 card opportunities over two Generations**.
 
 If `p` is the share of 4+ Influence cards among those opportunities, the approximate chance that the table sees at least one such card over two Generations is:
 
-> **1 − (1 − p)^12**
+> **1 − (1 − p)^42**
 
 Reference points:
 
-- **10%** powerful cards → about **72%** chance of seeing at least one over two Generations;
-- **12.5%** → about **80%**;
-- **15%** → about **86%**;
-- **17.5%** → about **90%**;
-- **20%** → about **93%**.
+- **3%** powerful cards → about **72%** chance of seeing at least one over two Generations;
+- **4%** → about **82%**;
+- **5%** → about **88%**;
+- **6%** → about **93%**;
+- **7.5%** → about **96%**;
+- **10%** → about **99%**.
 
-Because **seeing** a 4+ card does not guarantee that it can or will actually be **played** — the Family may lack Influence, fail another requirement, or prefer another card — the initial balancing target should be approximately **15–20% of the active deck mix at 4+ Influence**, with **about 17.5%** as the mathematical reference point for roughly 90% table-wide exposure over two Generations.
+Because **seeing** a 4+ card does not guarantee that it can or will actually be **played** — the Family may lack Influence, fail another requirement, discard it in favour of another option, or prefer not to spend the required resources — the initial balancing target should be approximately **6–8% of the active deck mix at 4+ Influence**, with **about 7.5%** as the working reference point.
 
-This remains a composition target rather than a guaranteed draw or guaranteed play. Unique Permanent cards should not be the sole means of meeting it because they progressively leave circulation once played. The final percentage must be validated through 3-player playtesting using actual Agent counts, seniority and card-play rates.
+This remains a composition target rather than a guaranteed draw or guaranteed play. Unique Permanent cards should not be the sole means of meeting it because they progressively leave circulation once played. The final percentage must be validated through 3-player playtesting using actual Agent counts, seniority, affordability and card-play rates.
 
 ---
 
@@ -275,7 +282,7 @@ Payment is all-or-nothing for each Agent; partial payment does not preserve an A
 
 #### Insider Information / Bid Advantage
 
-**Timing:** Reaction  
+**Timing:** Action  
 **Type:** Non-Permanent  
 **Cost:** 0 Influence
 
@@ -548,7 +555,7 @@ Individual card effects are not necessarily implemented in the digital prototype
 - The generic Intrigue acquisition, timing, cost, expiration and Permanent-card rules in this appendix.
 - The seven Permanent cards and all **Active** card parameters written above.
 - The parked / shelved / obsolete status of the concepts in K.8.
-- In a standard **3-player game**, deck composition should support approximately **one 4+ Influence powerful card being played by at least one Family every two Generations** at the table level, not once per Family. Under the reference model of one Seniority-2 Agent per player, this implies 12 card opportunities over two Generations and an initial target of roughly **15–20% 4+ Influence cards**, with **17.5%** giving about **90%** probability of at least one such card being seen before accounting for affordability and player choice.
+- In a standard **3-player game**, deck composition should support approximately **one 4+ Influence powerful card being played by at least one Family every two Generations** at the table level, not once per Family. Under the mid-game reference profile of **2 Seniority-1, 1 Seniority-2 and 1 Seniority-3 Agents per player**, the table sees about **42 card opportunities over two Generations**. The initial balancing target is therefore approximately **6–8% 4+ Influence cards**, with **about 7.5%** as the working reference before accounting for affordability, requirements and player choice.
 
 ### Still Open / Future Design
 
