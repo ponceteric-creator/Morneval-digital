@@ -119,6 +119,12 @@ function resolveCityInclination(state, summary) {
     entry.phaseSequence = [...summary.phaseSequence];
   }
 
+  if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof CustomEvent !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('morneval:inclination-resolved', {
+      detail: JSON.parse(JSON.stringify(result)),
+    }));
+  }
+
   return result;
 }
 
