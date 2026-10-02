@@ -1,6 +1,6 @@
 import './v111-ui-patch.js?v=0.11.5-base';
 
-const VERSION='0.11.5-intrigue';
+const VERSION='0.11.5';
 
 function patch(){
   const root=document.querySelector('#app');
