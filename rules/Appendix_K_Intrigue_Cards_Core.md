@@ -35,9 +35,25 @@ When a deck is exhausted, shuffle its discard pile to form a new draw pile, excl
 
 ### K.2A — Deck Composition Target
 
-Deck composition should support the founding design target that a Family with normal access to an Institution has the opportunity to play a **powerful Intrigue card costing 4 Influence or more approximately once every two Generations**.
+The founding cadence target is **table-wide**, not per Family: in a standard **3-player game**, the Intrigue decks should collectively support approximately **one powerful Intrigue card costing 4 Influence or more being played by at least one of the three Families every two Generations**.
 
-This is a composition target, not a guaranteed draw. Unique Permanent cards should not be the sole means of meeting this target because they progressively leave circulation once played.
+For composition calculations, use the baseline assumption that each of the three players has normal Intrigue access equivalent to **one Seniority-2 Agent**: each player therefore sees **2 cards per Generation**. Across 3 players and 2 Generations, the table sees approximately **12 card opportunities**.
+
+If `p` is the share of 4+ Influence cards among those opportunities, the approximate chance that the table sees at least one such card over two Generations is:
+
+> **1 − (1 − p)^12**
+
+Reference points:
+
+- **10%** powerful cards → about **72%** chance of seeing at least one over two Generations;
+- **12.5%** → about **80%**;
+- **15%** → about **86%**;
+- **17.5%** → about **90%**;
+- **20%** → about **93%**.
+
+Because **seeing** a 4+ card does not guarantee that it can or will actually be **played** — the Family may lack Influence, fail another requirement, or prefer another card — the initial balancing target should be approximately **15–20% of the active deck mix at 4+ Influence**, with **about 17.5%** as the mathematical reference point for roughly 90% table-wide exposure over two Generations.
+
+This remains a composition target rather than a guaranteed draw or guaranteed play. Unique Permanent cards should not be the sole means of meeting it because they progressively leave circulation once played. The final percentage must be validated through 3-player playtesting using actual Agent counts, seniority and card-play rates.
 
 ---
 
@@ -532,7 +548,7 @@ Individual card effects are not necessarily implemented in the digital prototype
 - The generic Intrigue acquisition, timing, cost, expiration and Permanent-card rules in this appendix.
 - The seven Permanent cards and all **Active** card parameters written above.
 - The parked / shelved / obsolete status of the concepts in K.8.
-- Deck composition should support access to a **4+ Influence powerful card approximately once every two Generations**, without relying solely on unique Permanents.
+- In a standard **3-player game**, deck composition should support approximately **one 4+ Influence powerful card being played by at least one Family every two Generations** at the table level, not once per Family. Under the reference model of one Seniority-2 Agent per player, this implies 12 card opportunities over two Generations and an initial target of roughly **15–20% 4+ Influence cards**, with **17.5%** giving about **90%** probability of at least one such card being seen before accounting for affordability and player choice.
 
 ### Still Open / Future Design
 
