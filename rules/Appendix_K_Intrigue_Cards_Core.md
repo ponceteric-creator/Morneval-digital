@@ -84,6 +84,16 @@ A **Reaction** card may be played only when its printed trigger occurs. It consu
 
 A **Resolution** card is played during its specified resolution window and consumes **no Player Action** at that moment. For Vote-related cards, initiating / placing the Vote still costs **1 Player Action**.
 
+### K.4A — Card Nature
+
+Each active Intrigue card also has one locked **Nature** classification:
+
+- **Bonus**
+- **Attack**
+- **Defense**
+
+Nature is separate from Timing: an Action may be a Bonus or an Attack, while defensive cards are currently Reactions.
+
 ---
 
 ## K.5 — Costs
@@ -105,6 +115,7 @@ All seven currently locked Permanent cards are **Action / 4 Influence / Unique**
 #### Advanced Farming Techniques
 
 **Timing:** Action  
+**Nature:** Bonus  
 **Cost:** 4 Influence  
 **Type:** Permanent — Patent
 
@@ -113,6 +124,7 @@ Each Civic Farm produces **+1 Raw Food**. The Patent owner gains **+1 Wealth** a
 #### Civic Sanitation Works
 
 **Timing:** Action  
+**Nature:** Bonus  
 **Cost:** 4 Influence  
 **Type:** Permanent — Patent
 
@@ -121,6 +133,7 @@ After normal Squalor resolution, reduce total Squalor by **1**, minimum 0. The P
 #### Advanced Judicial System
 
 **Timing:** Action  
+**Nature:** Bonus  
 **Cost:** 4 Influence  
 **Type:** Permanent — Patent
 
@@ -129,6 +142,7 @@ Morneval receives **+1 Order**, subject to the normal maximum. The Patent owner 
 #### Advanced Architecture
 
 **Timing:** Action  
+**Nature:** Bonus  
 **Cost:** 4 Influence  
 **Type:** Permanent — Patent
 
@@ -139,6 +153,7 @@ Urban tile capacity becomes **4 instead of 3**. The Patent owner gains **+1 Weal
 #### Gemstone Vein
 
 **Timing:** Action  
+**Nature:** Bonus  
 **Cost:** 4 Influence  
 **Type:** Permanent — Land Improvement
 
@@ -147,6 +162,7 @@ Attach to an eligible controlled **Hill**. It provides **+1 Wealth** according t
 #### Rare Breed
 
 **Timing:** Action  
+**Nature:** Bonus  
 **Cost:** 4 Influence  
 **Type:** Permanent — Land Improvement
 
@@ -155,6 +171,7 @@ Attach to an eligible controlled **Meadow**. It provides **+1 Wealth** according
 #### Precious Timber
 
 **Timing:** Action  
+**Nature:** Bonus  
 **Cost:** 4 Influence  
 **Type:** Permanent — Land Improvement
 
@@ -169,6 +186,7 @@ Attach to an eligible controlled **Forest**. It provides **+1 Wealth** according
 #### Assassination
 
 **Timing:** Action  
+**Nature:** Attack  
 **Type:** Non-Permanent  
 **Cost:** variable by target
 
@@ -182,6 +200,7 @@ Eliminate the chosen target automatically. No die roll is used.
 #### Bodyguards
 
 **Timing:** Reaction  
+**Nature:** Defense  
 **Type:** Non-Permanent  
 **Cost:** **3 Influence**
 
@@ -192,6 +211,7 @@ Bodyguards does not protect Institution Agents.
 #### Hostile Land Takeover
 
 **Timing:** Action  
+**Nature:** Attack  
 **Type:** Non-Permanent  
 **Cost:** **2 Influence + the acting Family's current next-territory claim cost**
 
@@ -200,6 +220,7 @@ Seize an eligible natural Hinterland territory controlled by another Family. The
 #### Martial Law
 
 **Timing:** Action  
+**Nature:** Bonus  
 **Type:** Non-Permanent  
 **Cost:** 1 Influence
 
@@ -208,6 +229,7 @@ Morneval receives **+1 Order until the end of the Generation**, subject to the n
 #### Officer Purge / Loyalty Commission
 
 **Timing:** Action  
+**Nature:** Attack  
 **Type:** Non-Permanent  
 **Cost:** **1 Influence**
 
@@ -222,6 +244,7 @@ Agent seniority does not modify this payment.
 #### Spy Network / Intelligence
 
 **Timing:** Action  
+**Nature:** Attack  
 **Type:** Non-Permanent  
 **Cost:** variable — **1 / 2 / 3 Influence total**
 
@@ -238,6 +261,7 @@ A stolen card enters the acting Family's hand and follows its normal timing, cos
 #### Counter-Intelligence
 
 **Timing:** Reaction  
+**Nature:** Defense  
 **Type:** Non-Permanent  
 **Cost:** 2 Influence
 
@@ -250,6 +274,7 @@ If the triggering card affects several Families, it continues to resolve normall
 #### Technological Acceleration
 
 **Timing:** Action  
+**Nature:** Bonus  
 **Type:** Non-Permanent  
 **Cost:** 1 Influence
 
@@ -260,6 +285,7 @@ The acting Family also immediately gains **+1 Prestige**.
 #### Experimental Methods
 
 **Timing:** Action  
+**Nature:** Bonus  
 **Type:** Non-Permanent  
 **Cost:** 1 Influence
 
@@ -270,6 +296,7 @@ The additional capacity follows normal production and allocation rules. It does 
 #### Expose the Charlatans
 
 **Timing:** Action  
+**Nature:** Attack  
 **Type:** Non-Permanent  
 **Cost:** 2 Influence
 
@@ -283,6 +310,7 @@ Payment is all-or-nothing for each Agent; partial payment does not preserve an A
 #### Insider Information / Bid Advantage
 
 **Timing:** Action  
+**Nature:** Bonus  
 **Type:** Non-Permanent  
 **Cost:** 0 Influence
 
@@ -293,6 +321,7 @@ Bid-only Influence cannot be spent on any other cost and unused points disappear
 #### Dark Magic
 
 **Timing:** Action  
+**Nature:** Bonus  
 **Type:** Non-Permanent  
 **Cost:** **0 Influence + 3 Prestige**
 
@@ -307,6 +336,7 @@ The Prestige loss is mandatory and cannot be prevented or ignored. The gained In
 #### Infernal Pact
 
 **Timing:** Action  
+**Nature:** Bonus  
 **Type:** Non-Permanent  
 **Cost:** 0 Influence + 2 Prestige
 
@@ -317,6 +347,7 @@ The Prestige loss is mandatory and cannot be prevented or ignored. The gained In
 #### Hunt the Heretics
 
 **Timing:** Action  
+**Nature:** Attack  
 **Type:** Non-Permanent  
 **Cost:** 2 Influence
 
@@ -330,6 +361,7 @@ Payment is all-or-nothing for each Agent; partial payment does not preserve an A
 #### Threat of Excommunication
 
 **Timing:** Action  
+**Nature:** Attack  
 **Type:** Non-Permanent  
 **Cost:** 1 Influence
 
@@ -341,6 +373,7 @@ Choose one opposing Family. That Family chooses to either:
 #### Anathema
 
 **Timing:** Action  
+**Nature:** Attack  
 **Type:** Non-Permanent  
 **Cost:** 3 Influence
 
@@ -354,6 +387,7 @@ The Prestige option is available only if the targeted Family can lose the full 4
 #### Alms for the Poor
 
 **Timing:** Action  
+**Nature:** Bonus  
 **Type:** Non-Permanent  
 **Cost:** 1 Influence
 
@@ -362,6 +396,7 @@ Immediately reduce Morneval's **Squalor by 1**, minimum 0. The acting Family imm
 #### Ecclesiastical Confiscation
 
 **Timing:** Action  
+**Nature:** Attack  
 **Type:** Non-Permanent  
 **Cost:** the normal Influence cost of converting a Hinterland territory into a Civic Farm
 
@@ -374,6 +409,7 @@ The former owner immediately gains **+2 Prestige**.
 #### Public Absolution
 
 **Timing:** Reaction  
+**Nature:** Defense  
 **Type:** Non-Permanent  
 **Cost:** 1 Influence
 
@@ -388,6 +424,7 @@ Public Absolution cannot reduce voluntary Prestige losses or Prestige paid as a 
 #### Criminal Network
 
 **Timing:** Action  
+**Nature:** Bonus  
 **Type:** Non-Permanent  
 **Cost:** **0 Influence + 1 Prestige**
 
@@ -398,6 +435,7 @@ The Prestige loss is mandatory and cannot be prevented or ignored. The gained In
 #### Hostile Takeover
 
 **Timing:** Action  
+**Nature:** Attack  
 **Type:** Non-Permanent  
 **Cost:** 1 Influence
 
@@ -408,6 +446,7 @@ The acting Family must immediately submit an **opening bid of 1 additional Influ
 #### Binding Bids / All Bidders Pay
 
 **Timing:** Action  
+**Nature:** Bonus  
 **Type:** Non-Permanent  
 **Cost:** 1 Influence
 
@@ -418,6 +457,7 @@ For this auction only, **every Family that submits a bid pays its final committe
 #### Line of Credit
 
 **Timing:** Action  
+**Nature:** Bonus  
 **Type:** Non-Permanent  
 **Cost:** variable
 
@@ -434,6 +474,7 @@ Resolve all auctions normally. **After all auctions have been resolved**, repay 
 #### Preferential Contracts
 
 **Timing:** Action  
+**Nature:** Bonus  
 **Type:** Non-Permanent  
 **Cost:** variable
 
@@ -450,6 +491,7 @@ Each unit follows the normal External Demand rules, including normal Wealth gain
 #### Private Buyer
 
 **Timing:** Action  
+**Nature:** Bonus  
 **Type:** Non-Permanent  
 **Cost:** 1 Influence
 
@@ -458,6 +500,7 @@ Immediately create **+1 External Demand for the current Generation**. The additi
 #### Misdirection / Straw Man
 
 **Timing:** Reaction  
+**Nature:** Defense  
 **Type:** Non-Permanent  
 **Cost:** 3 Influence
 
@@ -470,6 +513,7 @@ Choose a different **legal target** satisfying all normal restrictions of the tr
 #### Licence Revocation / Audit of Privileges
 
 **Timing:** Action  
+**Nature:** Attack  
 **Type:** Non-Permanent  
 **Cost:** **1 Influence**
 
@@ -553,6 +597,7 @@ Individual card effects are not necessarily implemented in the digital prototype
 ### Locked
 
 - The generic Intrigue acquisition, timing, cost, expiration and Permanent-card rules in this appendix.
+- The **Bonus / Attack / Defense Nature classification** of each active card as written above.
 - The seven Permanent cards and all **Active** card parameters written above.
 - The parked / shelved / obsolete status of the concepts in K.8.
 - In a standard **3-player game**, deck composition should support approximately **one 4+ Influence powerful card being played by at least one Family every two Generations** at the table level, not once per Family. Under the mid-game reference profile of **2 Seniority-1, 1 Seniority-2 and 1 Seniority-3 Agents per player**, the table sees about **42 card opportunities over two Generations**. The initial balancing target is therefore approximately **6–8% 4+ Influence cards**, with **about 7.5%** as the working reference before accounting for affordability, requirements and player choice.
