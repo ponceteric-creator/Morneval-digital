@@ -1,6 +1,6 @@
 # Appendix H — Generation Sequence, Auctions, Mercenary Contract & Renown
 
-Status: **v0.11.0 simulation model**. Intrigue cards are intentionally excluded because their rules are not yet sufficiently defined.
+Status: **v0.11.6 current simulation sequence**.
 
 ## 1. Generation sequence
 
@@ -16,6 +16,7 @@ Each Generation resolves in this order:
 8. **CIVIL DISORDER RESOLUTION**
 9. **WEALTH RECALCULATION**
 10. **FIRST PLAYER**
+11. **CITY INCLINATION**
 
 ### 1.1 Upkeep
 
@@ -30,13 +31,15 @@ Upkeep resolves:
 
 ### 1.2 Event
 
-The Event phase exists in the timing structure. The Event deck is not yet implemented in the v0.11.0 simulation.
+The Event phase exists in the timing structure. The Event deck is not yet implemented in the current simulation.
 
 ### 1.3 Player Actions
 
 Starting with First Player, Families take **one action successively**. There is no fixed action-round limit. A Family that passes is finished for the Generation. The phase ends when every Family has passed.
 
 Submitting or increasing an auction bid is a normal action.
+
+Intrigue **Action** cards consume a normal Player Action according to Appendix K. Intrigue **Reaction** cards consume no Player Action and resolve only when their trigger occurs.
 
 ### 1.4 Auction Resolution
 
@@ -79,11 +82,46 @@ Civil Disorder is an explicit exception to the normal rule that Prestige changes
 
 Wealth is recalculated from the Generation's economic results and becomes the Family's Wealth capacity for the **next** Generation. A Wealth reduction does not force immediate Agent recall here; support is checked at the next Upkeep.
 
+Permanent Intrigue effects that provide owner-specific Wealth, including Scholarium Patents and Military Land Enhancements, are included in the final Wealth state.
+
 ### 1.10 First Player
 
-The next First Player is determined after all other resolution:
+The next First Player is determined after Wealth Recalculation:
 
 **Influence → Prestige → recalculated Wealth → random tie-break.**
+
+City Inclination is resolved only after the next First Player has been determined.
+
+### 1.11 City Inclination
+
+City Inclination is the **last phase of the Generation**.
+
+Only Intrigue cards **actually played during the current Generation** are counted. There is no carry-over of card counts between Generations.
+
+The two axes are resolved independently:
+
+- **Scholarium ↔ Temple**
+- **Military ↔ Merchant Guild**
+
+For each axis, compare the number of cards played from the two opposing Institution decks:
+
+- if one side has a strict relative majority, move the axis **one step** toward that side;
+- if both sides played the same number of cards, the axis does not move;
+- there is **no minimum threshold** for movement;
+- an axis can move by at most **one step per Generation**, regardless of the size of the majority;
+- normal axis limits remain **II / I / Neutral / I / II**.
+
+Therefore, for example, **3 Temple cards vs 2 Scholarium cards** moves the Scholarium/Temple axis one step toward Temple; **5 vs 0** also moves it only one step; **2 vs 2** causes no movement.
+
+All cards actually played count:
+
+- Actions count;
+- Reactions count;
+- a card whose effect is cancelled or countered still counts because it was played;
+- a Permanent counts only in the Generation in which it is played;
+- a stolen card counts for the **Institution deck it originally belongs to**, not for the Institution of the Family that currently holds it.
+
+The resulting Inclination becomes the city's starting Inclination for the **following Generation**.
 
 ## 2. Universal auction rule
 
@@ -162,7 +200,7 @@ Production and Institution contribution per element:
 - Tier II: +1 Renown
 - Tier III: +2 Renown
 
-Each permanent future Innovation/Improvement card is currently intended to contribute +1 Renown while it remains in play. Intrigue cards themselves are not yet implemented.
+Each permanent future Innovation/Improvement card is currently intended to contribute +1 Renown while it remains in play.
 
 The simulation temporarily adds **+1 Renown per 5 completed Generations** to stand in for future permanent Improvements. This longevity bonus is simulation-only and will not exist in the final tabletop rules.
 
