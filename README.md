@@ -2,7 +2,7 @@
 
 Digital prototype of the Morneval strategy board game.
 
-Current deployed prototype: **v0.11.5 — Intrigue Simulation**.
+Current deployed prototype: **v0.11.6 — Intrigue & City Inclination**.
 
 The browser prototype currently supports:
 
@@ -19,11 +19,12 @@ The browser prototype currently supports:
 - Scholarium Patents and Military Land Enhancements as Permanents;
 - Patent transfer through Legal Contestation and Crooked Notary;
 - Intrigue-related Wealth bonuses reflected in current state and Generation History;
-- Contingency Reserves for Food stabilization before Imperial Aid.
+- Contingency Reserves for Food stabilization before Imperial Aid;
+- automatic end-of-Generation City Inclination movement based on Intrigue cards actually played.
 
 ## Current version
 
-**v0.11.5** is the canonical prototype version. The root `VERSION` file is the repository version reference. Query-string suffixes such as `intrigue3`, `safe5`, or `base` are cache / implementation identifiers and are not separate semantic versions.
+**v0.11.6** is the canonical prototype version. The root `VERSION` file is the repository version reference. Query-string suffixes used for cache invalidation or implementation routing are not separate semantic versions.
 
 ### Intrigue implementation status
 
@@ -42,7 +43,27 @@ The current mid-game composition reference is approximately 4 Agents per Family:
 
 Unique Patents and Land Enhancements leave their source decks when played. Their owner-specific Wealth bonus follows current ownership. Patents may later circulate through Temple Intrigue cards.
 
-### Known simulation limits
+## City Inclination resolution
+
+City Inclination is resolved as the **last phase of every Generation** from Intrigue cards actually played during that Generation.
+
+Two independent axes are used:
+
+- **Scholarium ↔ Temple**
+- **Military ↔ Merchant Guild**
+
+For each axis, compare the number of cards played from the two opposing Institution decks:
+
+- if one side has a strict relative majority, move the axis **one step** toward that side;
+- if the counts are tied, do not move;
+- there is **no minimum threshold**;
+- an axis can move by at most **one step per Generation**, regardless of the size of the majority.
+
+All cards actually played count: Actions and Reactions, including cards whose effects are later countered. Permanents count only in the Generation in which they are played. A stolen card counts for the Institution deck it originally belongs to.
+
+The current axis scale is five positions: `II ← I ← Neutral → I → II`.
+
+## Known simulation limits
 
 The current build intentionally keeps several limitations explicit:
 
@@ -55,7 +76,7 @@ The current build intentionally keeps several limitations explicit:
 
 The current rules are split into appendices under [`rules/`](./rules/). The most relevant current references are:
 
-- [`Appendix_H_Generation_Sequence_Auctions_Renown.md`](./rules/Appendix_H_Generation_Sequence_Auctions_Renown.md) — Generation sequence and auction framework
+- [`Appendix_H_Generation_Sequence_Auctions_Renown.md`](./rules/Appendix_H_Generation_Sequence_Auctions_Renown.md) — Generation sequence, auctions and final City Inclination phase
 - [`Appendix_I_Development_Costs_ROI.md`](./rules/Appendix_I_Development_Costs_ROI.md) — development and Domain costs
 - [`Appendix_J_Alternative_Wealth_Sources.md`](./rules/Appendix_J_Alternative_Wealth_Sources.md) — Tithes, Patents and Land Enhancement Wealth
 - [`Appendix_K_Intrigue_Cards_Core.md`](./rules/Appendix_K_Intrigue_Cards_Core.md) — current Intrigue rules and card effects
@@ -67,10 +88,11 @@ The current rules are split into appendices under [`rules/`](./rules/). The most
 - Wealth is a capacity recalculated each Generation rather than a stored currency.
 - Institution Agents persist, age through seniority and consume Wealth capacity.
 - Production Stakes age Young → Mature → Elder and interact with demand allocation.
-- City Inclination currently uses two axes: Scholarium / Temple and Military / Merchant Guild.
+- City Inclination uses two axes: Scholarium / Temple and Military / Merchant Guild.
 
 ## Version history — recent milestones
 
+- **v0.11.6** — Intrigue-driven City Inclination resolution added as the final Generation phase; README/versioning synchronized.
 - **v0.11.5** — active Intrigue decks, AI card selection/play, Permanents, Patent transfer, Contingency Reserves and Intrigue Wealth history synchronization.
 - **v0.11.3** — generic Intrigue deck / hand / timing scaffold.
 - **v0.11.2** — Temple Tithes and telemetry extensions.
