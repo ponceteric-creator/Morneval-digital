@@ -2,7 +2,7 @@
 
 Digital prototype of the Morneval strategy board game.
 
-Current deployed prototype: **v0.11.6 — Intrigue & City Inclination**.
+Current deployed prototype: **v0.11.7 — Contrarian AI**.
 
 The browser prototype currently supports:
 
@@ -15,6 +15,7 @@ The browser prototype currently supports:
 - the active four Institution Intrigue decks with their current copy counts;
 - Agent-based Intrigue acquisition by seniority (draw 1/2/3, keep 1);
 - contextual AI selection and play of Intrigue cards;
+- a Contrarian AI family that plans Institution access from visible opponent concentration and known Intrigue-deck opportunities;
 - Action and Reaction Intrigue timing;
 - Scholarium Patents and Military Land Enhancements as Permanents;
 - Patent transfer through Legal Contestation and Crooked Notary;
@@ -24,7 +25,17 @@ The browser prototype currently supports:
 
 ## Current version
 
-**v0.11.6** is the canonical prototype version. The root `VERSION` file is the repository version reference. Query-string suffixes used for cache invalidation or implementation routing are not separate semantic versions.
+**v0.11.7** is the canonical prototype version. The root `VERSION` file is the repository version reference. Query-string suffixes used for cache invalidation or implementation routing are not separate semantic versions.
+
+### Contrarian AI
+
+In the default three-Family simulation, the former generic Opportunist seat is now the **Contrarian**. The Opportunist profile remains available in code for custom states.
+
+The Contrarian receives no resource, action or scoring bonus. It uses the same rules and costs as the other Families, but adds a strategic valuation layer for future Intrigue access. It reads only public information: visible Land ownership, Production Stakes, Institution Agents, Permanents / Patents, city conditions and the known composition of the four Intrigue decks. Opponents' hidden Intrigue hands are not inspected.
+
+When the Contrarian decides to invest in an Agent, it compares the future opportunity value of the four Institution decks. The valuation rewards under-contested access, but only when that access also has a concrete exploitation path. For example, concentrated rival Land ownership increases the value of City Guard / Military access because Land Seizure becomes a stronger future option; concentrated mature / elder Stakes increase the value of Merchant Guild access through Hostile Takeover; and rival Patents increase the value of Temple access through Legal Contestation and Crooked Notary.
+
+This is intentionally a planning heuristic rather than a catch-up rule: the Contrarian does not target the Prestige leader automatically and does not receive artificial compensation for being behind.
 
 ### Intrigue implementation status
 
@@ -71,6 +82,7 @@ The current build intentionally keeps several limitations explicit:
 - Preferential Contracts and Private Buyer currently use approximate economy hooks.
 - Civic Sanitation Works applies its final Squalor reduction, but same-Generation disease timing remains an approximation.
 - AI Intrigue valuation and the temporary limit on Intrigue Actions per Family are simulation heuristics, not tabletop rules.
+- Contrarian Agent specialization is layered over the existing action heuristic; it changes which Institution a newly chosen Agent supports, but does not grant additional Agent actions or bypass normal Wealth commitment.
 
 ## Rule references
 
@@ -92,6 +104,7 @@ The current rules are split into appendices under [`rules/`](./rules/). The most
 
 ## Version history — recent milestones
 
+- **v0.11.7** — added the Intrigue-aware Contrarian AI family, replacing the default Opportunist seat in three-Family simulation without adding resource or scoring bonuses.
 - **v0.11.6** — Intrigue-driven City Inclination resolution added as the final Generation phase; README/versioning synchronized.
 - **v0.11.5** — active Intrigue decks, AI card selection/play, Permanents, Patent transfer, Contingency Reserves and Intrigue Wealth history synchronization.
 - **v0.11.3** — generic Intrigue deck / hand / timing scaffold.
