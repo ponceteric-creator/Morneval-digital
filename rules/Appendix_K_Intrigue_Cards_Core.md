@@ -512,6 +512,26 @@ Each such production unit follows the normal rules for satisfying External Deman
 
 Immediately create **+1 External Demand for the current Generation**. This additional demand is not automatically satisfied and is subsequently resolved under the normal External Demand and production-allocation rules.
 
+### Misdirection / Straw Man
+
+**Timing:** Reaction  
+**Type:** Non-Permanent  
+**Cost:** 3 Influence
+
+Play after an opposing Intrigue card with exactly one target has designated **your Family or one of your assets** as its target, but before that card resolves.
+
+Choose a different **legal target** for the triggering card. The new target must satisfy all normal targeting restrictions of that card. The triggering card then resolves normally against the new target.
+
+**Assassination may be redirected by Misdirection.** However, the new target may not be the Family that played the triggering card or any asset controlled by that Family. The triggering card's Action and Influence cost remain spent normally.
+
+---
+
+## K.7H — Shelved Merchant Guild Concepts
+
+### Commercial Charter — Shelved
+
+The previously proposed **Commercial Charter** development card is not retained in the current deck design. Like Military Academy, Conclave Development and Ecclesiastical Reform, a simple Institution-development discount was judged too utilitarian and too low-value relative to the opportunity cost of drawing and playing an Intrigue card.
+
 ---
 
 ## K.8 — Current Simulation Status
@@ -580,6 +600,8 @@ This is deliberate: the full initial composition of the Scholarium and City Guar
 - Line of Credit is Action / non-Permanent with three credit levels: 1/2/3 Influence cost for 5/10/15 temporary Influence, requiring 10/20/30 Prestige respectively when played; after all auctions resolve, the full temporary amount is repaid, and each unpaid point costs 2 Prestige.
 - Preferential Contracts is Action / non-Permanent with variable cost 1/3/5 Influence; it lets up to 1/2/3 production units from the acting Family's Production Stakes satisfy available External Demand before normal allocation priorities, while retaining the normal External Demand Wealth reward and resource-consumption rules.
 - Private Buyer is Action / non-Permanent / 1 Influence with an instant effect: it creates +1 External Demand for the current Generation, which is then handled under the normal allocation rules.
+- Misdirection / Straw Man is Reaction / non-Permanent / 3 Influence; it redirects a single-target opposing Intrigue card that targets the reacting Family or one of its assets to another legal target. Assassination can be redirected, but the source Family and its assets cannot be selected as the new target.
+- Commercial Charter is shelved and is not part of the current deck design.
 
 ### Still Open / Future Design
 
