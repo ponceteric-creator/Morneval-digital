@@ -12,7 +12,7 @@ function patchHistory(root){
     if(!data)continue;
     const notes=card.querySelector('.history-notes');
     if(!notes)continue;
-    notes.querySelector('[data-v116-inclination-note]')?.remove();
+    notes.querySelectorAll('[data-v116-inclination-note]').forEach(node=>node.remove());
     const c=data.counts;
     notes.insertAdjacentHTML('beforeend',`<br data-v116-inclination-note><span data-v116-inclination-note><b>City Inclination:</b> Temple ${c.temple} vs Scholarium ${c.scholarium} · ${data.labels.religionArcaneBefore} → ${data.labels.religionArcaneAfter}; Military ${c.military} vs Merchant ${c.merchant} · ${data.labels.militaryMercantileBefore} → ${data.labels.militaryMercantileAfter}</span>`);
   }
