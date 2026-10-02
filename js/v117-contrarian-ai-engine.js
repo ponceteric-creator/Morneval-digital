@@ -13,7 +13,7 @@ const RETARGET_MIN = 1.15;
 
 // No resource/scoring bonus: this profile only gives the existing AI a longer planning horizon.
 V090_CONFIG.personalities.contrarian = {
-  label:'Contrarian', prestige:1.00, wealth:1.00, engine:1.12, civic:0.82, horizon:4, discount:0.90,
+  label:'Contrarian', prestige:1.20, wealth:1.20, engine:1.40, civic:0.70, horizon:4, discount:0.92,
 };
 
 const n = v => Number(v) || 0;
@@ -149,6 +149,50 @@ function plan(state,player){
   return {generation:n(state.generation),playerId:player.id,familyName:player.familyName,opportunities,bestInstitutionId:opportunities[0]?.institutionId??null,bestScore:opportunities[0]?.score??0,signals:signals(state,player),hiddenOpponentHandsIgnored:true};
 }
 
+function strategicReallocation(state,player){
+  const agents=[...(player.institutionAgentRoster??[])];
+  if(!agents.length)return null;
+  const best=INST.map(id=>institutionValue(state,player,id)).sort((a,b)=>b.score-a.score)[0];
+  if(!best||best.score<RETARGET_MIN)return null;
+  const choices=agents.map(agent=>{
+    const current=institutionValue(state,player,agent.institutionId);
+    const seniority=Math.max(1,n(agent.seniority));
+    const seniorityLoss=(seniority-1)*.55;
+    return {agent,current,seniority,gain:best.score-current.score-seniorityLoss};
+  }).filter(x=>x.agent.institutionId!==best.institutionId).sort((a,b)=>b.gain-a.gain);
+  const pick=choices[0];
+  if(!pick||pick.gain<RETARGET_MARGIN+.20)return null;
+  const old={...pick.agent};
+  const order=Math.max(1,n(state.nextInstitutionAgentOrder)||1);
+  state.nextInstitutionAgentOrder=order+1;
+  pick.agent.id=`agent_${order}`;
+  pick.agent.institutionId=best.institutionId;
+  pick.agent.seniority=1;
+  pick.agent.placementOrder=order;
+  pick.agent.placedGeneration=state.generation;
+  syncAgents(player);
+  return {oldAgentId:old.id,newAgentId:pick.agent.id,fromInstitutionId:old.institutionId,toInstitutionId:best.institutionId,seniorityLost:Math.max(0,n(old.seniority)-1),fromScore:pick.current.score,toScore:best.score,netStrategicGain:pick.gain,topCards:best.topCards.slice(0,2)};
+}
+
+function instrumentActionPhaseReallocation(state,player){
+  let stored=n(player.wealthCommittedThisGeneration),triggered=false,reallocation=null;
+  const descriptor=Object.getOwnPropertyDescriptor(player,'wealthCommittedThisGeneration');
+  if(descriptor&&!descriptor.configurable)return {restore(){},get reallocation(){return null;}};
+  Object.defineProperty(player,'wealthCommittedThisGeneration',{configurable:true,enumerable:true,get(){return stored;},set(value){stored=Math.max(0,n(value));if(!triggered&&state.phase==='player_actions'&&stored===0){triggered=true;reallocation=strategicReallocation(state,player);}}});
+  return {
+    get reallocation(){return reallocation;},
+    restore(){delete player.wealthCommittedThisGeneration;if(descriptor)Object.defineProperty(player,'wealthCommittedThisGeneration',descriptor);player.wealthCommittedThisGeneration=stored;},
+  };
+}
+
+function injectReallocationLog(summary,player,r){
+  if(!r)return;
+  const action={type:`Agent reallocation: ${player.familyName} · ${LABEL[r.fromInstitutionId]} → ${LABEL[r.toInstitutionId]} (seniority reset to 1) · Contrarian plan`,actionKind:'agent_reallocation',playerId:player.id,agentId:r.newAgentId,formerAgentId:r.oldAgentId,fromInstitutionId:r.fromInstitutionId,institutionId:r.toInstitutionId,seniorityLost:r.seniorityLost,contrarianPlanScore:r.toScore,contrarianTopCards:r.topCards};
+  summary.actions??=[];
+  let i=0;while(i<summary.actions.length&&summary.actions[i]?.actionKind==='agent_recall'&&summary.actions[i]?.forced)i++;
+  summary.actions.splice(i,0,action);summary.actions.forEach((a,index)=>{a.sequence=index+1;});
+}
+
 function retarget(state,player,newAgents){
   const moves=[];
   for(const agent of newAgents){
@@ -207,11 +251,13 @@ export function resolveAutomatedGeneration(state){
   legacy.prepareV111State(state);
   const player=ensureContrarian(state);if(!player)return legacy.resolveAutomatedGeneration(state);
   const beforePlan=plan(state,player),beforeIds=new Set((player.institutionAgentRoster??[]).map(a=>a.id));
-  const summary=legacy.resolveAutomatedGeneration(state);
-  const newAgents=(player.institutionAgentRoster??[]).filter(a=>!beforeIds.has(a.id));
+  const phaseHook=instrumentActionPhaseReallocation(state,player);
+  let summary;try{summary=legacy.resolveAutomatedGeneration(state);}finally{phaseHook.restore();}
+  const reallocation=phaseHook.reallocation;injectReallocationLog(summary,player,reallocation);
+  const newAgents=(player.institutionAgentRoster??[]).filter(a=>!beforeIds.has(a.id)&&a.id!==reallocation?.newAgentId);
   const moves=retarget(state,player,newAgents);patchActions(summary,player,moves);
   const prestigeDelta=correctPrestige(state,summary,player,moves),afterPlan=plan(state,player);
-  const record={version:VERSION,generation:summary.generation,playerId:player.id,planBefore:beforePlan,retargetedAgents:moves,institutionPrestigeCorrection:prestigeDelta,planAfter:afterPlan,hiddenOpponentHandsIgnored:true};
+  const record={version:VERSION,generation:summary.generation,playerId:player.id,planBefore:beforePlan,strategicReallocation:reallocation,retargetedAgents:moves,institutionPrestigeCorrection:prestigeDelta,planAfter:afterPlan,hiddenOpponentHandsIgnored:true};
   state.contrarianAi??={version:VERSION,history:[]};state.contrarianAi.version=VERSION;state.contrarianAi.history.push(record);
   summary.contrarianAi=record;summary.aiProfiles??={};summary.aiProfiles[player.id]={...(summary.aiProfiles[player.id]??{}),personality:'contrarian',label:'Contrarian',intrigueAware:true,counterpointPlanning:true};
   return summary;
