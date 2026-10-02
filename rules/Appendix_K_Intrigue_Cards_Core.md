@@ -1,8 +1,8 @@
 # Appendix K — Intrigue Cards Core Rules
 
-**Status:** Locked design reference for the current tabletop rules. Individual card effects and costs remain card-specific unless explicitly locked below.
+**Status:** Locked design reference for the current tabletop rules.
 
-**Relationship to other rules:** This appendix defines the current common handling of Intrigue cards. Where older Intrigue-card notes conflict with this appendix, this appendix takes precedence. The economic effects of Scholarium Patents and City Guard / Military land-Wealth discoveries remain defined in **Appendix J — Alternative Wealth Sources**.
+**Relationship to other rules:** This appendix defines the current common handling of Intrigue cards. Where older Intrigue-card notes conflict with this appendix, this appendix takes precedence. Scholarium Patents and City Guard / Military land-Wealth discoveries use the economic effects defined in **Appendix J — Alternative Wealth Sources**.
 
 ---
 
@@ -23,92 +23,59 @@ An Agent gives access only to the Intrigue deck of the Institution in which that
 
 At the beginning of a Generation, each Agent already deployed generates one independent card selection from its Institution deck.
 
-The number of cards seen depends on the Agent's current seniority:
-
 - **Seniority 1:** draw 1, keep 1.
 - **Seniority 2:** draw 2, keep 1.
 - **Seniority 3:** draw 3, keep 1.
 
-Cards not kept are placed in that Institution's discard pile.
+Cards not kept go to that Institution's discard pile. Each Agent is resolved separately.
 
-Each Agent is resolved separately. Therefore a Family with several Agents can acquire several Intrigue cards in the same Generation.
+An Agent placed during the current Generation does **not** generate an Intrigue card immediately. It begins generating selections from the following Generation, provided it remains deployed.
 
-An Agent placed during the current Generation does **not** generate an Intrigue card immediately. It begins generating card selections from the following Generation, provided it remains deployed.
+When a deck is exhausted, shuffle its discard pile to form a new draw pile, excluding cards that have permanently entered play or otherwise left the deck.
 
-When an Institution deck is exhausted, shuffle its discard pile to form a new draw pile, excluding cards that have permanently entered play or otherwise left the deck.
+### K.2A — Deck Composition Target
+
+Deck composition should support the founding design target that a Family with normal access to an Institution has the opportunity to play a **powerful Intrigue card costing 4 Influence or more approximately once every two Generations**.
+
+This is a composition target, not a guaranteed draw. Unique Permanent cards should not be the sole means of meeting this target because they progressively leave circulation once played.
 
 ---
 
 ## K.3 — Hand Expiration
 
-Intrigue cards represent opportunities available during the current Generation rather than a permanent hand of accumulated options.
-
-At the end of the Generation, all unplayed Intrigue cards remaining in a Family's hand are discarded.
-
-They may return to circulation when that Institution's discard pile is reshuffled unless the card's own rules say otherwise.
+At the end of the Generation, all unplayed Intrigue cards remaining in a Family's hand are discarded. They may return to circulation when that Institution's discard pile is reshuffled unless the card says otherwise.
 
 ---
 
 ## K.4 — Timing Categories
 
-Every Intrigue card has one of three timing categories.
-
 ### Action
 
-Playing an **Action** Intrigue card consumes **1 Player Action**.
-
-The player must also pay the card's printed Influence cost.
+Playing an **Action** Intrigue card consumes **1 Player Action** and requires payment of its printed Influence cost.
 
 ### Reaction
 
-A **Reaction** card may be played only when its printed trigger occurs.
-
-Playing it consumes **no Player Action**, but the player must still pay its printed Influence cost.
+A **Reaction** card may be played only when its printed trigger occurs. It consumes **no Player Action**, but its printed Influence cost must still be paid.
 
 ### Resolution
 
-A **Resolution** card is played during the resolution window specified on the card and consumes **no Player Action** at that moment.
-
-For Vote-related Resolution cards, the Vote itself must first exist under the normal rules. **Placing / initiating the Vote still costs 1 Player Action.**
-
-The player must also pay the card's printed Influence cost.
+A **Resolution** card is played during its specified resolution window and consumes **no Player Action** at that moment. For Vote-related cards, initiating / placing the Vote still costs **1 Player Action**.
 
 ---
 
-## K.5 — Influence Costs
+## K.5 — Costs
 
-Every Intrigue card has a printed Influence cost, which may be **0**.
+Every Intrigue card has a printed Influence cost, which may be **0**. Some cards also impose additional costs in Prestige, bids, territory-claim cost, or other resources as stated on the card.
 
-There is no universal cost for the entire Intrigue system: the value is defined card by card according to effect strength and will be calibrated through playtesting.
-
-A card cannot be played unless its full Influence cost can be paid.
-
-The seven permanent cards listed in K.7 are currently locked at **4 Influence each**.
+A card cannot be played unless all mandatory costs required at the time of play can be paid.
 
 ---
 
 ## K.6 — Permanent Cards
 
-Some Intrigue cards are **Permanent**.
+When a Permanent card is successfully played, it leaves the player's hand, does not enter the discard pile, and remains visibly in play according to its own rules.
 
-When a Permanent card is successfully played:
-
-- it leaves the player's hand;
-- it does not enter the discard pile;
-- it is placed visibly in play or attached to the relevant board element;
-- its ongoing effect remains active according to the card's own rules.
-
-A Permanent card may later change owner or be removed if another rule explicitly allows it.
-
----
-
-## K.7 — Locked Permanent Cards
-
-All seven cards below share the following common parameters:
-
-> **Timing: Action · Cost: 4 Influence · Type: Permanent · Unique: one copy**
-
-Playing any of these cards therefore consumes **1 Player Action** and **4 Influence**.
+All seven currently locked Permanent cards are **Action / 4 Influence / Unique**.
 
 ### Scholarium — Patents
 
@@ -118,7 +85,7 @@ Playing any of these cards therefore consumes **1 Player Action** and **4 Influe
 **Cost:** 4 Influence  
 **Type:** Permanent — Patent
 
-Citywide effect and Patent income are defined in Appendix J.
+Each Civic Farm produces **+1 Raw Food**. The Patent owner gains **+1 Wealth** according to Appendix J.
 
 #### Civic Sanitation Works
 
@@ -126,7 +93,7 @@ Citywide effect and Patent income are defined in Appendix J.
 **Cost:** 4 Influence  
 **Type:** Permanent — Patent
 
-Citywide effect and Patent income are defined in Appendix J.
+After normal Squalor resolution, reduce total Squalor by **1**, minimum 0. The Patent owner gains **+1 Wealth** according to Appendix J.
 
 #### Advanced Judicial System
 
@@ -134,7 +101,7 @@ Citywide effect and Patent income are defined in Appendix J.
 **Cost:** 4 Influence  
 **Type:** Permanent — Patent
 
-Citywide effect and Patent income are defined in Appendix J.
+Morneval receives **+1 Order**, subject to the normal maximum. The Patent owner gains **+1 Wealth** according to Appendix J.
 
 #### Advanced Architecture
 
@@ -142,7 +109,7 @@ Citywide effect and Patent income are defined in Appendix J.
 **Cost:** 4 Influence  
 **Type:** Permanent — Patent
 
-Citywide effect and Patent income are defined in Appendix J.
+Urban tile capacity becomes **4 instead of 3**. The Patent owner gains **+1 Wealth** according to Appendix J.
 
 ### City Guard / Military — Land-Wealth Discoveries
 
@@ -152,7 +119,7 @@ Citywide effect and Patent income are defined in Appendix J.
 **Cost:** 4 Influence  
 **Type:** Permanent — Land Improvement
 
-Choose an eligible Hill you control. The improvement is attached to that territory under the rules in Appendix J.
+Attach to an eligible controlled **Hill**. It provides **+1 Wealth** according to Appendix J and follows the territory.
 
 #### Rare Breed
 
@@ -160,7 +127,7 @@ Choose an eligible Hill you control. The improvement is attached to that territo
 **Cost:** 4 Influence  
 **Type:** Permanent — Land Improvement
 
-Choose an eligible Meadow you control. The improvement is attached to that territory under the rules in Appendix J.
+Attach to an eligible controlled **Meadow**. It provides **+1 Wealth** according to Appendix J and follows the territory.
 
 #### Precious Timber
 
@@ -168,13 +135,15 @@ Choose an eligible Meadow you control. The improvement is attached to that terri
 **Cost:** 4 Influence  
 **Type:** Permanent — Land Improvement
 
-Choose an eligible Forest you control. The improvement is attached to that territory under the rules in Appendix J.
+Attach to an eligible controlled **Forest**. It provides **+1 Wealth** according to Appendix J and follows the territory.
 
 ---
 
-## K.7A — Locked City Guard / Military Non-Permanent Cards
+## K.7 — Active Non-Permanent Cards
 
-### Assassination
+### K.7A — City Guard / Military
+
+#### Assassination
 
 **Timing:** Action  
 **Type:** Non-Permanent  
@@ -185,85 +154,65 @@ Choose an eligible Forest you control. The improvement is attached to that terri
 - **Mature Dynasty Member:** 6 Influence
 - **Young Dynasty Member:** 7 Influence
 
-The chosen target is eliminated automatically; no die roll is used.
+Eliminate the chosen target automatically. No die roll is used.
 
-### Bodyguards
+#### Bodyguards
 
 **Timing:** Reaction  
 **Type:** Non-Permanent  
-**Cost:** 2 Influence
+**Cost:** **3 Influence**
 
-Play when an opponent uses **Assassination** against one of your Dynasty Members. The Assassination is cancelled. The attacker still loses the Assassination card, the Player Action used to play it, and the Influence paid for the attempted Assassination.
+Play when an opponent uses **Assassination** against one of your Dynasty Members. Cancel the Assassination. The attacker still loses the Assassination card, the Player Action used to play it, and the Influence paid for it.
 
 Bodyguards does not protect Institution Agents.
 
-### Hostile Land Takeover
+#### Hostile Land Takeover
 
 **Timing:** Action  
 **Type:** Non-Permanent  
-**Cost:** **3 Influence + the acting Family's current next-territory claim cost**
+**Cost:** **2 Influence + the acting Family's current next-territory claim cost**
 
-The card enables the acting Family to seize an eligible natural Hinterland territory controlled by another Family. The variable claim component follows the normal Domain-track acquisition cost already defined in Appendix I.
+Seize an eligible natural Hinterland territory controlled by another Family. The variable claim component follows the normal Domain-track acquisition cost in Appendix I.
 
-### Martial Law
+#### Martial Law
 
 **Timing:** Action  
 **Type:** Non-Permanent  
 **Cost:** 1 Influence
 
-Morneval receives **+1 Order until the end of the Generation**, subject to the normal Order maximum. The Family that plays Martial Law immediately gains **+1 Prestige**.
+Morneval receives **+1 Order until the end of the Generation**, subject to the normal Order maximum. The acting Family immediately gains **+1 Prestige**.
 
-### Officer Purge / Loyalty Commission
+#### Officer Purge / Loyalty Commission
 
 **Timing:** Action  
 **Type:** Non-Permanent  
-**Cost:** 2 Influence
+**Cost:** **1 Influence**
 
-Each opposing Family must pay **1 Influence for each Agent it has in the City Guard / Military Institution**. For each payment that is refused or cannot be made, that Family chooses one of its own City Guard / Military Agents and removes it.
+Each opposing Family must pay **1 Influence for each Agent it has in the City Guard / Military Institution**. For each payment refused or impossible, that Family removes one of its own City Guard / Military Agents.
 
 Agent seniority does not modify this payment.
 
 ---
 
-## K.7B — Shelved, Parked and Obsolete City Guard / Military Concepts
+### K.7B — Scholarium
 
-### Military Academy — Shelved
-
-The previously proposed **Military Academy** Intrigue card is **not retained in the current deck design**. Its value was judged too low relative to the opportunity cost of drawing and playing an Intrigue card. The concept remains in the historical design appendix only and may be revisited later if Institution-development rules create a stronger use case.
-
-### Military Political Mobilization — Parked
-
-The previously proposed **Military Political Mobilization** card is **parked pending a proper redesign of the City Inclination system**. No timing, Influence cost, Vote modifier or final effect is currently locked.
-
-The concept may be revisited once the City Inclination rules, their strategic consequences, and the relationship between Inclination and Votes have been redesigned.
-
-### Food Requisition — Obsolete
-
-The previously proposed **Food Requisition** card is **removed from the current deck design**. Its original purpose relied on Raw Food being diverted between population supply and commercial sale. Under the current Raw Food rules, Raw Food is no longer sold, so that opportunity-cost mechanism no longer exists and the card no longer creates a meaningful decision.
-
-The historical concept remains in the design archive only; it should not be included in the current City Guard / Military deck unless the Raw Food economy is materially redesigned again.
-
----
-
-## K.7C — Locked Scholarium Non-Permanent Cards
-
-### Spy Network / Intelligence
+#### Spy Network / Intelligence
 
 **Timing:** Action  
 **Type:** Non-Permanent  
-**Cost:** variable, resolved in stages
+**Cost:** variable — **1 / 2 / 3 Influence total**
 
 Choose one opposing Family.
 
-1. Pay **1 Influence** and look at all Intrigue cards currently in that Family's hand.
+1. Pay **1 Influence** to look at all Intrigue cards currently in that Family's hand.
 2. After seeing the hand, choose one of the following:
-   - take no further effect; total cost remains **1 Influence**;
-   - pay **+2 Influence** to choose and discard one card from that hand; total cost **3 Influence**;
-   - pay **+4 Influence** to choose and steal one card from that hand; total cost **5 Influence**.
+   - stop; total cost remains **1 Influence**;
+   - pay **+1 Influence** to choose and discard one card from that hand; total cost **2 Influence**;
+   - pay **+2 Influence** to choose and steal one card from that hand; total cost **3 Influence**.
 
-A stolen card enters the acting Family's hand and thereafter follows its normal timing, Influence-cost and end-of-Generation expiration rules. Spy Network itself still consumes only the single Player Action used to play it; the optional additional payment does not consume another Action.
+A stolen card enters the acting Family's hand and follows its normal timing, cost and end-of-Generation expiration rules. The optional additional payment consumes no additional Player Action.
 
-### Counter-Intelligence
+#### Counter-Intelligence
 
 **Timing:** Reaction  
 **Type:** Non-Permanent  
@@ -271,270 +220,295 @@ A stolen card enters the acting Family's hand and thereafter follows its normal 
 
 Play when an opposing Intrigue card specifically targets **your Family, one of your Agents, one of your territories, one of your Stakes, or a card in your hand**. Cancel that card's effect against you.
 
-If the triggering Intrigue card affects several Families, it continues to resolve normally against all other affected Families.
+If the triggering card affects several Families, it continues to resolve normally against the others.
 
-**Counter-Intelligence cannot counter Assassination.** Bodyguards remains the dedicated defence against Assassination targeting Dynasty Members.
+**Counter-Intelligence cannot counter Assassination.**
 
-### Technological Acceleration
-
-**Timing:** Action  
-**Type:** Non-Permanent  
-**Cost:** 1 Influence
-
-Choose one Production Sector. Immediately perform **one additional development phase** in that Sector, paying that phase's normal Influence cost and gaining its normal Prestige reward, even if that Sector has already received a development phase during the current Generation.
-
-The Family that plays Technological Acceleration also immediately gains **+1 Prestige**.
-
-Technological Acceleration does not reduce or replace the normal cost of the development phase. Its benefit is to bypass the normal limit of one development phase per Production Sector per Generation. The additional Prestige rewards the acting Family for accelerating a structural improvement whose resulting higher Production Tier benefits the city more broadly.
-
-### Experimental Methods
+#### Technological Acceleration
 
 **Timing:** Action  
 **Type:** Non-Permanent  
 **Cost:** 1 Influence
 
-Choose one natural Hinterland territory. Until the end of the Generation, its Raw Resource capacity increases by **+1**.
+Choose one Production Sector. Immediately perform **one additional development phase** in that Sector, paying its normal development cost and gaining its normal Prestige reward, even if that Sector has already been developed this Generation.
 
-The effect represents temporary experimental techniques — for example improved cultivation, extraction, irrigation, selective breeding, alchemical treatment or other Scholarium-led field methods — rather than a permanent structural improvement.
+The acting Family also immediately gains **+1 Prestige**.
 
-The additional capacity follows the normal production and allocation rules. It does not create an additional Stake and does not cause the territory to score its productive-land Prestige more than once.
+#### Experimental Methods
 
-The Family that plays Experimental Methods immediately gains **+1 Prestige**, reflecting credit for a temporary productivity improvement that can benefit the city more broadly.
+**Timing:** Action  
+**Type:** Non-Permanent  
+**Cost:** 1 Influence
 
-### Purge of Charlatans
+Choose one natural Hinterland territory. Until the end of the Generation, its Raw Resource capacity increases by **+1**. The acting Family immediately gains **+1 Prestige**.
+
+The additional capacity follows normal production and allocation rules. It does not create an additional Stake and does not make the territory score productive-land Prestige more than once.
+
+#### Expose the Charlatans
 
 **Timing:** Action  
 **Type:** Non-Permanent  
 **Cost:** 2 Influence
 
-Each opposing Family must pay **1 Influence for each Agent it has in the Scholarium**. For each payment that is refused or cannot be made, that Family chooses one of its own Scholarium Agents and removes it.
+For **each Scholarium Agent** controlled by an opposing Family, that Family must choose one of the following for that Agent:
 
-Agent seniority does not modify this payment.
+- pay **2 Influence** to maintain the Agent;
+- pay nothing and **remove that Agent**.
 
-### Insider Information / Bid Advantage
+Payment is all-or-nothing for each Agent; partial payment does not preserve an Agent. Agent seniority does not modify the payment.
+
+#### Insider Information / Bid Advantage
 
 **Timing:** Reaction  
 **Type:** Non-Permanent  
 **Cost:** 0 Influence
 
-Gain **2 bid-only Influence** for the current Generation. These points may be used only to increase bids for Production-Sector Stakes.
+Gain **2 bid-only Influence** for the current Generation. Use both as **+2 on one Production-Stake bid**, or split them as **+1 on each of two different Production-Stake bids**.
 
-The two points may either be added together to **one bid**, or split as **+1 Influence on each of two different bids**.
+Bid-only Influence cannot be spent on any other cost and unused points disappear at the end of the Generation.
 
-Bid-only Influence never becomes normal stored Influence, cannot be spent on any other cost, and any unused amount disappears at the end of the Generation.
-
-### Dark Magic
+#### Dark Magic
 
 **Timing:** Action  
 **Type:** Non-Permanent  
-**Cost:** 0 Influence
+**Cost:** **0 Influence + 3 Prestige**
 
-Lose **1 Prestige** and gain **2 Influence** immediately.
+Lose **3 Prestige** and gain **6 normal Influence** immediately.
 
-The Prestige loss is a mandatory cost of playing the card and cannot be prevented or ignored. The gained Influence is normal stored Influence and remains subject to the normal Family Influence ceiling.
-
----
-
-## K.7D — Shelved and Parked Scholarium Concepts
-
-### Conclave Development — Shelved
-
-The previously proposed **Conclave Development** card is not retained in the current deck design. Its narrow Institution-development discount was judged too low-value and too utilitarian relative to the opportunity cost of drawing and playing an Intrigue card. **Technological Acceleration** now fills the Scholarium's development-acceleration role more effectively.
-
-### Arcane Political Manipulation — Parked
-
-The previously proposed **Arcane Political Manipulation** card is parked pending redesign of the City Inclination system. Its timing, Influence cost and Vote effect will be reconsidered together with the equivalent Institution political-mobilization cards once Inclinations are redesigned.
-
-### Knowledge / Event Manipulation — Parked
-
-The historical **Knowledge / Event Manipulation** concept is parked until the Event system is sufficiently detailed to define a safe and meaningful scope for player manipulation. Direct cancellation or replacement of a Generation Event is not currently retained.
-
-When revisited, the design should preferentially explore **prediction, constrained choice or limited mitigation** rather than unrestricted Event cancellation, so that Events continue to create a common generational situation to which all Families must adapt.
+The Prestige loss is mandatory and cannot be prevented or ignored. The gained Influence is subject to the normal Family Influence ceiling.
 
 ---
 
-## K.7E — Locked Temple Non-Permanent Cards
+### K.7C — Temple
 
-### Infernal Pact
+#### Infernal Pact
 
 **Timing:** Action  
 **Type:** Non-Permanent  
-**Cost:** 0 Influence
+**Cost:** 0 Influence + 2 Prestige
 
-Lose **2 Prestige** and gain **4 Influence** immediately.
+Lose **2 Prestige** and gain **4 normal Influence** immediately.
 
-The Prestige loss is a mandatory cost of playing the card and cannot be prevented or ignored. The gained Influence is normal stored Influence and remains subject to the normal Family Influence ceiling.
+The Prestige loss is mandatory and cannot be prevented or ignored. The gained Influence is subject to the normal Family Influence ceiling.
 
-### Hunt the Heretics
+#### Hunt the Heretics
 
 **Timing:** Action  
 **Type:** Non-Permanent  
 **Cost:** 2 Influence
 
-Each opposing Family must pay **1 Influence for each Agent it has in the Temple**. For each payment that is refused or cannot be made, that Family chooses one of its own Temple Agents and removes it.
+For **each Temple Agent** controlled by an opposing Family, that Family must choose one of the following for that Agent:
 
-Agent seniority does not modify this payment.
+- pay **2 Influence** to maintain the Agent;
+- pay nothing and **remove that Agent**.
 
-### Threat of Excommunication
+Payment is all-or-nothing for each Agent; partial payment does not preserve an Agent. Agent seniority does not modify the payment.
+
+#### Threat of Excommunication
 
 **Timing:** Action  
 **Type:** Non-Permanent  
 **Cost:** 1 Influence
 
-Choose one opposing Family. That Family chooses one of the following losses:
+Choose one opposing Family. That Family chooses to either:
 
-- lose **2 Influence**;
+- lose **2 Influence**; or
 - lose **1 Prestige**.
 
-### Anathema
+#### Anathema
 
 **Timing:** Action  
 **Type:** Non-Permanent  
 **Cost:** 3 Influence
 
-Choose one opposing Family. That Family chooses one of the following losses:
+Choose one opposing Family. That Family chooses to either:
 
-- lose **4 Prestige**;
+- lose **4 Prestige**; or
 - remove **1 of its Agents**, chosen by that Family, from any Institution.
 
-The Prestige option is available only if the targeted Family can lose the full **4 Prestige**. Otherwise it must choose the Agent-removal option.
+The Prestige option is available only if the targeted Family can lose the full 4 Prestige. Otherwise it must choose Agent removal.
 
-### Alms for the Poor
+#### Alms for the Poor
 
 **Timing:** Action  
 **Type:** Non-Permanent  
 **Cost:** 1 Influence
 
-Immediately reduce Morneval's **Squalor by 1**, to a minimum of 0. The Family that plays Alms for the Poor immediately gains **+1 Prestige**.
+Immediately reduce Morneval's **Squalor by 1**, minimum 0. The acting Family immediately gains **+1 Prestige**.
 
-### Ecclesiastical Confiscation
+#### Ecclesiastical Confiscation
 
 **Timing:** Action  
 **Type:** Non-Permanent  
-**Cost:** the normal Influence cost of converting a Hinterland territory into a Civic Farm, paid by the Family playing this card
+**Cost:** the normal Influence cost of converting a Hinterland territory into a Civic Farm
 
-Choose one eligible natural Hinterland territory owned by an opposing Family. The territory is permanently **donated to the City**: remove the target Family's ownership marker and return that marker to its Domain track.
+Choose one eligible natural Hinterland territory owned by an opposing Family. Permanently donate it to the City: remove the target Family's ownership marker and return that marker to its Domain track.
 
-The territory continues to produce its normal Raw Resources, but it is permanently municipal: it has no Family owner, cannot be claimed by a Family, and can never be converted into a Civic Farm.
+The territory continues producing its normal Raw Resources but becomes permanently municipal: it has no Family owner, cannot be claimed by a Family, and cannot be converted into a Civic Farm.
 
-The former owner immediately gains **+2 Prestige**, representing public credit for the donation.
+The former owner immediately gains **+2 Prestige**.
 
-### Public Absolution
+#### Public Absolution
 
 **Timing:** Reaction  
 **Type:** Non-Permanent  
 **Cost:** 1 Influence
 
-Play when an opposing effect would cause your Family to lose Prestige. Reduce that Prestige loss by **2**, to a minimum loss of 0.
+Play when an opposing effect would cause your Family to lose Prestige. Reduce that loss by **2**, minimum 0.
 
-Public Absolution cannot reduce a voluntary Prestige loss or a Prestige loss paid as a cost to play or resolve one of your own cards. In particular, it cannot reduce the Prestige costs of **Dark Magic** or **Infernal Pact**.
-
----
-
-## K.7F — Shelved and Parked Temple Concepts
-
-### Ecclesiastical Reform — Shelved
-
-The previously proposed **Ecclesiastical Reform** card is not retained in the current deck design. Like Military Academy and Conclave Development, its narrow Institution-development role is judged too utilitarian and too low-value relative to the opportunity cost of drawing and playing an Intrigue card.
-
-### Religious Mobilization / Sermon — Parked
-
-The previously proposed **Religious Mobilization / Sermon** card is parked pending redesign of the City Inclination system. Its timing, Influence cost and Vote effect will be reconsidered together with the equivalent political-mobilization cards for the other Institutions once Inclinations are redesigned.
+Public Absolution cannot reduce voluntary Prestige losses or Prestige paid as a cost of your own cards, including **Dark Magic**, **Infernal Pact**, or **Criminal Network**.
 
 ---
 
-## K.7G — Locked Merchant Guild Non-Permanent Cards
+### K.7D — Merchant Guild
 
-### Hostile Takeover
+#### Criminal Network
+
+**Timing:** Action  
+**Type:** Non-Permanent  
+**Cost:** **0 Influence + 1 Prestige**
+
+Lose **1 Prestige** and gain **2 normal Influence** immediately.
+
+The Prestige loss is mandatory and cannot be prevented or ignored. The gained Influence is subject to the normal Family Influence ceiling.
+
+#### Hostile Takeover
 
 **Timing:** Action  
 **Type:** Non-Permanent  
 **Cost:** 1 Influence
 
-Choose one **Mature or Elder Production Stake** occupied by an opposing Family. Remove that Stake immediately, leaving its existing age slot vacant.
+Choose one **Mature or Elder Production Stake** occupied by an opposing Family and remove it.
 
-The Family playing Hostile Takeover must immediately submit an **opening bid of 1 additional Influence** for the newly vacant slot. This opening bid is part of resolving the Hostile Takeover action and does **not** consume an additional Player Action.
+The acting Family must immediately submit an **opening bid of 1 additional Influence** for that same age slot. This opening bid is part of resolving the card and consumes no additional Player Action. The auction then follows the normal universal auction rules.
 
-The opening bid is reserved and resolved under the normal universal auction rules. The auction for that specific Mature or Elder slot then remains open under those normal rules.
-
-### Binding Bids / All Bidders Pay
+#### Binding Bids / All Bidders Pay
 
 **Timing:** Action  
 **Type:** Non-Permanent  
 **Cost:** 1 Influence
 
-Choose one eligible vacant **Young Production Stake slot** before any bid has been submitted for that slot. The Family playing Binding Bids must immediately submit an **opening bid of 1 additional Influence**. This opening bid is part of resolving the card and consumes no additional Player Action.
+Choose one eligible vacant **Young Production Stake slot** before any bid has been submitted. The acting Family must immediately submit an **opening bid of 1 additional Influence**; this consumes no additional Player Action.
 
-For this auction only, **every Family that submits a bid pays its final committed bid at Auction Resolution, whether it wins or loses**. A Family pays only its final committed bid, not the sum of its successive raises. This rule applies equally to the Family that played Binding Bids.
+For this auction only, **every Family that submits a bid pays its final committed bid at Auction Resolution, whether it wins or loses**. A Family pays only its final committed bid, not the sum of successive raises.
 
-### Line of Credit
+#### Line of Credit
 
 **Timing:** Action  
 **Type:** Non-Permanent  
 **Cost:** variable
 
-Choose one of the following credit levels when playing the card:
+Choose one level:
 
 - pay **1 Influence**, requiring at least **10 Prestige**, and gain **5 temporary Influence**;
 - pay **2 Influence**, requiring at least **20 Prestige**, and gain **10 temporary Influence**;
 - pay **3 Influence**, requiring at least **30 Prestige**, and gain **15 temporary Influence**.
 
-The Prestige requirement is checked when the card is played. The temporary Influence may exceed the normal Family Influence ceiling and may be spent or committed like normal Influence during the remainder of the Player Actions phase.
+The Prestige requirement is checked when the card is played. Temporary Influence may exceed the normal Influence ceiling and may be spent or committed like normal Influence during the remainder of the Player Actions phase.
 
-Resolve all auctions normally. Winning bids are paid and losing bids are refunded under the normal auction rules.
+Resolve all auctions normally. **After all auctions have been resolved**, repay the full temporary amount received. Repayment is made from available Influence. For each point that cannot be repaid, lose **2 Prestige**.
 
-**Immediately after all auctions have been resolved**, the Family must repay the full amount of temporary Influence received: 5, 10 or 15. Repayment is made from the Influence the Family then has available.
-
-For each point of temporary Influence that the Family cannot repay, it loses **2 Prestige**. This means a Family may win several auctions using borrowed Influence and then suffer a substantial Prestige loss when the credit falls due.
-
-### Preferential Contracts
+#### Preferential Contracts
 
 **Timing:** Action  
 **Type:** Non-Permanent  
 **Cost:** variable
 
-Choose one of the following levels when playing the card:
+Choose one level:
 
-- pay **1 Influence** to prioritize up to **1 External Demand**;
-- pay **3 Influence** to prioritize up to **2 External Demands**;
-- pay **5 Influence** to prioritize up to **3 External Demands**.
+- **1 Influence** → prioritize up to **1 External Demand**;
+- **3 Influence** → prioritize up to **2 External Demands**;
+- **5 Influence** → prioritize up to **3 External Demands**.
 
-During Economy Resolution, choose up to the corresponding number of production units generated by your own Production Stakes. Those units satisfy available **External Demand before the normal demand-allocation priorities are applied**.
+During Economy Resolution, choose up to the corresponding number of production units generated by your own Production Stakes. Those units satisfy available **External Demand before normal demand-allocation priorities**.
 
-Each such production unit follows the normal rules for satisfying External Demand, including its normal Wealth gain and Raw Resource consumption. Preferential Contracts does not itself create additional External Demand. If fewer External Demands are available than the selected level permits, the unused priority is lost.
+Each unit follows the normal External Demand rules, including normal Wealth gain and Raw Resource consumption. This card does not create External Demand. Unused priority is lost.
 
-### Private Buyer
+#### Private Buyer
 
 **Timing:** Action  
 **Type:** Non-Permanent  
-**Cost:** 1 Influence  
-**Effect:** Instant
+**Cost:** 1 Influence
 
-Immediately create **+1 External Demand for the current Generation**. This additional demand is not automatically satisfied and is subsequently resolved under the normal External Demand and production-allocation rules.
+Immediately create **+1 External Demand for the current Generation**. The additional demand is not automatically satisfied and is subsequently handled under the normal production-allocation rules.
 
-### Misdirection / Straw Man
+#### Misdirection / Straw Man
 
 **Timing:** Reaction  
 **Type:** Non-Permanent  
 **Cost:** 3 Influence
 
-Play after an opposing Intrigue card with exactly one target has designated **your Family or one of your assets** as its target, but before that card resolves.
+Play after an opposing Intrigue card with exactly one target designates **your Family or one of your assets**, but before that card resolves.
 
-Choose a different **legal target** for the triggering card. The new target must satisfy all normal targeting restrictions of that card. The triggering card then resolves normally against the new target.
+Choose a different **legal target** satisfying all normal restrictions of the triggering card. The triggering card resolves normally against the new target.
 
-**Assassination may be redirected by Misdirection.** However, the new target may not be the Family that played the triggering card or any asset controlled by that Family. The triggering card's Action and Influence cost remain spent normally.
+**Assassination may be redirected.** The new target may not be the Family that played the triggering card or an asset controlled by that Family. The triggering card's Action and costs remain spent normally.
+
+#### Licence Revocation / Audit of Privileges
+
+**Timing:** Action  
+**Type:** Non-Permanent  
+**Cost:** **1 Influence**
+
+Each opposing Family must pay **1 Influence for each Agent it has in the Merchant Guild**. For each payment refused or impossible, that Family removes one of its own Merchant Guild Agents.
+
+Agent seniority does not modify this payment.
 
 ---
 
-## K.7H — Shelved Merchant Guild Concepts
+## K.8 — Parked, Shelved and Obsolete Concepts
 
-### Commercial Charter — Shelved
+### City Guard / Military
 
-The previously proposed **Commercial Charter** development card is not retained in the current deck design. Like Military Academy, Conclave Development and Ecclesiastical Reform, a simple Institution-development discount was judged too utilitarian and too low-value relative to the opportunity cost of drawing and playing an Intrigue card.
+#### Military Academy — Shelved
+
+Not retained in the current deck design. Its narrow Institution-development role is too utilitarian relative to the opportunity cost of drawing and playing an Intrigue card.
+
+#### Military Political Mobilization — Parked
+
+Parked pending redesign of the City Inclination and Vote systems.
+
+#### Food Requisition — Obsolete
+
+Removed from the current deck because Raw Food is no longer sold, eliminating the opportunity-cost mechanism on which the card depended.
+
+### Scholarium
+
+#### Conclave Development — Shelved
+
+Not retained in the current deck design. **Technological Acceleration** fills the development-acceleration role more effectively.
+
+#### Arcane Political Manipulation — Parked
+
+Parked pending redesign of the City Inclination and Vote systems.
+
+#### Knowledge / Event Manipulation — Parked
+
+Parked until the Event system is sufficiently developed to define a constrained and meaningful manipulation effect.
+
+### Temple
+
+#### Ecclesiastical Reform — Shelved
+
+Not retained in the current deck design because its narrow Institution-development role is too utilitarian.
+
+#### Religious Mobilization / Sermon — Parked
+
+Parked pending redesign of the City Inclination and Vote systems.
+
+### Merchant Guild
+
+#### Commercial Charter — Shelved
+
+Not retained in the current deck design because a simple Merchant-Institution development discount is too utilitarian.
+
+#### Merchant Lobbying — Parked
+
+Parked pending redesign of the City Inclination and Vote systems. Its eventual purpose is to support movement toward the **Mercantile Inclination**.
 
 ---
 
-## K.8 — Current Simulation Status
+## K.9 — Current Simulation / Implementation Status
 
 The generic Intrigue engine supports:
 
@@ -544,69 +518,25 @@ The generic Intrigue engine supports:
 - discard and reshuffle;
 - end-of-Generation expiration;
 - Action / Reaction / Resolution timing metadata;
-- Influence costs, including a printed cost of 0;
+- Influence costs, including printed cost 0;
 - Permanent cards leaving the normal deck cycle.
 
-The seven cards in K.7 are recorded in the simulation card catalogue with their locked metadata, but are **not yet inserted into the active simulation decks** and their individual effects are not yet executed by the simulation.
-
-This is deliberate: the full initial composition of the Scholarium and City Guard / Military decks must be defined before these unique Permanent cards are activated, otherwise they would appear at an artificially high frequency.
+Individual card effects are not necessarily implemented in the digital prototype merely because their tabletop design is locked here.
 
 ---
 
-## K.9 — Locked vs Open Points
+## K.10 — Locked vs Open Points
 
 ### Locked
 
-- Four separate Institution Intrigue decks.
-- One independent card selection per deployed Agent at the beginning of the Generation.
-- Seniority 1 / 2 / 3 means draw 1 / 2 / 3 and keep exactly 1.
-- An Agent placed during the current Generation does not draw until the following Generation.
-- Unchosen cards go to the Institution discard pile.
-- Unplayed cards in hand expire at the end of the Generation.
-- **Action** cards consume 1 Player Action.
-- **Reaction** cards consume no Player Action.
-- **Resolution** cards consume no Player Action during their resolution window; initiating a Vote still requires a Player Action.
-- Every Intrigue card has a printed Influence cost, which may be 0.
-- The four Scholarium Patents and three City Guard / Military land-Wealth discoveries are **Action / Permanent** cards costing **4 Influence each**.
-- Assassination is Action / non-Permanent with target costs Agent 3, Elder 5, Mature 6, Young 7.
-- Bodyguards is Reaction / non-Permanent / 2 Influence and protects Dynasty Members from Assassination.
-- Hostile Land Takeover is Action / non-Permanent and costs 3 Influence plus the acting Family's current next-territory claim cost.
-- Martial Law is Action / non-Permanent / 1 Influence, gives +1 Order until the end of the Generation, and grants +1 Prestige to the Family that plays it.
-- Officer Purge / Loyalty Commission is Action / non-Permanent / 2 Influence; opposing Families pay 1 Influence per City Guard / Military Agent or remove an Agent for each unpaid amount.
-- Military Academy is shelved and is not part of the current deck design.
-- Military Political Mobilization is parked until the City Inclination system is redesigned.
-- Food Requisition is obsolete under the current Raw Food rules and is removed from the current deck design.
-- Spy Network / Intelligence is Action / non-Permanent with staged cost: 1 Influence to inspect an opposing hand, +2 to discard one inspected card, or +4 to steal one inspected card, for totals of 1 / 3 / 5 Influence respectively.
-- Counter-Intelligence is Reaction / non-Permanent / 2 Influence; it cancels a targeted opposing Intrigue effect against the acting Family or one of its listed assets, but cannot counter Assassination.
-- Technological Acceleration is Action / non-Permanent / 1 Influence; it permits one additional normally paid Production-Sector development phase in a Sector already developed that Generation and grants the acting Family +1 Prestige.
-- Experimental Methods is Action / non-Permanent / 1 Influence; it gives one natural Hinterland territory +1 Raw Resource capacity until the end of the Generation and grants the acting Family +1 Prestige.
-- Purge of Charlatans is Action / non-Permanent / 2 Influence; opposing Families pay 1 Influence per Scholarium Agent or remove an Agent for each unpaid amount.
-- Insider Information / Bid Advantage is Reaction / non-Permanent / 0 Influence; it provides 2 bid-only Influence for the Generation, usable as +2 on one Stake bid or +1 on each of two different Stake bids.
-- Dark Magic is Action / non-Permanent / 0 Influence; it costs 1 Prestige and grants 2 normal Influence, subject to the normal Influence ceiling.
-- Conclave Development is shelved and is not part of the current deck design.
-- Arcane Political Manipulation is parked until the City Inclination system is redesigned.
-- Knowledge / Event Manipulation is parked pending further Event-system design.
-- Infernal Pact is Action / non-Permanent / 0 Influence; it costs 2 Prestige and grants 4 normal Influence, subject to the normal Influence ceiling.
-- Hunt the Heretics is Action / non-Permanent / 2 Influence; opposing Families pay 1 Influence per Temple Agent or remove an Agent for each unpaid amount.
-- Threat of Excommunication is Action / non-Permanent / 1 Influence; the target chooses to lose 2 Influence or 1 Prestige.
-- Anathema is Action / non-Permanent / 3 Influence; the target chooses to lose 4 Prestige or remove one of its Agents, with the Prestige option available only if the full 4 Prestige can be lost.
-- Alms for the Poor is Action / non-Permanent / 1 Influence; it reduces Squalor by 1, minimum 0, and grants +1 Prestige to the acting Family.
-- Ecclesiastical Confiscation is Action / non-Permanent; its Influence cost equals the normal Civic Farm conversion cost paid by the acting Family; it permanently donates an opposing natural Hinterland territory to the City, returns the former owner's Domain marker, preserves normal Raw Resource production, permanently prevents Family ownership and Civic Farm conversion, and grants the former owner +2 Prestige.
-- Public Absolution is Reaction / non-Permanent / 1 Influence; it reduces a Prestige loss caused by an opposing effect by 2, but cannot reduce voluntary Prestige losses or Prestige paid as the cost of the acting Family's own cards.
-- Ecclesiastical Reform is shelved and is not part of the current deck design.
-- Religious Mobilization / Sermon is parked until the City Inclination system is redesigned.
-- Hostile Takeover is Action / non-Permanent / 1 Influence; it removes one opposing Mature or Elder Production Stake and immediately opens an auction for that same age slot with a mandatory 1-Influence opening bid from the acting Family; the opening bid is additional to the card cost and is part of the card action.
-- Binding Bids / All Bidders Pay is Action / non-Permanent / 1 Influence; it opens an auction for an eligible vacant Young slot with a mandatory 1-Influence opening bid from the acting Family, and every bidder pays its final committed bid at resolution whether it wins or loses.
-- Line of Credit is Action / non-Permanent with three credit levels: 1/2/3 Influence cost for 5/10/15 temporary Influence, requiring 10/20/30 Prestige respectively when played; after all auctions resolve, the full temporary amount is repaid, and each unpaid point costs 2 Prestige.
-- Preferential Contracts is Action / non-Permanent with variable cost 1/3/5 Influence; it lets up to 1/2/3 production units from the acting Family's Production Stakes satisfy available External Demand before normal allocation priorities, while retaining the normal External Demand Wealth reward and resource-consumption rules.
-- Private Buyer is Action / non-Permanent / 1 Influence with an instant effect: it creates +1 External Demand for the current Generation, which is then handled under the normal allocation rules.
-- Misdirection / Straw Man is Reaction / non-Permanent / 3 Influence; it redirects a single-target opposing Intrigue card that targets the reacting Family or one of its assets to another legal target. Assassination can be redirected, but the source Family and its assets cannot be selected as the new target.
-- Commercial Charter is shelved and is not part of the current deck design.
+- The generic Intrigue acquisition, timing, cost, expiration and Permanent-card rules in this appendix.
+- The seven Permanent cards and all **Active** card parameters written above.
+- The parked / shelved / obsolete status of the concepts in K.8.
+- Deck composition should support access to a **4+ Influence powerful card approximately once every two Generations**, without relying solely on unique Permanents.
 
 ### Still Open / Future Design
 
-- Full deck composition and number of copies of non-unique cards.
-- Influence costs and timing categories for remaining Intrigue cards not explicitly locked above.
+- Exact physical deck composition and copy counts for non-unique cards.
 - AI valuation and play heuristics for individual Intrigue effects.
 - Specific contest / theft / counter-card procedures for Patents and land ownership.
-- City Inclination redesign, including the eventual fate and implementation of parked political-mobilization cards.
+- City Inclination redesign and the final implementation of parked political-mobilization cards.
