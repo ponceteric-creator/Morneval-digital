@@ -443,6 +443,22 @@ The previously proposed **Religious Mobilization / Sermon** card is parked pendi
 
 ---
 
+## K.7G — Locked Merchant Guild Non-Permanent Cards
+
+### Hostile Takeover
+
+**Timing:** Action  
+**Type:** Non-Permanent  
+**Cost:** 0 Influence
+
+Choose one **Mature or Elder Production Stake** occupied by an opposing Family. Remove that Stake immediately, leaving its existing age slot vacant.
+
+The Family playing Hostile Takeover must immediately submit an **opening bid of 1 Influence** for the newly vacant slot. This opening bid is part of resolving the Hostile Takeover action and does **not** consume an additional Player Action.
+
+The 1 Influence is an auction bid, not a separate card fee: it is reserved and resolved under the normal universal auction rules. The auction for that specific Mature or Elder slot then remains open under those normal rules.
+
+---
+
 ## K.8 — Current Simulation Status
 
 The generic Intrigue engine supports:
@@ -504,6 +520,7 @@ This is deliberate: the full initial composition of the Scholarium and City Guar
 - Public Absolution is Reaction / non-Permanent / 1 Influence; it reduces a Prestige loss caused by an opposing effect by 2, but cannot reduce voluntary Prestige losses or Prestige paid as the cost of the acting Family's own cards.
 - Ecclesiastical Reform is shelved and is not part of the current deck design.
 - Religious Mobilization / Sermon is parked until the City Inclination system is redesigned.
+- Hostile Takeover is Action / non-Permanent / 0 Influence; it removes one opposing Mature or Elder Production Stake and immediately opens an auction for that same age slot with a mandatory 1-Influence opening bid from the acting Family; that opening bid is part of the card action and follows normal auction rules.
 
 ### Still Open / Future Design
 
