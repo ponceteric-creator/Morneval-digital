@@ -20,24 +20,33 @@ jobs:
           node-version: '20'
       - name: Enable ESM
         run: echo '{"type":"module"}' > package.json
-      - name: Legacy Merchant Guild scoring — 3/5 Production, 4/6 Institutions
+      - name: Legacy Merchant Guild scoring
         env:
           COST_MODE: proposed
           MERCHANT_MODE: legacy
+          MERCHANT_AI: legacy
         run: node --loader ./scripts/development-cost-loader.mjs ./scripts/run-merchant-guild-score-batch.mjs
-      - name: Wealth-score isolated rule — preserve existing first-player trajectory
+      - name: Wealth-score rule only
         env:
           COST_MODE: proposed
           MERCHANT_MODE: wealth
           MERCHANT_AI: off
         run: node --loader ./scripts/development-cost-loader.mjs ./scripts/run-merchant-guild-score-batch.mjs
+      - name: Wealth-score with exact AI understanding
+        env:
+          COST_MODE: proposed
+          MERCHANT_MODE: wealth
+          MERCHANT_AI: wealth
+        run: node --loader ./scripts/development-cost-loader.mjs ./scripts/run-merchant-guild-score-batch.mjs
       - name: Print summaries
         run: |
           echo '--- legacy ---'
           node -e "console.log(JSON.stringify(require('./simulation-results/merchant-guild-legacy.json').summary))"
-          echo '--- wealth rule isolated ---'
-          node -e "console.log(JSON.stringify(require('./simulation-results/merchant-guild-wealth.json').summary))"
+          echo '--- wealth rule only ---'
+          node -e "console.log(JSON.stringify(require('./simulation-results/merchant-guild-wealth-rule-only.json').summary))"
+          echo '--- wealth + exact AI ---'
+          node -e "console.log(JSON.stringify(require('./simulation-results/merchant-guild-wealth-ai-aware.json').summary))"
       - uses: actions/upload-artifact@v4
         with:
-          name: merchant-guild-rule-isolated-ab-results
+          name: merchant-guild-three-way-results
           path: simulation-results/merchant-guild-*.json
