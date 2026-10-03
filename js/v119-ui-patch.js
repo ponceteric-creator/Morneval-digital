@@ -1,6 +1,6 @@
 import './v118-ui-patch.js?v=0.11.8';
 
-const VERSION='0.11.9';
+const VERSION='0.11.10';
 
 function patch(){
   const root=document.querySelector('#app');
@@ -9,9 +9,9 @@ function patch(){
   const brand=root.querySelector('.brand p');
   if(brand)brand.textContent=`Institutions & civic stability sandbox · Engine v${VERSION}`;
   const notice=root.querySelector('.notice');
-  if(notice)notice.innerHTML=`<b>v${VERSION}:</b> Agent placement now values the <b>future Intrigue access</b> created by each Institution. Seniority is evaluated as draw 1 / 2 / 3, keep 1, using public board state and known deck composition. The Contrarian no longer receives named-card bonuses (including no special Land Seizure weighting) and no longer retargets Agents after placement.`;
+  if(notice)notice.innerHTML=`<b>v${VERSION}:</b> Agent utility is now normalized across <b>Institution / future Influence / Intrigue access</b>. Baseline weighting is 40% / 30% / 30%, with personality-specific mixes and diminishing returns on large Agent networks. Intrigue access still uses draw 1 / 2 / 3, keep 1 and no named-card strategic bonuses.`;
   const footer=root.querySelector('.footer-note');
-  if(footer)footer.textContent='Intrigue-aware Agent valuation is an AI simulation heuristic only. It changes no tabletop costs or effects, reads no hidden opponent hands, and uses no card-name-specific strategic multiplier. Political Influence remains all-pay under the v0.11.8 rule.';
+  if(footer)footer.textContent='Normalized Agent valuation is an AI simulation heuristic only. Dynast weights Institution prestige more, Merchant weights future Influence more but has stronger network diminishing returns, and Contrarian weights Intrigue option value more. No tabletop costs or effects are changed.';
 }
 
 patch();
