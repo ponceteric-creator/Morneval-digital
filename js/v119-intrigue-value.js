@@ -1,6 +1,6 @@
 import { ACTIVE_INTRIGUE_CARDS, INTRIGUE_CARD_META } from './v115-intrigue-card-catalog.js?v=0.11.5';
 
-export const INTRIGUE_VALUE_VERSION = '0.11.9';
+export const INTRIGUE_VALUE_VERSION = '0.11.10';
 export const INSTITUTION_IDS = ['city_guard','temple','merchant_guild','scholarium'];
 export const BASE_POWER_VALUE = Object.freeze({ LOW:1.0, MID:2.2, HIGH:4.0 });
 
