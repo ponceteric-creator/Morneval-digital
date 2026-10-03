@@ -1,11 +1,11 @@
-import * as legacy from './v111-ai-engine.js?original=0.11.1-v119';
+import * as legacy from './v111-ai-engine.js?original=0.11.1-v120';
 import { ACTIVE_INTRIGUE_CARDS } from './v115-intrigue-card-catalog.js?v=0.11.5';
-import { publicIntrigueSignals, prospectiveCardValue, intrigueAccessProfile, institutionDeckOpportunity } from './v119-intrigue-value.js?v=0.11.9';
+import { publicIntrigueSignals, prospectiveCardValue, intrigueAccessProfile, institutionDeckOpportunity } from './v119-intrigue-value.js?v=0.11.10';
 
-export * from './v111-ai-engine.js?original=0.11.1-v119';
+export * from './v111-ai-engine.js?original=0.11.1-v120';
 export const V090_CONFIG = legacy.V090_CONFIG;
 
-const VERSION='0.11.9';
+const VERSION='0.11.10';
 const INST=['city_guard','temple','merchant_guild','scholarium'];
 const LABEL={city_guard:'City Guard',temple:'Temple',merchant_guild:'Merchant Guild',scholarium:'Scholarium College'};
 const n=value=>Number(value)||0;
