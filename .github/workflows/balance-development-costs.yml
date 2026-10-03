@@ -1,0 +1,44 @@
+name: Development cost A/B simulation
+
+on:
+  push:
+    paths:
+      - '.github/workflows/balance-development-costs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  simulate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Enable ESM
+        run: echo '{"type":"module"}' > package.json
+      - name: Baseline — 2/4 Production and 2/4 Institutions
+        env:
+          COST_MODE: baseline
+        run: node --loader ./scripts/development-cost-loader.mjs ./scripts/run-development-cost-batch.mjs
+      - name: Proposed — 3/5 Production and 4/7 Institutions
+        env:
+          COST_MODE: proposed
+        run: node --loader ./scripts/development-cost-loader.mjs ./scripts/run-development-cost-batch.mjs
+      - name: Compare
+        run: node ./scripts/compare-development-cost-batches.mjs
+      - name: Print summaries
+        run: |
+          echo '--- baseline ---'
+          node -e "console.log(JSON.stringify(require('./simulation-results/development-costs-baseline.json').summary))"
+          echo '--- proposed ---'
+          node -e "console.log(JSON.stringify(require('./simulation-results/development-costs-proposed.json').summary))"
+          echo '--- comparison ---'
+          cat simulation-results/development-costs-comparison.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: development-costs-ab-results
+          path: simulation-results/development-costs-*.json
