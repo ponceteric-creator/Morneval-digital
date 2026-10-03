@@ -1,0 +1,42 @@
+name: Merchant Guild Wealth-score A/B simulation
+
+on:
+  push:
+    paths:
+      - '.github/workflows/balance-merchant-guild.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  simulate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Enable ESM
+        run: echo '{"type":"module"}' > package.json
+      - name: Legacy Merchant Guild scoring — 3/5 Production, 4/6 Institutions
+        env:
+          COST_MODE: proposed
+          MERCHANT_MODE: legacy
+        run: node --loader ./scripts/development-cost-loader.mjs ./scripts/run-merchant-guild-score-batch.mjs
+      - name: Wealth-based Merchant Guild scoring — 3/5 Production, 4/6 Institutions
+        env:
+          COST_MODE: proposed
+          MERCHANT_MODE: wealth
+        run: node --loader ./scripts/development-cost-loader.mjs ./scripts/run-merchant-guild-score-batch.mjs
+      - name: Print summaries
+        run: |
+          echo '--- legacy ---'
+          node -e "console.log(JSON.stringify(require('./simulation-results/merchant-guild-legacy.json').summary))"
+          echo '--- wealth ---'
+          node -e "console.log(JSON.stringify(require('./simulation-results/merchant-guild-wealth.json').summary))"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: merchant-guild-ab-results
+          path: simulation-results/merchant-guild-*.json
