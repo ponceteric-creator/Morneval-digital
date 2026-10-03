@@ -1,4 +1,4 @@
-# Appendix D — Automated Player Heuristics (v0.9.0)
+# Appendix D — Automated Player Heuristics (v0.11.9)
 
 **Status:** digital-prototype testing specification only. These heuristics are **not tabletop rules**.
 
@@ -10,7 +10,7 @@ The simulation currently assigns the three Families, in seat order, to:
 
 1. **Dynast** — favours short-term Prestige;
 2. **Merchant** — favours Wealth capacity and durable economic engines;
-3. **Opportunist** — adapts its priorities to relative standing and city pressure.
+3. **Contrarian** — seeks under-contested strategic access and long-horizon option value without receiving rules bonuses.
 
 ## D.2 — Planning horizon
 
@@ -20,7 +20,7 @@ Current provisional horizons:
 
 - Dynast: **2 Generations**;
 - Merchant: **4 Generations**;
-- Opportunist: **3 Generations**.
+- Contrarian: **4 Generations**.
 
 Future benefits are discounted rather than valued at full current value.
 
@@ -85,19 +85,23 @@ Consequently:
 
 - Dynast tends to value City-serving positions more highly;
 - Merchant tends to value External-serving positions more highly;
-- Opportunist changes its weighting with circumstances.
+- Contrarian gives additional weight to under-contested strategic access and future Intrigue options.
 
 This bidding heuristic is a simulator convenience and does not replace the intended tabletop sequential Influence-auction procedure.
 
-## D.8 — Opportunist adaptation
+## D.8 — Contrarian adaptation
 
-The Opportunist starts from balanced weights, then shifts emphasis when circumstances change.
+The Contrarian uses the same legal actions, costs and scoring rules as the other Families. Its difference is entirely evaluative.
 
-Current prototype triggers include:
+It gives additional weight to:
 
-- falling materially behind the table in Prestige → more Prestige-oriented;
-- falling behind in projected Wealth capacity → more Wealth / engine-oriented;
-- Raw Food shortage or severe Squalor → more civic / stability-oriented.
+- long-horizon option value;
+- Institutions with low opposing-Agent congestion;
+- card opportunities supported by visible public board state.
+
+The Contrarian does **not** receive a named-card bonus. Card strategic value is derived from generic metadata such as power, cost, timing, Permanent status, tags and public board affordances. Opponents' hidden Intrigue hands are never inspected.
+
+The Contrarian no longer retargets or reallocates Agents after normal placement. Institution choice is made through the same direct Agent valuation path as the other automated Families.
 
 ## D.9 — Expansion voting
 
@@ -128,3 +132,17 @@ Examples:
 - Population 3 supplied by two Farms → **3 / 4**.
 
 Imperial Food aid remains shown separately.
+
+## D.11 — Intrigue-aware Institution Agents (v0.11.9)
+
+Every automated Family now values the future Intrigue access created by an Institution Agent in addition to Institution Prestige and Agent Influence income.
+
+For prospective access, the AI computes the expected best-card value for the Agent's seniority draw:
+
+- Seniority 1: expected value of draw 1 / keep 1;
+- Seniority 2: expected maximum of draw 2 / keep 1;
+- Seniority 3: expected maximum of draw 3 / keep 1.
+
+The calculation uses known deck composition and public game state. A card's strategic estimate is based on generic characteristics rather than its name. Unique Permanents already in play no longer contribute future access value.
+
+This is a simulator heuristic only. It does not modify the tabletop Agent, Intrigue, Influence, Wealth or City Inclination rules.
