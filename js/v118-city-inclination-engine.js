@@ -34,7 +34,12 @@ function applyPoliticalBids(state,summary){
   const actualDelta={religionArcane:after.religionArcane-before.religionArcane,militaryMercantile:after.militaryMercantile-before.militaryMercantile};
   state.city.religionArcane=after.religionArcane;state.city.militaryMercantile=after.militaryMercantile;
   const result={
-    ...base,version:VERSION,counts:cardCounts,politicalBids:{...bids},combinedTotals:combined,
+    ...base,
+    version:VERSION,
+    cardCounts:{...cardCounts},
+    counts:combined,
+    politicalBids:{...bids},
+    combinedTotals:combined,
     before,requestedDelta,actualDelta,after,
     labels:{
       religionArcaneBefore:label('religionArcane',before.religionArcane),
@@ -47,6 +52,9 @@ function applyPoliticalBids(state,summary){
   summary.cityInclination=result;
   const history=[...(state.history??[])].reverse().find(item=>n(item.generation)===n(summary.generation));
   if(history&&history!==summary)history.cityInclination=JSON.parse(JSON.stringify(result));
+  if(typeof window!=='undefined'&&typeof window.dispatchEvent==='function'&&typeof CustomEvent!=='undefined'){
+    window.dispatchEvent(new CustomEvent('morneval:inclination-resolved',{detail:JSON.parse(JSON.stringify(result))}));
+  }
   return result;
 }
 
