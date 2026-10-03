@@ -20,11 +20,13 @@ function servedByPlayer(summary, category){
 function applyMarketRewardModel(state, summary){
   const populationServed = servedByPlayer(summary, 'population');
   const externalServed = servedByPlayer(summary, 'external_markets');
+  const imperialServed = servedByPlayer(summary, 'imperial');
   const corrections = [];
 
   for(const player of state.players ?? []){
     const pop = populationServed.get(player.id) ?? 0;
     const ext = externalServed.get(player.id) ?? 0;
+    const imp = imperialServed.get(player.id) ?? 0;
     const scoring = (summary.prestigeScoring ?? []).find(row => row.playerId === player.id);
 
     // Population demand already grants +1 Prestige in the legacy ledger.
@@ -38,11 +40,11 @@ function applyMarketRewardModel(state, summary){
     }
 
     // Legacy production awards +1 Wealth for every served Stake regardless of destination.
-    // Remove that Wealth for Population-served Stakes. External-served Stakes retain +1 Wealth.
+    // Remove that Wealth for Population- and Imperial-served Stakes. Only External-served Stakes retain +1 Wealth.
     const beforeWealth = n(player.wealthCapacity);
     const floorWealth = 1;
-    const afterWealth = Math.max(floorWealth, beforeWealth - pop);
-    const removedPopulationWealth = beforeWealth - afterWealth;
+    const afterWealth = Math.max(floorWealth, beforeWealth - pop - imp);
+    const removedNonExternalWealth = beforeWealth - afterWealth;
     player.wealthCapacity = afterWealth;
     player.wealthGeneratedThisGeneration = afterWealth;
 
@@ -56,13 +58,16 @@ function applyMarketRewardModel(state, summary){
     corrections.push({
       playerId: player.id,
       populationDemandServed: pop,
+      imperialDemandServed: imp,
       externalDemandServed: ext,
       populationPrestige: pop,
       populationWealth: 0,
+      imperialPrestige: 0,
+      imperialWealth: 0,
       externalPrestige: ext,
       externalWealth: ext,
       wealthBeforeCorrection: beforeWealth,
-      populationWealthRemoved: removedPopulationWealth,
+      nonExternalWealthRemoved: removedNonExternalWealth,
       wealthAfterCorrection: afterWealth,
     });
   }
@@ -72,6 +77,7 @@ function applyMarketRewardModel(state, summary){
   summary.marketRewardModel = {
     version: V125_VERSION,
     population: { prestigePerServedDemand: 1, wealthPerServedDemand: 0 },
+    imperial: { prestigePerServedDemand: 0, wealthPerServedDemand: 0 },
     externalMarkets: { prestigePerServedDemand: 1, wealthPerServedDemand: 1 },
     corrections,
   };
