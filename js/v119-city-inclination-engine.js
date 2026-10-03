@@ -2,7 +2,7 @@ import * as legacy from './v116-city-inclination-engine.js?base=0.11.6-v118';
 
 export * from './v116-city-inclination-engine.js?base=0.11.6-v118';
 
-const VERSION='0.11.9';
+const VERSION='0.11.10';
 function n(value){return Number(value)||0;}
 function clampAxis(value){return Math.max(-2,Math.min(2,Math.trunc(n(value))));}
 function sign(value){return value>0?1:value<0?-1:0;}
