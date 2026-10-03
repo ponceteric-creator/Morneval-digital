@@ -333,10 +333,14 @@ function agentContinuationValue(state, player, agent) {
   const profile = profileFor(state, player);
   const institutionScore = estimatedInstitutionScore(state, agent.institutionId);
   const influenceValue = influenceShadowValue(state, player, profile);
+  const intrigueHook = V090_CONFIG?.agents?.intrigueAccessValue;
   let total = 0;
   for (let t = 0; t < Math.max(1, profile.horizon); t += 1) {
     const seniority = Math.min(3, clampInt(agent.seniority ?? 1, 1, 3) + t);
-    total += (profile.discount ** t) * (institutionScore * profile.prestige + seniority * influenceValue);
+    const intrigueValue = typeof intrigueHook === "function"
+      ? Math.max(0, Number(intrigueHook(state, player, agent.institutionId, seniority, profile, t)) || 0)
+      : 0;
+    total += (profile.discount ** t) * (institutionScore * profile.prestige + seniority * influenceValue + intrigueValue);
   }
   return total;
 }
