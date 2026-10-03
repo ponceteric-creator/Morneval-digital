@@ -1,0 +1,61 @@
+name: v119 agent hook one-shot
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch-v110:
+    if: github.event.head_commit.message == 'Apply v0.11.9 Agent hook'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch Agent continuation value
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('js/v110-ai-engine.js')
+          text = path.read_text()
+          old = '''function agentContinuationValue(state, player, agent) {
+            const profile = profileFor(state, player);
+            const institutionScore = estimatedInstitutionScore(state, agent.institutionId);
+            const influenceValue = influenceShadowValue(state, player, profile);
+            let total = 0;
+            for (let t = 0; t < Math.max(1, profile.horizon); t += 1) {
+              const seniority = Math.min(3, clampInt(agent.seniority ?? 1, 1, 3) + t);
+              total += (profile.discount ** t) * (institutionScore * profile.prestige + seniority * influenceValue);
+            }
+            return total;
+          }'''.replace('          ', '')
+          new = '''function agentContinuationValue(state, player, agent) {
+            const profile = profileFor(state, player);
+            const institutionScore = estimatedInstitutionScore(state, agent.institutionId);
+            const influenceValue = influenceShadowValue(state, player, profile);
+            const intrigueHook = V090_CONFIG?.agents?.intrigueAccessValue;
+            let total = 0;
+            for (let t = 0; t < Math.max(1, profile.horizon); t += 1) {
+              const seniority = Math.min(3, clampInt(agent.seniority ?? 1, 1, 3) + t);
+              const intrigueValue = typeof intrigueHook === "function"
+                ? Math.max(0, Number(intrigueHook(state, player, agent.institutionId, seniority, profile, t)) || 0)
+                : 0;
+              total += (profile.discount ** t) * (institutionScore * profile.prestige + seniority * influenceValue + intrigueValue);
+            }
+            return total;
+          }'''.replace('          ', '')
+          if text.count(old) != 1:
+              raise SystemExit(f'Expected exactly one old Agent continuation block, found {text.count(old)}')
+          path.write_text(text.replace(old, new))
+          Path('.github/workflows/v119-agent-hook-once.yml').unlink()
+          PY
+          node --check js/v110-ai-engine.js
+          git config user.name "Morneval automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add js/v110-ai-engine.js .github/workflows/v119-agent-hook-once.yml
+          git commit -m "Wire Intrigue option value into Agent continuation"
+          git push
