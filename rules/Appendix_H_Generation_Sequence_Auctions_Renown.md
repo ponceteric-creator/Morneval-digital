@@ -1,6 +1,6 @@
 # Appendix H — Generation Sequence, Auctions, Mercenary Contract & Renown
 
-Status: **v0.11.6 current simulation sequence**.
+Status: **v0.11.8 current simulation sequence**.
 
 ## 1. Generation sequence
 
@@ -39,11 +39,24 @@ Starting with First Player, Families take **one action successively**. There is 
 
 Submitting or increasing an auction bid is a normal action.
 
+A Family may also take the **Influence City Inclination** action:
+
+- spend **1 Influence** immediately;
+- consume **1 normal Player Action**;
+- support exactly one City Inclination pole: **Military, Merchant Guild, Temple, or Scholarium**;
+- place one Political Influence bid on that pole for the current Generation.
+
+Political Influence uses an **all-pay** model. The Influence is permanently spent when the action is taken. It is not refunded if that pole later loses or ties.
+
+There is no tabletop limit to the number of Political Influence actions a Family may take in one Generation beyond normal action sequencing and available Influence.
+
 Intrigue **Action** cards consume a normal Player Action according to Appendix K. Intrigue **Reaction** cards consume no Player Action and resolve only when their trigger occurs.
 
 ### 1.4 Auction Resolution
 
 All auctions are resolved after every Family has passed and before the economy is resolved.
+
+Political Influence bids are **not auctions** and do not resolve in this phase. Their Influence has already been spent; they are counted only during the final City Inclination phase.
 
 ### 1.5 Economy Resolution
 
@@ -96,24 +109,32 @@ City Inclination is resolved only after the next First Player has been determine
 
 City Inclination is the **last phase of the Generation**.
 
-Only Intrigue cards **actually played during the current Generation** are counted. There is no carry-over of card counts between Generations.
+There is no carry-over of Intrigue-card counts or Political Influence bids between Generations.
 
 The two axes are resolved independently:
 
 - **Scholarium ↔ Temple**
 - **Military ↔ Merchant Guild**
 
-For each axis, compare the number of cards played from the two opposing Institution decks:
+For each pole, calculate its final support as:
 
-- if one side has a strict relative majority, move the axis **one step** toward that side;
-- if both sides played the same number of cards, the axis does not move;
+**Intrigue cards actually played from that Institution during the current Generation + Political Influence bids spent on that pole during the current Generation.**
+
+For each axis:
+
+- if one side has a strict relative majority of total support, move the axis **one step** toward that side;
+- if both sides have the same total support, the axis does not move;
 - there is **no minimum threshold** for movement;
 - an axis can move by at most **one step per Generation**, regardless of the size of the majority;
 - normal axis limits remain **II / I / Neutral / I / II**.
 
-Therefore, for example, **3 Temple cards vs 2 Scholarium cards** moves the Scholarium/Temple axis one step toward Temple; **5 vs 0** also moves it only one step; **2 vs 2** causes no movement.
+Examples:
 
-All cards actually played count:
+- **3 Temple cards + 1 Temple bid vs 2 Scholarium cards + 1 Scholarium bid** gives Temple 4 vs Scholarium 3 and moves one step toward Temple;
+- **2 Military cards + 2 Military bids vs 3 Merchant cards + 1 Merchant bid** gives 4 vs 4 and causes no movement;
+- **5 Merchant total support vs 0 Military total support** still moves the axis only one step toward Merchant.
+
+All Intrigue cards actually played count:
 
 - Actions count;
 - Reactions count;
@@ -121,11 +142,13 @@ All cards actually played count:
 - a Permanent counts only in the Generation in which it is played;
 - a stolen card counts for the **Institution deck it originally belongs to**, not for the Institution of the Family that currently holds it.
 
+All Political Influence bids count, including bids from a Family whose preferred pole ultimately loses or ties. Because Political Influence is all-pay, none of that Influence is refunded after resolution.
+
 The resulting Inclination becomes the city's starting Inclination for the **following Generation**.
 
 ## 2. Universal auction rule
 
-All auctions, including Production Stakes and contracts, use the same structure.
+All actual auctions, including Production Stakes and contracts, use the same structure.
 
 - A Family submits or raises a bid during its normal action turn.
 - Each bid consumes one action.
@@ -140,6 +163,8 @@ All auctions, including Production Stakes and contracts, use the same structure.
 - If every bid is invalid, the auction has no winner.
 
 This makes the order in which a Family enters different auctions strategically relevant because reserved Influence cannot be reused while the Player Actions phase is still open.
+
+**Political Influence for City Inclination is explicitly not covered by this refund rule.** It is an all-pay political action, not an auction: each 1 Influence spent is permanently lost as soon as the action is taken.
 
 ## 3. Mercenary Contract
 
