@@ -2,7 +2,7 @@
 
 Digital prototype of the Morneval strategy board game.
 
-Current deployed prototype: **v0.11.7 — Contrarian AI**.
+Current deployed prototype: **v0.11.8 — Political City Inclination**.
 
 The browser prototype currently supports:
 
@@ -21,11 +21,32 @@ The browser prototype currently supports:
 - Patent transfer through Legal Contestation and Crooked Notary;
 - Intrigue-related Wealth bonuses reflected in current state and Generation History;
 - Contingency Reserves for Food stabilization before Imperial Aid;
-- automatic end-of-Generation City Inclination movement based on Intrigue cards actually played.
+- end-of-Generation City Inclination movement based on Intrigue cards actually played **plus all-pay Political Influence bids**.
 
 ## Current version
 
-**v0.11.7** is the canonical prototype version. The root `VERSION` file is the repository version reference. Query-string suffixes used for cache invalidation or implementation routing are not separate semantic versions.
+**v0.11.8** is the canonical prototype version. The root `VERSION` file is the repository version reference. Query-string suffixes used for cache invalidation or implementation routing are not separate semantic versions.
+
+### Political Influence and City Inclination
+
+During Player Actions, a Family may spend **1 Influence as one normal action** to support one of the four City Inclination poles:
+
+- Military
+- Merchant Guild
+- Temple
+- Scholarium
+
+Each Political Influence bid adds **1 point** to that pole for the end-of-Generation City Inclination resolution.
+
+Political Influence uses an **all-pay** model. The 1 Influence is spent immediately when the action is taken and is never refunded, regardless of whether that pole eventually wins, loses, or ties. This is intentionally different from the normal auction rule, where losing auction bids are refunded.
+
+At City Inclination resolution, each axis compares:
+
+**Intrigue cards actually played + Political Influence bids spent during the Generation.**
+
+A strict majority moves the axis one step. A tie causes no movement. Each axis can still move by at most one step per Generation.
+
+The tabletop rule has no bid cap. The digital simulation uses a per-Family bidding guardrail only to prevent runaway automated loops; that guardrail is an AI implementation detail, not a rule.
 
 ### Contrarian AI
 
@@ -56,21 +77,26 @@ Unique Patents and Land Enhancements leave their source decks when played. Their
 
 ## City Inclination resolution
 
-City Inclination is resolved as the **last phase of every Generation** from Intrigue cards actually played during that Generation.
+City Inclination is resolved as the **last phase of every Generation**.
 
 Two independent axes are used:
 
 - **Scholarium ↔ Temple**
 - **Military ↔ Merchant Guild**
 
-For each axis, compare the number of cards played from the two opposing Institution decks:
+For each axis, total each side's:
+
+- Intrigue cards actually played during the current Generation; plus
+- Political Influence bids spent on that pole during the current Generation.
+
+Then:
 
 - if one side has a strict relative majority, move the axis **one step** toward that side;
-- if the counts are tied, do not move;
+- if the totals are tied, do not move;
 - there is **no minimum threshold**;
 - an axis can move by at most **one step per Generation**, regardless of the size of the majority.
 
-All cards actually played count: Actions and Reactions, including cards whose effects are later countered. Permanents count only in the Generation in which they are played. A stolen card counts for the Institution deck it originally belongs to.
+All Intrigue cards actually played count: Actions and Reactions, including cards whose effects are later countered. Permanents count only in the Generation in which they are played. A stolen card counts for the Institution deck it originally belongs to.
 
 The current axis scale is five positions: `II ← I ← Neutral → I → II`.
 
@@ -83,6 +109,7 @@ The current build intentionally keeps several limitations explicit:
 - Civic Sanitation Works applies its final Squalor reduction, but same-Generation disease timing remains an approximation.
 - AI Intrigue valuation and the temporary limit on Intrigue Actions per Family are simulation heuristics, not tabletop rules.
 - Contrarian Agent specialization is layered over the existing action heuristic; it changes which Institution a newly chosen Agent supports, but does not grant additional Agent actions or bypass normal Wealth commitment.
+- Political Influence AI bidding uses a simulation-only spending guardrail; the tabletop rule itself has no maximum number of Political Influence actions per Family.
 
 ## Rule references
 
@@ -104,6 +131,7 @@ The current rules are split into appendices under [`rules/`](./rules/). The most
 
 ## Version history — recent milestones
 
+- **v0.11.8** — added all-pay Political Influence actions for City Inclination; each 1 Influence action counts as one point alongside Intrigue cards in the final axis comparison.
 - **v0.11.7** — added the Intrigue-aware Contrarian AI family, replacing the default Opportunist seat in three-Family simulation without adding resource or scoring bonuses.
 - **v0.11.6** — Intrigue-driven City Inclination resolution added as the final Generation phase; README/versioning synchronized.
 - **v0.11.5** — active Intrigue decks, AI card selection/play, Permanents, Patent transfer, Contingency Reserves and Intrigue Wealth history synchronization.
