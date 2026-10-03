@@ -1,5 +1,6 @@
 import * as legacy from './v123-institution-prestige-engine.js?base=0.11.14';
 import { ACTIVE_INTRIGUE_CARDS, INTRIGUE_CARD_META } from './v115-intrigue-card-catalog.js?v=0.11.5';
+import * as activeAi from './v119-political-influence-ai-engine.js?v=0.11.9';
 
 export * from './v123-institution-prestige-engine.js?base=0.11.14';
 export const V090_CONFIG = legacy.V090_CONFIG;
@@ -64,39 +65,42 @@ function scholariumStrategicAdjustment(state, player, seniority) {
 
   // Patents are significant because each one is simultaneously a permanent
   // +1 Wealth improvement, +1 city Renown, and +1 recurring Scholarium score.
-  // The base Intrigue model already values HIGH/permanent cards; this is only
+  // The base Intrigue model already values HIGH/permanent cards; this adds only
   // the missing rule-specific strategic value.
-  const patentOptionValue = patentAccess * 1.55;
+  const patentOptionValue = patentAccess * 0.60;
 
   // A Family not yet represented in the Scholarium should recognize the
   // recurring institutional Prestige created by Patents already in play.
   // Existing representation gets only a small continuation reminder because
   // extra Agents do not multiply Institution Prestige.
-  const activePatentValue = patents * (ownAgents === 0 ? 0.80 : 0.12);
+  const activePatentValue = patents * (ownAgents === 0 ? 0.35 : 0.08);
 
   // Breakthrough Prestige is transient and uncapped. Near-complete Production
-  // developments are therefore valuable reasons to establish Scholarium access
-  // before the Tier increase resolves. Diminish sharply once already represented.
+  // developments are therefore reasons to establish Scholarium access before
+  // the Tier increase resolves, but this value is deliberately moderate.
   const coverageFactor = ownAgents === 0 ? 1.0 : 0.22 / Math.max(1, ownAgents);
-  const breakthroughValue = breakthroughs * 0.34 * coverageFactor;
+  const breakthroughValue = breakthroughs * 0.12 * coverageFactor;
 
   return patentOptionValue + activePatentValue + breakthroughValue;
 }
 
-if (V090_CONFIG?.agents) {
-  const previousIntrigueAccessValue = V090_CONFIG.agents.intrigueAccessValue;
-  V090_CONFIG.agents.intrigueAccessValue = (state, player, institutionId, seniority, profile, t) => {
+// v115's complete Intrigue simulation uses this exact v119 AI module instance.
+// Configure that live instance rather than only the wrapper's exported config.
+const ACTIVE_AI_CONFIG = activeAi.V090_CONFIG ?? V090_CONFIG;
+if (ACTIVE_AI_CONFIG?.agents) {
+  const previousIntrigueAccessValue = ACTIVE_AI_CONFIG.agents.intrigueAccessValue;
+  ACTIVE_AI_CONFIG.agents.intrigueAccessValue = (state, player, institutionId, seniority, profile, t) => {
     const baseValue = typeof previousIntrigueAccessValue === 'function'
       ? Math.max(0, n(previousIntrigueAccessValue(state, player, institutionId, seniority, profile, t)))
       : 0;
     if (institutionId !== SCHOLARIUM_ID) return baseValue;
     return Math.max(0, baseValue + scholariumStrategicAdjustment(state, player, seniority));
   };
-  V090_CONFIG.agents.scholariumStrategicUnderstanding = {
+  ACTIVE_AI_CONFIG.agents.scholariumStrategicUnderstanding = {
     version: V124_AI_VERSION,
-    patentOptionWeight: 1.55,
-    activePatentFirstAgentWeight: 0.80,
-    breakthroughWeight: 0.34,
+    patentOptionWeight: 0.60,
+    activePatentFirstAgentWeight: 0.35,
+    breakthroughWeight: 0.12,
     ruleBonus: false,
   };
 }
