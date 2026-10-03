@@ -1,12 +1,12 @@
 # Appendix I — Development Costs & Prestige ROI
 
-Status: **v0.11.1 simulation benchmark**. This appendix supersedes the older Wealth-bearing development costs in Appendix B for the current simulation. Intrigue-card costs remain intentionally undefined.
+Status: **v0.11.12 simulation benchmark**. This appendix supersedes older Wealth-bearing development costs for the current simulation.
 
 ## I.1 — Economic principle
 
 **Wealth is capacity, not a generic construction currency.** One-off development actions therefore no longer spend Wealth.
 
-- **Influence** pays for territorial acquisition, civic conversion and Production-Sector development.
+- **Influence** pays for territorial acquisition, civic conversion, Production-Sector development and Core-Institution development.
 - **Wealth** remains a recurring capacity used by persistent commitments such as deployed Institution Agents.
 - **Auctions** continue to determine the Influence price of Production Stakes and the Mercenary Contract.
 
@@ -20,9 +20,9 @@ There is no passive Influence erosion. At Upkeep:
 
 **Influence = min(current Influence, Influence ceiling)**
 
-The default simulation ceiling is **15**, and remains adjustable for testing.
+The default simulation ceiling is **15**.
 
-Agents remain the main recurring source of Influence. Each Agent generates Influence equal to current seniority during Prestige & Influence Scoring.
+Agent Influence is generated from Agent seniority but is capped separately for each Family in each Core Institution according to Institution Tier: **2 / 4 / 8** at Tier I / II / III.
 
 ## I.3 — Territory acquisition / Domain track
 
@@ -40,14 +40,6 @@ Acquiring an unexplored Hinterland territory costs Influence according to the nu
 
 There is **no Wealth cost**.
 
-### Tabletop implementation
-
-The intended physical implementation is a visible **Domain track** on each Family board. Domain markers begin on the printed values `1 / 2 / 4 / 6 / 9 / 12 / 15`. When a Family acquires a territory, it takes the next marker from its board and places it on that territory. The newly uncovered number shows the cost of the next acquisition.
-
-If the Family ceases to control a territory — for example because it becomes a public Civic Farm or is absorbed by Morneval — the corresponding Domain marker returns to the Family board and the marginal acquisition cost falls accordingly.
-
-The simulation implements the same rule by counting currently controlled non-Urban territories.
-
 ## I.4 — Civic Farm conversion
 
 Converting a controlled natural territory into a Civic Farm costs:
@@ -57,11 +49,11 @@ Converting a controlled natural territory into a Civic Farm costs:
 
 The contributing Family gains **+3 Prestige** under the current benchmark.
 
-The Farm becomes public property, so the Family no longer counts that territory on its Domain track.
+## I.5 — Shared development-cost schedule
 
-## I.5 — Production-Sector development
+Production Sectors and Core Institutions use the **same three-phase development cost and Prestige schedule**.
 
-A Production Sector still requires three development phases for each Tier increase, with at most one phase funded in that Sector per Generation.
+At most one phase may be funded in the same Production Sector or Core Institution in one Generation. Completing Phase 3 activates the next Tier.
 
 ### Tier I → Tier II
 
@@ -72,8 +64,6 @@ A Production Sector still requires three development phases for each Tier increa
 | 3 | 2 | 0 | +2, then Tier II activates |
 | **Total** | **6** | **0** | **+9** |
 
-Direct Prestige/Influence ratios are therefore **2.0 / 1.5 / 1.0**.
-
 ### Tier II → Tier III
 
 | Phase | Influence | Wealth | Prestige |
@@ -83,29 +73,46 @@ Direct Prestige/Influence ratios are therefore **2.0 / 1.5 / 1.0**.
 | 3 | 4 | 0 | +4, then Tier III activates |
 | **Total** | **12** | **0** | **+18** |
 
-The Tier III project doubles the Tier II development scale while retaining the same **2.0 / 1.5 / 1.0** phase ROI profile.
+The Tier III project doubles the Tier II development scale while retaining the same **2.0 / 1.5 / 1.0** phase Prestige/Influence profile.
 
-### Rationale for front-loaded Prestige
+### Structural Renown
 
-The Family funding Phase 1 waits longest before the upgraded Tier becomes usable. The higher immediate Prestige compensates for that delayed structural return. Phase 3 gives the lowest direct Prestige/Influence ratio because it also receives the immediate public benefit of activating the new Tier.
+Production and Institution Tier contributions are identical:
 
-## I.6 — Institution Agents
+- Tier I = **0 Renown**
+- Tier II = **+1 Renown**
+- Tier III = **+2 Renown**
+
+### Why Prestige is front-loaded
+
+The Family funding Phase 1 waits longest before the upgraded Tier becomes usable. Higher immediate Prestige compensates for delayed structural return. Phase 3 gives the lowest direct Prestige/Influence ratio because it also activates the new Tier.
+
+## I.6 — Additional Core-Institution return
+
+Increasing a Core Institution Tier raises the maximum Agent Influence that **each Family** can obtain from that Institution:
+
+| Institution Tier | Influence cap per Family |
+|---|---:|
+| I | 2 |
+| II | 4 |
+| III | 8 |
+
+The cap is per Family and per Institution, not global.
+
+Institution Prestige is scored once for each represented Family, regardless of how many Agents that Family has in the Institution. Consequently, once the Influence cap is reached, additional Agents are valuable only for additional Intrigue-card access.
+
+## I.7 — Institution Agents
 
 Placing an Institution Agent has no Influence payment and no one-off Wealth expenditure.
 
 A deployed Agent reserves exactly **1 Wealth capacity** while it remains deployed.
 
-The former automated-player heuristic that required **2 free Wealth** before placing an Agent — one Wealth for the Agent plus one Wealth kept liquid — is removed in v0.11.1. If a Family has exactly **1 free Wealth**, it may deploy one Agent and reduce its remaining free Wealth to 0.
+## I.8 — Items outside this fixed schedule
 
-## I.7 — Items not priced by this appendix
-
-The following remain outside the fixed development-cost schedule:
+The following remain outside the development-cost schedule:
 
 - Production Stakes — universal Influence auction;
 - Mercenary Contract — universal Influence auction plus Raw Food operating requirement;
-- voting Influence — spent according to the vote procedure;
-- Institution Tier-development costs — still TBD;
+- Political Influence for City Inclination — 1 Influence all-pay per action;
 - Fortification construction costs — still TBD;
-- Intrigue / Innovation / Improvement cards — intentionally TBD until that subsystem is defined.
-
-These should not be assigned placeholder costs merely to complete the table; their benefits must be defined first and then calibrated against the same ROI framework.
+- individual Intrigue-card costs — defined by the relevant card rather than by this development table.
