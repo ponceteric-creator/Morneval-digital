@@ -1,63 +1,121 @@
-# Appendix G — Institution Agents, Seniority & Influence
+# Appendix G — Institution Agents, Tiers, Seniority & Influence
 
-Status: **v0.11.0 simulation model**. Structural Agent rules are locked; AI valuation coefficients remain simulation tuning.
+Status: **v0.11.12 locked structural model**. AI valuation coefficients remain simulation tuning.
 
-## 1. Starting state and placement
+## 1. Core Institution tiers
+
+The four Core Institutions are:
+
+- City Guard
+- Temple
+- Merchant Guild
+- Scholars’ Collegium
+
+Each Core Institution has three Tiers: **I / II / III**.
+
+Institution development uses the **same three-step development structure, Influence costs and immediate Prestige rewards as Production Sector development**.
+
+Current development track:
+
+### Tier I → Tier II
+
+| Step | Influence cost | Wealth cost | Prestige |
+|---|---:|---:|---:|
+| 1 | 2 | 0 | 4 |
+| 2 | 2 | 0 | 3 |
+| 3 | 2 | 0 | 2 |
+
+Completing Step 3 raises the Institution to Tier II.
+
+### Tier II → Tier III
+
+| Step | Influence cost | Wealth cost | Prestige |
+|---|---:|---:|---:|
+| 1 | 4 | 0 | 8 |
+| 2 | 4 | 0 | 6 |
+| 3 | 4 | 0 | 4 |
+
+Completing Step 3 raises the Institution to Tier III.
+
+An Institution Tier contributes to structural Renown exactly like a Production Sector Tier:
+
+- Tier I = **0 Renown**
+- Tier II = **+1 Renown**
+- Tier III = **+2 Renown**
+
+## 2. Agent placement and Wealth support
 
 Each Family begins with **0 deployed Agents**.
 
-Placing an Agent is a normal player action, costs no Influence, and reserves **1 Wealth capacity** while the Agent remains deployed. A Family may place Agents in any major Institution without prerequisite or Institution capacity limit. A newly placed Agent begins at **Seniority 1** and participates immediately in that Generation's Institution Prestige scoring and Agent Influence income.
+Placing an Agent is a normal Player Action, costs no Influence, and reserves **1 Wealth capacity** while the Agent remains deployed.
 
-## 2. Wealth support and recall
+There is no Agent-slot cap tied to Institution Tier. A Family may therefore place additional Agents even when its Influence income from that Institution is already capped.
 
-Each Agent reserves 1 Wealth. Wealth is a capacity, not a stored currency.
-
-Agent support is checked during **Upkeep**, after Agent ageing. If the Wealth capacity carried from the previous Generation is lower than the number of deployed Agents, enough Agents are recalled to restore legal support. There is no second forced-support check later in the Generation; a Wealth reduction determined during Wealth Recalculation takes effect on Agent support at the next Upkeep.
-
-Recall is free in action-economy terms, immediately releases 1 Wealth, and destroys the Agent's seniority. A later replacement is a new normal action and returns at Seniority 1.
+Each Agent remains persistent until recalled or removed.
 
 ## 3. Seniority
 
-Agents age during **Upkeep**:
+Agents age during Upkeep:
 
 **1 → 2 → 3 → 3 → ...**
 
-Seniority does not multiply Institution Prestige. It determines Agent Influence income and will later interact with Intrigue cards.
+Seniority has two functions:
+
+1. it contributes to the Family’s raw Agent Influence income in that Institution;
+2. it determines Intrigue access: Seniority 1 draws 1 card, Seniority 2 draws 2 and keeps 1, Seniority 3 draws 3 and keeps 1.
+
+Seniority does **not** multiply Institution Prestige.
 
 ## 4. Institution Prestige
 
-At Phase 6 — **Prestige & Influence Scoring**:
+At Prestige & Influence Scoring, a Family scores an Institution if it has **at least one Agent** in that Institution.
 
-**Family Prestige gained = Institution score × number of that Family's Agents in the Institution.**
+**Family Prestige gained = Institution score once.**
 
-An Agent placed during the current Generation counts immediately.
+The score is **per represented Family, not per Agent**.
+
+Additional Agents in the same Institution do not multiply this Prestige award.
 
 ## 5. Agent Influence income
 
-At Phase 6, every deployed Agent generates Influence equal to current seniority:
+For each Family and each Institution, first calculate raw Agent Influence:
 
-- Seniority 1: +1 Influence
-- Seniority 2: +2 Influence
-- Seniority 3: +3 Influence
+**Raw Influence = sum of the seniority of that Family’s Agents in that Institution.**
 
-There is **no hard Influence cap** and the former automatic +5 Influence income is removed.
+Then apply the Institution Tier cap:
 
-Influence erosion happens in Upkeep before actions. The simulation uses an adjustable soft-cap threshold `T`:
+| Institution Tier | Maximum Agent Influence received by one Family from that Institution |
+|---|---:|
+| I | **2** |
+| II | **4** |
+| III | **8** |
 
-**new Influence = max(0, min(T, current Influence − 1))**
+The cap is applied **separately for each Family and separately for each Institution**.
 
-Thus every Family with positive Influence loses at least 1 during Upkeep, while values above the threshold are compressed back toward the threshold. The threshold is adjustable in the simulation and will be fixed in the tabletop game after playtesting.
+Example: a Family with Agents of Seniority 3 and 2 in a Tier II Temple has raw Influence 5 but receives only **4 Influence** from the Temple.
 
-## 6. AI liquidity reserve
+If that same Family also generates 3 Influence from another Tier II Institution, it receives those 3 normally. The cap is not a global Family cap.
 
-The automated-player model keeps **1 Wealth liquid** before voluntarily placing a new Agent. An AI therefore needs at least 2 free Wealth to place a new Agent: 1 becomes reserved by the Agent and 1 remains free.
+## 6. Marginal value of additional Agents
 
-This is an **AI guardrail, not a tabletop rule**.
+Once a Family has reached the Influence cap of an Institution, additional Agents in that Institution provide:
 
-## 7. AI voluntary and forced recall
+- **no additional Institution Prestige**;
+- **no additional Agent Influence beyond the Tier cap**;
+- **additional Intrigue-card access only**.
 
-The AI may voluntarily recall Agents if the value of an unlocked action exceeds the continuation value lost from the recalled Agent(s) by a tuning margin.
+This is intentional. A Family may maintain a dense Agent network in one Institution specifically to see more cards and improve selection quality, but it does not receive unlimited political income for doing so.
 
-At Upkeep, forced recall removes the lowest estimated continuation-value Agent first until Agent count fits Wealth capacity. Continuation value includes expected Institution Prestige and future seniority-based Influence income.
+## 7. Wealth support and recall
 
-Exact utility weights and the AI liquidity reserve are simulation parameters rather than tabletop rules.
+Each Agent reserves 1 Wealth. Wealth is a capacity, not a stored currency.
+
+Agent support is checked during Upkeep, after Agent ageing. If carried Wealth capacity is lower than the number of deployed Agents, enough Agents are recalled to restore legal support.
+
+Recall is free in action-economy terms, immediately releases 1 Wealth, and destroys the Agent’s seniority. A later replacement is a new Agent at Seniority 1.
+
+## 8. AI implementation note
+
+The digital simulation evaluates Institution development alongside the current strategic state. The automated player currently uses a simulation guardrail of at most one Institution-development action per Family per Generation while this mechanism is being tested.
+
+This guardrail is **not a tabletop rule**. The tabletop restriction is only normal action sequencing and the ability to pay the development cost.
