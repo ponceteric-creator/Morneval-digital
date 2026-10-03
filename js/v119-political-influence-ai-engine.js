@@ -1,11 +1,11 @@
-import * as legacy from './v119-contrarian-ai-engine.js?base=0.11.9';
+import * as legacy from './v119-contrarian-ai-engine.js?base=0.11.10';
 import { INTRIGUE_CARD_META } from './v115-intrigue-card-catalog.js?v=0.11.5';
-import { intrigueAccessTurnValue } from './v119-intrigue-value.js?v=0.11.9';
+import { intrigueAccessTurnValue } from './v119-intrigue-value.js?v=0.11.10';
 
-export * from './v119-contrarian-ai-engine.js?base=0.11.9';
+export * from './v119-contrarian-ai-engine.js?base=0.11.10';
 export const V090_CONFIG = legacy.V090_CONFIG;
 
-const VERSION = '0.11.9';
+const VERSION = '0.11.10';
 const MAX_SIM_BIDS_PER_FAMILY = 6; // Simulation guardrail only; not a tabletop rule.
 const MIN_RESERVE = 2;
 const AXES = {
@@ -19,25 +19,20 @@ const POLE_TO_INSTITUTION = {
   scholarium: 'scholarium',
 };
 
-// All AI personalities value the future Intrigue access created by an Agent.
-// This augments the existing Institution Prestige + Influence continuation value.
+// All AI personalities value future Intrigue access through the normalized Agent utility model.
+// The hook returns raw prospective option value; personality weights are applied in v110-ai-engine.
 if (V090_CONFIG?.agents) {
-  V090_CONFIG.agents.intrigueAccessWeight ??= 1.50;
-  V090_CONFIG.agents.contrarianIntrigueAccessWeight ??= 3.25;
-  V090_CONFIG.agents.contrarianCrowdingWeight ??= 0.90;
-  V090_CONFIG.agents.contrarianNeglectedBonus ??= 0.40;
+  V090_CONFIG.agents.contrarianCrowdingWeight = 0.18;
+  V090_CONFIG.agents.contrarianNeglectedBonus = 0.35;
   V090_CONFIG.agents.intrigueAccessValue = (state, player, institutionId, seniority) => {
-    const normalWeight=Math.max(0,Number(V090_CONFIG.agents.intrigueAccessWeight)||0);
-    const contrarianWeight=Math.max(0,Number(V090_CONFIG.agents.contrarianIntrigueAccessWeight)||normalWeight);
-    const weight=player.aiPersonality==='contrarian'?contrarianWeight:normalWeight;
-    let value=intrigueAccessTurnValue(state, player, institutionId, seniority, weight);
+    let value=intrigueAccessTurnValue(state, player, institutionId, seniority, 1.0);
     if(player.aiPersonality==='contrarian'){
       let opposingAgents=0;
       for(const opponent of state.players ?? []) if(opponent.id!==player.id) opposingAgents+=agentCount(opponent,institutionId);
       const ownAgents=agentCount(player,institutionId);
       const crowding=Math.max(0,Number(V090_CONFIG.agents.contrarianCrowdingWeight)||0);
       const neglected=Math.max(0,Number(V090_CONFIG.agents.contrarianNeglectedBonus)||0);
-      value=value-opposingAgents*crowding-ownAgents*0.16+Math.max(0,neglected-opposingAgents*0.10);
+      value=value-opposingAgents*crowding-ownAgents*0.08+Math.max(0,neglected-opposingAgents*0.07);
     }
     return Math.max(0,value);
   };
