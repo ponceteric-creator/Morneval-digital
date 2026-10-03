@@ -1,7 +1,7 @@
 import * as legacy from './v126-base-wealth-engine.js?base=0.11.17';
 
 export * from './v126-base-wealth-engine.js?base=0.11.17';
-export const V127_VERSION = '0.11.18-test';
+export const V127_VERSION = '0.11.18';
 export const FAMILY_BASE_WEALTH = 2;
 
 const MERCHANT_GUILD_ID = 'merchant_guild';
@@ -20,24 +20,14 @@ function commercialWealth(state) {
   const players = state.players ?? [];
   const totalWealth = players.reduce((sum, player) => sum + Math.max(FAMILY_BASE_WEALTH, n(player.wealthCapacity)), 0);
   const baseWealth = FAMILY_BASE_WEALTH * players.length;
-  return {
-    totalWealth,
-    baseWealth,
-    generatedWealth: Math.max(0, totalWealth - baseWealth),
-  };
+  return { totalWealth, baseWealth, generatedWealth: Math.max(0, totalWealth - baseWealth) };
 }
 function merchantGuildStructuralScore(state) {
   const wealth = commercialWealth(state);
   const tier = institutionTier(state, MERCHANT_GUILD_ID);
   const cap = PRESTIGE_CAP_BY_TIER[tier] ?? 2;
-  return {
-    ...wealth,
-    tier,
-    cap,
-    structuralRaw: wealth.generatedWealth,
-    structuralCapped: Math.min(cap, wealth.generatedWealth),
-    score: Math.min(cap, wealth.generatedWealth),
-  };
+  const score = Math.min(cap, wealth.generatedWealth);
+  return { ...wealth, tier, cap, structuralRaw: wealth.generatedWealth, structuralCapped: score, score };
 }
 function externalPrestigeFor(summary, playerId) {
   const correction = (summary.marketRewardModel?.corrections ?? []).find(row => row.playerId === playerId);
@@ -65,6 +55,32 @@ function recomputePlayerPrestige(state, summary) {
   }
   summary.prestigeAfter = Object.fromEntries((state.players ?? []).map(player => [player.id, n(player.prestige)]));
 }
+function correctFirstPlayerIfPrestigeChanged(state, summary, corrections) {
+  if (!corrections.some(row => row.delta !== 0)) return;
+  const players = [...(state.players ?? [])];
+  if (!players.length) return;
+  const maxInfluence = Math.max(...players.map(player => n(player.influence)));
+  let finalists = players.filter(player => n(player.influence) === maxInfluence);
+  if (finalists.length <= 1) return;
+
+  const maxPrestige = Math.max(...finalists.map(player => n(player.prestige)));
+  finalists = finalists.filter(player => n(player.prestige) === maxPrestige);
+  if (finalists.length > 1) {
+    const maxWealth = Math.max(...finalists.map(player => n(player.wealthGeneratedThisGeneration ?? player.wealthCapacity)));
+    finalists = finalists.filter(player => n(player.wealthGeneratedThisGeneration ?? player.wealthCapacity) === maxWealth);
+  }
+
+  const existingWinner = summary.firstPlayerResolution?.nextFirstPlayerId ?? summary.nextFirstPlayerId ?? state.firstPlayerId;
+  const chosen = finalists.find(player => player.id === existingWinner) ?? finalists[0];
+  if (!chosen) return;
+  state.firstPlayerId = chosen.id;
+  summary.nextFirstPlayerId = chosen.id;
+  summary.firstPlayerResolution = {
+    ...(summary.firstPlayerResolution ?? {}),
+    nextFirstPlayerId: chosen.id,
+    correctedForMerchantGuildWealthScore: true,
+  };
+}
 function applyMerchantGuildPrestigeModel(state, summary) {
   const computed = merchantGuildStructuralScore(state);
   const row = summary.institutionScores?.[MERCHANT_GUILD_ID] ?? {};
@@ -89,9 +105,9 @@ function applyMerchantGuildPrestigeModel(state, summary) {
 
   const corrections = [];
   for (const scoring of summary.prestigeScoring ?? []) {
-    const player = (state.players ?? []).find(row => row.id === scoring.playerId);
+    const player = (state.players ?? []).find(item => item.id === scoring.playerId);
     if (!player) continue;
-    const entry = (scoring.entries ?? []).find(row => row.reason === `institution_${MERCHANT_GUILD_ID}`);
+    const entry = (scoring.entries ?? []).find(item => item.reason === `institution_${MERCHANT_GUILD_ID}`);
     if (!entry) continue;
     const represented = agentCount(player, MERCHANT_GUILD_ID) > 0;
     const before = n(entry.amount);
@@ -104,17 +120,11 @@ function applyMerchantGuildPrestigeModel(state, summary) {
   }
 
   recomputePlayerPrestige(state, summary);
+  correctFirstPlayerIfPrestigeChanged(state, summary, corrections);
 
-  // For the rule-isolation test, preserve the legacy first-player result.
-  // Recomputing it post-hoc changes future action order and overwhelms the
-  // very small Merchant Guild scoring delta we are trying to measure.
   summary.institutionPrestigeAwards = (summary.prestigeScoring ?? []).flatMap(scoring => (scoring.entries ?? [])
     .filter(entry => String(entry.reason ?? '').startsWith('institution_'))
-    .map(entry => ({
-      playerId: scoring.playerId,
-      institutionId: String(entry.reason).replace('institution_', ''),
-      amount: n(entry.amount),
-    })));
+    .map(entry => ({ playerId: scoring.playerId, institutionId: String(entry.reason).replace('institution_', ''), amount: n(entry.amount) })));
 
   summary.merchantGuildPrestigeModel = {
     version: V127_VERSION,
@@ -123,7 +133,6 @@ function applyMerchantGuildPrestigeModel(state, summary) {
     structuralPrestigeCapByTier: { ...PRESTIGE_CAP_BY_TIER },
     familyBaseWealth: FAMILY_BASE_WEALTH,
     penaltiesForUnmetExternalPopulationImperialDemand: false,
-    firstPlayerResultPreservedForIsolationTest: true,
     ...computed,
     corrections,
   };
