@@ -25,7 +25,7 @@ jobs:
           COST_MODE: proposed
           MERCHANT_MODE: legacy
         run: node --loader ./scripts/development-cost-loader.mjs ./scripts/run-merchant-guild-score-batch.mjs
-      - name: Wealth-score rule only — 3/5 Production, 4/6 Institutions
+      - name: Wealth-score isolated rule — preserve existing first-player trajectory
         env:
           COST_MODE: proposed
           MERCHANT_MODE: wealth
@@ -35,9 +35,9 @@ jobs:
         run: |
           echo '--- legacy ---'
           node -e "console.log(JSON.stringify(require('./simulation-results/merchant-guild-legacy.json').summary))"
-          echo '--- wealth rule only ---'
+          echo '--- wealth rule isolated ---'
           node -e "console.log(JSON.stringify(require('./simulation-results/merchant-guild-wealth.json').summary))"
       - uses: actions/upload-artifact@v4
         with:
-          name: merchant-guild-rule-only-ab-results
+          name: merchant-guild-rule-isolated-ab-results
           path: simulation-results/merchant-guild-*.json
