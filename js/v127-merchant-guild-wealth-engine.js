@@ -175,9 +175,13 @@ function applyMerchantGuildPrestigeModel(state, summary) {
 
 // Make the automated player understand the recurring Prestige represented by
 // Morneval's commercial Wealth. This is a valuation adjustment only; it grants
-// no rule bonus. Existing Intrigue-card valuation remains untouched.
+// no rule bonus. MERCHANT_AI=off is used by the A/B harness to isolate the
+// tabletop scoring rule from this AI-only heuristic.
+const MERCHANT_AI_VALUATION_ENABLED = !(
+  typeof process !== 'undefined' && process?.env?.MERCHANT_AI === 'off'
+);
 const ACTIVE_AI_CONFIG = activeAi.V090_CONFIG ?? legacy.V090_CONFIG;
-if (ACTIVE_AI_CONFIG?.agents) {
+if (MERCHANT_AI_VALUATION_ENABLED && ACTIVE_AI_CONFIG?.agents) {
   const previousIntrigueAccessValue = ACTIVE_AI_CONFIG.agents.intrigueAccessValue;
   ACTIVE_AI_CONFIG.agents.intrigueAccessValue = (state, player, institutionId, seniority, profile, t) => {
     const baseValue = typeof previousIntrigueAccessValue === 'function'
