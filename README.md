@@ -2,7 +2,7 @@
 
 Digital prototype of the Morneval strategy board game.
 
-Current deployed prototype: **v0.11.9 — Intrigue-aware Agent AI**.
+Current deployed prototype: **v0.11.10 — Normalized Agent Utility**.
 
 The browser prototype currently supports:
 
@@ -26,7 +26,7 @@ The browser prototype currently supports:
 
 ## Current version
 
-**v0.11.9** is the canonical prototype version. The root `VERSION` file is the repository version reference. Query-string suffixes used for cache invalidation or implementation routing are not separate semantic versions.
+**v0.11.10** is the canonical prototype version. The root `VERSION` file is the repository version reference. Query-string suffixes used for cache invalidation or implementation routing are not separate semantic versions.
 
 ### Political Influence and City Inclination
 
@@ -63,7 +63,7 @@ This is intentionally a planning heuristic rather than a catch-up rule: the Cont
 
 ### Intrigue-aware Agent valuation
 
-In v0.11.9, every automated Family includes future Intrigue access in the continuation value of an Institution Agent. For each Institution the AI estimates the expected value of the best card available from the Agent's seniority draw:
+In v0.11.10, every automated Family evaluates Institution Agents through a normalized continuation model combining Institution value, future Influence and Intrigue access. For each Institution the AI estimates the expected value of the best card available from the Agent's seniority draw:
 
 - Seniority 1: draw 1, keep 1;
 - Seniority 2: draw 2, keep the best 1;
@@ -71,7 +71,7 @@ In v0.11.9, every automated Family includes future Intrigue access in the contin
 
 The estimate uses known deck composition and public state only. Unique Permanents already in play are removed from prospective access value. Current inability to pay a card's Influence cost reduces value but does not make future access automatically worthless. Opponents' hidden hands are never inspected.
 
-This option value is added to the existing Institution-Prestige and Agent-Influence continuation value. The Contrarian gives somewhat more weight to long-horizon Intrigue access and discounts Institutions already crowded by opposing Agents, but still receives no rules bonus.
+The three components are normalized before they are combined so that one scoring scale cannot dominate merely because it uses larger raw numbers. The default mix is **40% Institution / 30% future Influence / 30% Intrigue access**. Personality variants preserve distinct priorities: the Dynast weights Institution prestige more strongly, the Merchant weights future Influence more strongly but receives stronger diminishing returns from an already-large Agent network, and the Contrarian weights Intrigue option value most heavily while still penalizing crowded Institutions. These are AI heuristics only and create no tabletop bonus.
 
 ### Intrigue implementation status
 
@@ -146,6 +146,7 @@ The current rules are split into appendices under [`rules/`](./rules/). The most
 
 ## Version history — recent milestones
 
+- **v0.11.10** — normalized Agent utility into Institution / future Influence / Intrigue components, added personality-specific weights, and added diminishing returns for large Agent networks.
 - **v0.11.9** — added Intrigue-aware Agent continuation value for every AI, removed named-card strategic multipliers from Contrarian planning, and removed post-hoc Contrarian Agent retarget/reallocation.
 - **v0.11.8** — added all-pay Political Influence actions for City Inclination; each 1 Influence action counts as one point alongside Intrigue cards in the final axis comparison.
 - **v0.11.7** — added the Intrigue-aware Contrarian AI family, replacing the default Opportunist seat in three-Family simulation without adding resource or scoring bonuses.
