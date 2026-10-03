@@ -1,6 +1,6 @@
 # Appendix H — Generation Sequence, Auctions, Mercenary Contract & Renown
 
-Status: **v0.11.8 current simulation sequence**.
+Status: **v0.11.11 current simulation sequence**.
 
 ## 1. Generation sequence
 
@@ -225,9 +225,9 @@ Production and Institution contribution per element:
 - Tier II: +1 Renown
 - Tier III: +2 Renown
 
-Each permanent future Innovation/Improvement card is currently intended to contribute +1 Renown while it remains in play.
+Each **Permanent Intrigue card that provides +1 Wealth** contributes **+1 Renown while it remains in play**. This contribution belongs to the city, not to the owning Family: transferring ownership of the Permanent does not remove its Renown contribution.
 
-The simulation temporarily adds **+1 Renown per 5 completed Generations** to stand in for future permanent Improvements. This longevity bonus is simulation-only and will not exist in the final tabletop rules.
+The former simulation-only **+1 Renown per 5 completed Generations** placeholder has been removed.
 
 There is no Population ×2 Renown cap.
 
