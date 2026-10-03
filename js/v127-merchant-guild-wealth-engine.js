@@ -1,8 +1,7 @@
 import * as legacy from './v126-base-wealth-engine.js?base=0.11.17';
-import * as activeAi from './v119-political-influence-ai-engine.js?v=0.11.10';
 
 export * from './v126-base-wealth-engine.js?base=0.11.17';
-export const V127_VERSION = '0.11.18';
+export const V127_VERSION = '0.11.18-test';
 export const FAMILY_BASE_WEALTH = 2;
 
 const MERCHANT_GUILD_ID = 'merchant_guild';
@@ -40,12 +39,10 @@ function merchantGuildStructuralScore(state) {
     score: Math.min(cap, wealth.generatedWealth),
   };
 }
-
 function externalPrestigeFor(summary, playerId) {
   const correction = (summary.marketRewardModel?.corrections ?? []).find(row => row.playerId === playerId);
   return Math.max(0, n(correction?.externalPrestige));
 }
-
 function recomputePlayerPrestige(state, summary) {
   for (const player of state.players ?? []) {
     const scoring = (summary.prestigeScoring ?? []).find(row => row.playerId === player.id);
@@ -53,7 +50,6 @@ function recomputePlayerPrestige(state, summary) {
     const externalPrestige = externalPrestigeFor(summary, player.id);
     const preChaosAfter = Math.max(0, n(scoring.after) - externalPrestige);
     let finalPrestige = preChaosAfter;
-
     if (summary.chaos?.triggered) {
       const loss = preChaosAfter > 0 ? Math.ceil(preChaosAfter * 0.20) : 0;
       finalPrestige = Math.max(0, preChaosAfter - loss);
@@ -65,51 +61,10 @@ function recomputePlayerPrestige(state, summary) {
         chaosRow.after = finalPrestige;
       }
     }
-
     player.prestige = finalPrestige + externalPrestige;
   }
   summary.prestigeAfter = Object.fromEntries((state.players ?? []).map(player => [player.id, n(player.prestige)]));
 }
-
-function recomputeFirstPlayer(state, summary) {
-  const players = [...(state.players ?? [])];
-  if (!players.length) return;
-  const maxInfluence = Math.max(...players.map(player => n(player.influence)));
-  let finalists = players.filter(player => n(player.influence) === maxInfluence);
-  let tieBreakMethod = 'influence';
-  let maxPrestige = null;
-  let maxWealth = null;
-
-  if (finalists.length > 1) {
-    maxPrestige = Math.max(...finalists.map(player => n(player.prestige)));
-    finalists = finalists.filter(player => n(player.prestige) === maxPrestige);
-    tieBreakMethod = 'prestige';
-  }
-  if (finalists.length > 1) {
-    maxWealth = Math.max(...finalists.map(player => n(player.wealthCapacity)));
-    finalists = finalists.filter(player => n(player.wealthCapacity) === maxWealth);
-    tieBreakMethod = 'wealth';
-  }
-  if (finalists.length > 1) {
-    const previous = summary.firstPlayerResolution?.nextFirstPlayerId ?? summary.nextFirstPlayerId ?? state.firstPlayerId;
-    const preserved = finalists.find(player => player.id === previous);
-    finalists = [preserved ?? finalists[0]];
-    tieBreakMethod = 'existing_random_result_preserved';
-  }
-
-  state.firstPlayerId = finalists[0]?.id ?? state.firstPlayerId;
-  summary.firstPlayerResolution = {
-    ...(summary.firstPlayerResolution ?? {}),
-    nextFirstPlayerId: state.firstPlayerId,
-    maxInfluence,
-    maxPrestige,
-    maxWealth,
-    tieBreakMethod,
-    correctedForMerchantGuildWealthScore: true,
-  };
-  summary.nextFirstPlayerId = state.firstPlayerId;
-}
-
 function applyMerchantGuildPrestigeModel(state, summary) {
   const computed = merchantGuildStructuralScore(state);
   const row = summary.institutionScores?.[MERCHANT_GUILD_ID] ?? {};
@@ -149,8 +104,10 @@ function applyMerchantGuildPrestigeModel(state, summary) {
   }
 
   recomputePlayerPrestige(state, summary);
-  recomputeFirstPlayer(state, summary);
 
+  // For the rule-isolation test, preserve the legacy first-player result.
+  // Recomputing it post-hoc changes future action order and overwhelms the
+  // very small Merchant Guild scoring delta we are trying to measure.
   summary.institutionPrestigeAwards = (summary.prestigeScoring ?? []).flatMap(scoring => (scoring.entries ?? [])
     .filter(entry => String(entry.reason ?? '').startsWith('institution_'))
     .map(entry => ({
@@ -166,49 +123,19 @@ function applyMerchantGuildPrestigeModel(state, summary) {
     structuralPrestigeCapByTier: { ...PRESTIGE_CAP_BY_TIER },
     familyBaseWealth: FAMILY_BASE_WEALTH,
     penaltiesForUnmetExternalPopulationImperialDemand: false,
+    firstPlayerResultPreservedForIsolationTest: true,
     ...computed,
     corrections,
   };
-
   return computed;
-}
-
-// Make the automated player understand the recurring Prestige represented by
-// Morneval's commercial Wealth. This is a valuation adjustment only; it grants
-// no rule bonus. MERCHANT_AI=off is used by the A/B harness to isolate the
-// tabletop scoring rule from this AI-only heuristic.
-const MERCHANT_AI_VALUATION_ENABLED = !(
-  typeof process !== 'undefined' && process?.env?.MERCHANT_AI === 'off'
-);
-const ACTIVE_AI_CONFIG = activeAi.V090_CONFIG ?? legacy.V090_CONFIG;
-if (MERCHANT_AI_VALUATION_ENABLED && ACTIVE_AI_CONFIG?.agents) {
-  const previousIntrigueAccessValue = ACTIVE_AI_CONFIG.agents.intrigueAccessValue;
-  ACTIVE_AI_CONFIG.agents.intrigueAccessValue = (state, player, institutionId, seniority, profile, t) => {
-    const baseValue = typeof previousIntrigueAccessValue === 'function'
-      ? Math.max(0, n(previousIntrigueAccessValue(state, player, institutionId, seniority, profile, t)))
-      : 0;
-    if (institutionId !== MERCHANT_GUILD_ID) return baseValue;
-    const score = merchantGuildStructuralScore(state).score;
-    const ownAgents = agentCount(player, MERCHANT_GUILD_ID);
-    const recurringPrestigeRecognition = score * (ownAgents === 0 ? 0.45 : 0.05);
-    return Math.max(0, baseValue + recurringPrestigeRecognition);
-  };
-  ACTIVE_AI_CONFIG.agents.merchantGuildWealthUnderstanding = {
-    version: V127_VERSION,
-    firstAgentRecurringPrestigeWeight: 0.45,
-    additionalAgentReminderWeight: 0.05,
-    ruleBonus: false,
-  };
 }
 
 export function createV084Game(familyNames = ['Valenne', "D'Arcy", 'Corven']) {
   return legacy.createV084Game(familyNames);
 }
-
 export function prepareV111State(state, options = {}) {
   return typeof legacy.prepareV111State === 'function' ? legacy.prepareV111State(state, options) : state;
 }
-
 export function resolveAutomatedGeneration(state) {
   const summary = legacy.resolveAutomatedGeneration(state);
   applyMerchantGuildPrestigeModel(state, summary);
