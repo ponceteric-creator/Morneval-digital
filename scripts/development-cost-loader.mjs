@@ -5,7 +5,7 @@ const ROOT = pathToFileURL(`${process.cwd()}/`).href;
 const mode = process.env.COST_MODE === 'proposed' ? 'proposed' : 'baseline';
 
 const COSTS = mode === 'proposed'
-  ? { production: { 1: 3, 2: 5 }, institution: { 1: 4, 2: 7 } }
+  ? { production: { 1: 3, 2: 5 }, institution: { 1: 4, 2: 6 } }
   : { production: { 1: 2, 2: 4 }, institution: { 1: 2, 2: 4 } };
 
 function local(rel) {
