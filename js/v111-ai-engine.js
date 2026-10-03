@@ -1,7 +1,7 @@
-import * as engine from "./v110-ai-engine.js?real=0.11.0-v111";
+import * as engine from "./v110-ai-engine.js?real=0.11.0-v120";
 import * as base from "./v089-engine.js?base=0.8.9";
 
-export * from "./v110-ai-engine.js?real=0.11.0-v111";
+export * from "./v110-ai-engine.js?real=0.11.0-v120";
 
 export const V090_CONFIG = engine.V090_CONFIG;
 
