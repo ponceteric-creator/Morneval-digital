@@ -1,6 +1,6 @@
 # Appendix C — Institutions
 
-**Status:** Consolidated institution design reference  
+**Status:** Consolidated institution design reference — core Tier/Agent economy updated for v0.11.12  
 **Relationship to master rules:** This appendix records the current locked institution structure and the current specialization roster. Numerical values and effects explicitly marked **TBD** remain provisional.
 
 ---
@@ -19,62 +19,63 @@ Morneval has one civic institution present from setup and four **Core Institutio
 
 Exact Population thresholds remain **TBD**.
 
-Once created, a Core Institution remains part of Morneval. Its importance may subsequently rise or fall through Agent investment.
+Once created, a Core Institution remains part of Morneval. Its Tier may subsequently be increased through direct Institution development.
 
 ---
 
-## C.2 — Core Institution Levels and Agents
+## C.2 — Core Institution Tiers and Agents
 
-Each Core Institution has **three Levels: I, II and III**.
+Each Core Institution has **three Tiers: I, II and III**.
 
-Core Institutions contain a limited number of Agent slots. Exact slot counts remain **TBD**.
+There is **no Agent-slot limit tied to Tier**. Agents are persistent political/institutional investments, not worker-placement pieces. They remain embedded in the Institution rather than being exhausted to take actions.
 
-Agents are **persistent political/institutional investments**, not worker-placement pieces. They remain embedded in the Institution rather than being exhausted to take actions.
+A Family represented by at least one Agent in an Institution receives that Institution's Prestige score **once per Generation**. Additional Agents do not multiply that Prestige award.
 
-Agents serve several purposes:
+Agents generate raw Influence equal to their Seniority, but the total Influence received by one Family from one Institution is capped by that Institution's Tier:
 
-1. **Prestige:** at the end of a Generation, each Agent scores Prestige according to the current strength/Level of its Core Institution. The exact Prestige progression remains TBD.
-2. **Institutional dividend:** Agents provide a player-facing benefit associated with the Institution.
-3. **Control:** Agent presence determines which Family controls the Institution; exact tie-breaking remains TBD.
-4. **Institutional development:** sufficient investment allows the Institution to maintain or increase its Level. Insufficient investment may cause it to decline.
-5. **Minor Institution access:** having at least one Agent in a Core Institution gives that Family access to that Core Institution’s active Minor Institutions.
+| Core Tier | Influence cap per Family from that Institution |
+|---|---:|
+| **I** | **2** |
+| **II** | **4** |
+| **III** | **8** |
 
-### Current Core-Institution dividends
+The cap is applied separately for every Family and every Institution. Once a Family has reached the Influence cap in an Institution, the only marginal benefit of adding further Agents there is **additional Intrigue-card access / card selection**.
 
-| Core Institution | Dividend direction |
-|---|---|
-| **Temple** | **Influence** |
-| **Merchant Guild** | **Wealth capacity** |
-| **City Guard** | **Force** when relevant to city defence/conflict |
-| **Scholars’ Collegium** | **Knowledge** |
+Agent Seniority remains **1 → 2 → 3 → 3...**. It determines raw Influence and Intrigue access: draw 1 / 2 / 3 cards and keep 1 according to Seniority.
 
-Exact quantities remain **TBD**.
+Having at least one Agent in a Core Institution also gives the Family access to eligible active Minor Institutions attached to that Core.
 
-### Knowledge
-
-Knowledge is intended to be a tightly capped wild resource rather than a third full economy.
-
-A Knowledge may be used to:
-- substitute for a limited amount of **Influence** when paying a cost;
-- reduce a **Wealth requirement**;
-- or be exchanged for **Prestige** if not otherwise used.
-
-Knowledge does not permanently convert into stored Influence or Wealth. The maximum Knowledge usable on one action/check remains **TBD** (current design range: 1–2).
+Control rules and tie-breaking for control remain **TBD**.
 
 ---
 
-## C.3 — Institutional Growth and Decline
+## C.3 — Institutional Development
 
-Core Institutions can both **grow and shrink** according to continuing Agent investment.
+Core Institutions increase Tier through direct development using the **same three-phase cost and immediate Prestige schedule as Production Sectors**. Agent count is not a prerequisite for development.
 
-A Core Institution that has reached Level III can later fall to Level II or Level I if Families cease supporting it. Institutional Level therefore represents current political/social weight rather than a permanent technological unlock.
+### Tier I → Tier II
 
-The exact Agent thresholds for:
-- maintaining a Level;
-- increasing a Level;
-- and declining a Level
+| Phase | Influence | Wealth | Prestige |
+|---:|---:|---:|---:|
+| 1 | 2 | 0 | +4 |
+| 2 | 2 | 0 | +3 |
+| 3 | 2 | 0 | +2, then Tier II activates |
 
-remain **TBD**.
+### Tier II → Tier III
+
+| Phase | Influence | Wealth | Prestige |
+|---:|---:|---:|---:|
+| 1 | 4 | 0 | +8 |
+| 2 | 4 | 0 | +6 |
+| 3 | 4 | 0 | +4, then Tier III activates |
+
+Institution Tiers contribute to structural Renown exactly like Production Tiers:
+
+- Tier I = **0 Renown**
+- Tier II = **+1 Renown**
+- Tier III = **+2 Renown**
+
+Under the current locked model, a developed Institution Tier does **not automatically decline** because Agents leave it or City Inclination later moves away. A future explicit decline/reform rule may revisit this, but no such rule is currently active.
 
 A Core Institution does not disappear merely because the city later moves away from the Inclination that helped create it.
 
@@ -96,9 +97,7 @@ When a new specialization slot opens, the Family controlling the parent Core Ins
 
 Choosing one Minor Institution does **not** permanently lock out all alternatives. A Level III Core may support two different Minor Institutions. However, because each Core has five possible specializations, every city will normally leave several paths undeveloped.
 
-Once created, a Minor Institution remains part of the city’s history. If the parent Core later falls below the Level required to support all of its Minor Institutions, excess Minor Institutions become **Dormant** rather than being destroyed. Dormant Minor Institutions provide no normal effect and cannot be newly exploited until sufficient specialization capacity returns.
-
-A decline and later recovery does not freely allow the city to replace an established Minor Institution with a completely different one; the established institution remains the one available for reactivation unless a future reform rule explicitly allows replacement.
+Once created, a Minor Institution remains part of the city’s history. The current Tier model has no automatic Tier decline, so Dormancy from Tier loss is not active in the present rules. If a future reform/decline rule is introduced, established Minor Institutions should become Dormant rather than being destroyed unless that future rule explicitly states otherwise.
 
 ---
 
@@ -275,17 +274,13 @@ The following institution rules remain intentionally open:
 
 - exact Population thresholds for automatic creation of the four Core Institutions;
 - exact effect of matching City Inclination on early creation timing;
-- exact Agent-slot counts at Core Levels I–III;
-- exact Agent maintenance/development thresholds and decline procedure;
-- exact Prestige scored per Agent at each Core Level;
-- exact Influence / Wealth / Force / Knowledge dividends generated by Core Agents;
-- Knowledge cap per action/check and Prestige conversion rate;
 - tie-break procedure for control of Core Institutions;
+- Knowledge cap per action/check and Prestige conversion rate, if Knowledge remains in the final design;
 - final names for **Civic Watch / Patrols** and **Grand Bazaar / Trade Fair**;
 - exact Renown-specialization triggers and values;
 - detailed effects/costs of the four Shadow specializations;
 - caps and numerical values for Mercenaries, Conscription, Sappers and Templars;
-- exact dormant-Minor reactivation timing;
+- any future explicit Institution decline/reform procedure;
 - City Hall Agent gameplay and whether City Hall eventually develops its own civic branches.
 
-These open points should be resolved through subsequent design and playtesting rather than inferred from this appendix.
+The following are **no longer TBD** as of v0.11.12: Core Institution development costs, Tier Renown contribution, Agent Influence caps, Agent slot limits (none tied to Tier), and Institution Prestige being scored once per represented Family rather than per Agent.
