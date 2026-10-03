@@ -1,6 +1,6 @@
-import * as base from "./v102-base.js?real=0.10.2-v110";
+import * as base from "./v102-base.js?real=0.11.11-renown";
 
-export * from "./v102-base.js?real=0.10.2-v110";
+export * from "./v102-base.js?real=0.11.11-renown";
 
 export const V084_CONFIG = {
   ...base.V084_CONFIG,
