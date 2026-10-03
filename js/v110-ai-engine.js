@@ -12,6 +12,16 @@ export const V090_CONFIG = {
     ...legacy.V090_CONFIG.agents,
     wealthCommitment: 1,
     liquidityReserve: 1,
+    utilityScale: 3.6,
+    utilityReferences: { institution: 4.0, influence: 3.2, intrigue: 3.0 },
+    utilityWeights: {
+      default: { institution: 0.40, influence: 0.30, intrigue: 0.30 },
+      dynast: { institution: 0.52, influence: 0.30, intrigue: 0.18 },
+      merchant: { institution: 0.32, influence: 0.38, intrigue: 0.30 },
+      contrarian: { institution: 0.28, influence: 0.22, intrigue: 0.50 },
+      opportunist: { institution: 0.40, influence: 0.30, intrigue: 0.30 },
+    },
+    networkDiminishingReturns: { default: 0.06, dynast: 0.04, merchant: 0.18, contrarian: 0.08, opportunist: 0.06 },
   },
   mercenaryContract: {
     maintenanceBid: 1,
@@ -329,18 +339,57 @@ function estimatedInstitutionScore(state, institutionId) {
   return calculateInstitutionScores(state, economy.reports, [], state.city.order, state.city.population)[institutionId]?.score ?? 0;
 }
 
-function agentContinuationValue(state, player, agent) {
-  const profile = profileFor(state, player);
+function agentUtilityWeights(player) {
+  const key = player.aiPersonality ?? "opportunist";
+  const configured = V090_CONFIG?.agents?.utilityWeights?.[key]
+    ?? V090_CONFIG?.agents?.utilityWeights?.default
+    ?? { institution: 0.40, influence: 0.30, intrigue: 0.30 };
+  const institution = Math.max(0, Number(configured.institution) || 0);
+  const influence = Math.max(0, Number(configured.influence) || 0);
+  const intrigue = Math.max(0, Number(configured.intrigue) || 0);
+  const total = institution + influence + intrigue || 1;
+  return { institution: institution / total, influence: influence / total, intrigue: intrigue / total };
+}
+
+function normalizedAgentComponents(state, player, agent, profile, seniority, t) {
   const institutionScore = estimatedInstitutionScore(state, agent.institutionId);
   const influenceValue = influenceShadowValue(state, player, profile);
   const intrigueHook = V090_CONFIG?.agents?.intrigueAccessValue;
+  const intrigueValue = typeof intrigueHook === "function"
+    ? Math.max(0, Number(intrigueHook(state, player, agent.institutionId, seniority, profile, t)) || 0)
+    : 0;
+  const refs = V090_CONFIG?.agents?.utilityReferences ?? {};
+  const institutionRef = Math.max(0.1, Number(refs.institution) || 4.0);
+  const influenceRef = Math.max(0.1, Number(refs.influence) || 3.2);
+  const intrigueRef = Math.max(0.1, Number(refs.intrigue) || 3.0);
+  return {
+    institution: Math.min(1.5, Math.max(0, institutionScore * profile.prestige / institutionRef)),
+    influence: Math.min(1.5, Math.max(0, seniority * influenceValue / influenceRef)),
+    intrigue: Math.min(1.5, Math.max(0, intrigueValue / intrigueRef)),
+  };
+}
+
+function agentNetworkFactor(player) {
+  const count = deployedInstitutionAgentCount(player);
+  const key = player.aiPersonality ?? "opportunist";
+  const penalties = V090_CONFIG?.agents?.networkDiminishingReturns ?? {};
+  const rate = Math.max(0, Number(penalties[key] ?? penalties.default) || 0);
+  return 1 / (1 + Math.max(0, count - 1) * rate);
+}
+
+function agentContinuationValue(state, player, agent) {
+  const profile = profileFor(state, player);
+  const weights = agentUtilityWeights(player);
+  const scale = Math.max(0.1, Number(V090_CONFIG?.agents?.utilityScale) || 3.6);
+  const networkFactor = agentNetworkFactor(player);
   let total = 0;
   for (let t = 0; t < Math.max(1, profile.horizon); t += 1) {
     const seniority = Math.min(3, clampInt(agent.seniority ?? 1, 1, 3) + t);
-    const intrigueValue = typeof intrigueHook === "function"
-      ? Math.max(0, Number(intrigueHook(state, player, agent.institutionId, seniority, profile, t)) || 0)
-      : 0;
-    total += (profile.discount ** t) * (institutionScore * profile.prestige + seniority * influenceValue + intrigueValue);
+    const c = normalizedAgentComponents(state, player, agent, profile, seniority, t);
+    const weighted = c.institution * weights.institution
+      + c.influence * weights.influence
+      + c.intrigue * weights.intrigue;
+    total += (profile.discount ** t) * weighted * scale * networkFactor;
   }
   return total;
 }
@@ -1301,7 +1350,8 @@ export function resolveAutomatedGeneration(state) {
     aiProfiles: Object.fromEntries(state.players.map(player => {
       const p = profileFor(state, player);
       return [player.id, { personality: player.aiPersonality, label: p.label, prestigeWeight: p.prestige,
-        wealthWeight: p.wealth, engineWeight: p.engine, civicWeight: p.civic, horizon: p.horizon }];
+        wealthWeight: p.wealth, engineWeight: p.engine, civicWeight: p.civic, horizon: p.horizon,
+        agentUtilityWeights: agentUtilityWeights(player), agentNetworkFactor: agentNetworkFactor(player) }];
     })),
   };
 
