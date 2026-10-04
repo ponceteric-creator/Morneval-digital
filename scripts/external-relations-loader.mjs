@@ -83,6 +83,44 @@ function patchAutomatedFarmCosts(source) {
   return source;
 }
 
+function patchAutomatedFinalRaid(source) {
+  const needle = `state.phase = "economy_resolution";\n  base.applyAutoDemand(state);\n  const economyResult = base.previewEconomy(state);`;
+  if (!source.includes(needle)) throw new Error('Could not find final economy resolution block in v110 AI engine');
+  const replacement = `state.phase = "economy_resolution";\n  base.applyAutoDemand(state);\n  if (state.externalRelations?.active) {\n    state.externalRelations.transient ??= {};\n    state.externalRelations.transient.orcRaidSectorLosses = {};\n    const relation = Number(state.externalRelations?.levels?.orcs) || 0;\n    const requestedRaidLoss = relation <= -3 ? 4 : relation === -2 ? 2 : relation === -1 ? 1 : 0;\n    if (requestedRaidLoss > 0) {\n      const noRaidPreview = base.previewEconomy(state);\n      const remaining = Object.fromEntries((noRaidPreview.reports ?? []).map(report => [\n        report.sectorId, Math.max(0, Math.floor(Number(report.actualProduction) || 0)),\n      ]));\n      let unallocated = requestedRaidLoss;\n      while (unallocated > 0) {\n        const candidates = Object.entries(remaining).filter(([, amount]) => amount > 0);\n        if (!candidates.length) break;\n        candidates.sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0])));\n        const sectorId = candidates[0][0];\n        remaining[sectorId] -= 1;\n        state.externalRelations.transient.orcRaidSectorLosses[sectorId] =\n          (state.externalRelations.transient.orcRaidSectorLosses[sectorId] ?? 0) + 1;\n        unallocated -= 1;\n      }\n    }\n  }\n  const economyResult = base.previewEconomy(state);`;
+  return source.replace(needle, replacement);
+}
+
+function patchV128Timing(source) {
+  const maintenanceNeedle = `.filter(stake => level <= -3 || stake.age === 'elder')`;
+  if (!source.includes(maintenanceNeedle)) throw new Error('Could not find Gnome Stake maintenance filter in v128 engine');
+  source = source.replace(
+    maintenanceNeedle,
+    `.filter(stake => level <= -3 ? stake.age !== 'elder' : stake.age === 'mature')`,
+  );
+
+  const reforestNeedle = `if (!land || land.ownerId !== playerId || land.development !== 'farm') return { ok: false, reason: 'controlled_farm_required' };`;
+  if (!source.includes(reforestNeedle)) throw new Error('Could not find Reforestation target rule in v128 engine');
+  source = source.replace(
+    reforestNeedle,
+    `if (!land || land.development !== 'farm') return { ok: false, reason: 'civic_farm_required' };`,
+  );
+
+  const raidPrepNeedle = `prep.orcRaid = allocateOrcRaidSectorLosses(state);`;
+  if (!source.includes(raidPrepNeedle)) throw new Error('Could not find pre-generation Orc raid allocation in v128 engine');
+  source = source.replace(
+    raidPrepNeedle,
+    `rel.transient.orcRaidSectorLosses = {};\n  prep.orcRaid = { totalLoss: 0, requestedLoss: raidLevelForOrcs(levelsAtStart.orcs), sectorLosses: {} };`,
+  );
+
+  const resolveNeedle = `try {\n    summary = legacy.resolveAutomatedGeneration(state);\n  } finally {\n    restorePreparedState(state, prep);\n  }`;
+  if (!source.includes(resolveNeedle)) throw new Error('Could not find v128 legacy generation wrapper');
+  source = source.replace(
+    resolveNeedle,
+    `try {\n    summary = legacy.resolveAutomatedGeneration(state);\n    const sectorLosses = Object.fromEntries((summary.economyReports ?? [])\n      .filter(report => Number(report.diplomacyRaidLoss) > 0)\n      .map(report => [report.sectorId, Number(report.diplomacyRaidLoss) || 0]));\n    prep.orcRaid = {\n      requestedLoss: raidLevelForOrcs(levelsAtStart.orcs),\n      totalLoss: Object.values(sectorLosses).reduce((sum, value) => sum + value, 0),\n      sectorLosses,\n    };\n  } finally {\n    restorePreparedState(state, prep);\n  }`,
+  );
+  return source;
+}
+
 export async function load(url, context, nextLoad) {
   const result = await nextLoad(url, context);
   if (result.format !== 'module' || result.source == null) return result;
@@ -100,6 +138,11 @@ export async function load(url, context, nextLoad) {
   }
   if (pathname.endsWith('/js/v110-ai-engine.js')) {
     source = patchAutomatedFarmCosts(source);
+    source = patchAutomatedFinalRaid(source);
+    changed = true;
+  }
+  if (pathname.endsWith('/js/v128-external-relations-engine.js')) {
+    source = patchV128Timing(source);
     changed = true;
   }
 
