@@ -14,7 +14,7 @@ function getPlayer(state, playerId) {
 }
 
 function isEligibleTerrainOwner(land, playerId) {
-  return land?.ownerId === playerId || land?.ownerId === 'city';
+  return land?.ownerId === playerId || land?.ownerId === 'city' || land?.ownerId === 'public';
 }
 
 function elvenRelationFromForestCount(state) {
@@ -138,7 +138,7 @@ export function resolveAutomatedGeneration(state) {
       prestigeAward: TERRAIN_ACTION_PRESTIGE,
       reforestationUnlockedWhenRelationsActive: true,
       gnomeImproveLandUnlockedAt: '+1 Gnomes',
-      validTargetOwnership: 'acting Family or City',
+      validTargetOwnership: 'acting Family or City/public',
       gnomeImprovementProductionGain: 1,
     };
     summary.externalRelations.notes = (summary.externalRelations.notes ?? [])
