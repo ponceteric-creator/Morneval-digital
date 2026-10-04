@@ -101,11 +101,12 @@ export function improveLandForGnomes(state, playerId, landId) {
   if (!land || !land.revealed || land.development === 'urban' || !isEligibleTerrainOwner(land, playerId)) {
     return { ok: false, reason: 'owned_or_city_nonurban_land_required' };
   }
-  if (land.gnomeImproved) return { ok: false, reason: 'already_improved' };
+  if (land.gnomeImproved || land.gnomeImprovementPermanent) return { ok: false, reason: 'already_improved' };
 
   player.influence -= TERRAIN_ACTION_INFLUENCE_COST;
   player.prestige = n(player.prestige) + TERRAIN_ACTION_PRESTIGE;
-  land.gnomeImproved = true;
+  land.gnomeImprovementPermanent = true;
+  land.baseCapacity = Math.max(0, Math.trunc(n(land.baseCapacity))) + 1;
 
   return {
     ok: true,
@@ -115,7 +116,8 @@ export function improveLandForGnomes(state, playerId, landId) {
     influenceCost: TERRAIN_ACTION_INFLUENCE_COST,
     prestigeAward: TERRAIN_ACTION_PRESTIGE,
     productionGain: 1,
-    note: 'The permanent +1 Production is represented by gnomeImproved. The former separate Gnome +2 improvement bonus is now redundant and must be redesigned rather than stacked.',
+    newBaseCapacity: land.baseCapacity,
+    note: 'Permanent +1 Production is applied directly to land capacity. The former separate Gnome +2 improvement bonus is redundant and must be redesigned rather than stacked.',
   };
 }
 
@@ -142,7 +144,7 @@ export function resolveAutomatedGeneration(state) {
     summary.externalRelations.notes = (summary.externalRelations.notes ?? [])
       .filter(note => !String(note).includes('Improve Land is represented') && !String(note).includes('action cost is still TBD'));
     summary.externalRelations.notes.push('Reforestation and Gnome Improve Land cost 2 Influence and grant +1 Prestige.');
-    summary.externalRelations.notes.push('Gnome Improve Land grants permanent +1 Production; the former separate +2 Gnome improvement bonus must not stack and is marked for redesign.');
+    summary.externalRelations.notes.push('Gnome Improve Land grants permanent +1 Production directly; the former separate +2 Gnome improvement bonus must not stack and is marked for redesign.');
   }
   return summary;
 }
