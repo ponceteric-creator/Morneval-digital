@@ -6,6 +6,7 @@ on:
       - '.github/workflows/balance-external-relations.yml'
       - 'js/v128-external-relations-engine.js'
       - 'scripts/external-relations-loader.mjs'
+      - 'scripts/fortification-sim-loader.mjs'
       - 'scripts/run-external-relations-batch.mjs'
       - 'rules/Appendix_N_External_Relations_v01119_Simulation.md'
   workflow_dispatch:
@@ -29,13 +30,13 @@ jobs:
           COST_MODE: proposed
           MERCHANT_AI: wealth
           EXTERNAL_RELATIONS: off
-        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs ./scripts/run-external-relations-batch.mjs
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/fortification-sim-loader.mjs ./scripts/run-external-relations-batch.mjs
       - name: External Relations active
         env:
           COST_MODE: proposed
           MERCHANT_AI: wealth
           EXTERNAL_RELATIONS: on
-        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs ./scripts/run-external-relations-batch.mjs
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/fortification-sim-loader.mjs ./scripts/run-external-relations-batch.mjs
       - name: Print A/B summaries
         run: |
           echo '--- baseline ---'
