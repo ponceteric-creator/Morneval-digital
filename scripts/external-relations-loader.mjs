@@ -54,6 +54,35 @@ function patchExternalDemand(source) {
   return source.replace(re, replacement);
 }
 
+function patchAutomatedFarmCosts(source) {
+  const farmCandidateNeedle = `const influenceCost = base.V084_CONFIG.hinterland.farmInfluenceCost;\n  const wealthCost = base.V084_CONFIG.hinterland.farmWealthCost;\n  if (!canPay(state, player, influenceCost, wealthCost)) return null;\n  const selected = state.lands`;
+  if (!source.includes(farmCandidateNeedle)) throw new Error('Could not find farmCandidate cost block in v110 AI engine');
+  source = source.replace(
+    farmCandidateNeedle,
+    `const baseInfluenceCost = base.V084_CONFIG.hinterland.farmInfluenceCost;\n  const wealthCost = base.V084_CONFIG.hinterland.farmWealthCost;\n  const selected = state.lands`,
+  );
+  const selectionTail = `.sort((a, b) => a.value - b.value || (a.land.explorationOrder ?? 9999) - (b.land.explorationOrder ?? 9999))[0];\n  if (!selected) return null;\n  const profile = profileFor(state, player);`;
+  if (!source.includes(selectionTail)) throw new Error('Could not find farmCandidate selected-land tail in v110 AI engine');
+  source = source.replace(
+    selectionTail,
+    `.sort((a, b) => a.value - b.value || (a.land.explorationOrder ?? 9999) - (b.land.explorationOrder ?? 9999))[0];\n  if (!selected) return null;\n  const elvenDeforestationSurcharge = state.externalRelations?.active\n    && Number(state.externalRelations?.levels?.elves) <= -1\n    && selected.land.originalTerrain === "forest"\n    ? 1\n    : 0;\n  const influenceCost = baseInfluenceCost + elvenDeforestationSurcharge;\n  if (!canPay(state, player, influenceCost, wealthCost)) return null;\n  const profile = profileFor(state, player);`,
+  );
+
+  const executeNeedle = `if (candidate.kind === "farm") {\n    const influenceCost = base.V084_CONFIG.hinterland.farmInfluenceCost;\n    const wealthCost = base.V084_CONFIG.hinterland.farmWealthCost;\n    if (!canPay(state, player, influenceCost, wealthCost)) return null;`;
+  if (!source.includes(executeNeedle)) throw new Error('Could not find automated farm execution block in v110 AI engine');
+  source = source.replace(
+    executeNeedle,
+    `if (candidate.kind === "farm") {\n    const baseInfluenceCost = base.V084_CONFIG.hinterland.farmInfluenceCost;\n    const wealthCost = base.V084_CONFIG.hinterland.farmWealthCost;\n    const elvenDeforestationSurcharge = state.externalRelations?.active\n      && Number(state.externalRelations?.levels?.elves) <= -1\n      && candidate.land.originalTerrain === "forest"\n      ? 1\n      : 0;\n    const influenceCost = baseInfluenceCost + elvenDeforestationSurcharge;\n    if (!canPay(state, player, influenceCost, wealthCost)) return null;`,
+  );
+  const actionNeedle = `return { sequence, type: "farm_conversion", playerId: player.id, landId: land.id, influenceCost, wealthCost,\n      prestigeAward: V090_CONFIG.civicFarmPrestige, previousResourceType, ownershipTransferredTo: V090_CONFIG.publicFarmOwnerId };`;
+  if (!source.includes(actionNeedle)) throw new Error('Could not find automated farm action report in v110 AI engine');
+  source = source.replace(
+    actionNeedle,
+    `return { sequence, type: "farm_conversion", playerId: player.id, landId: land.id, influenceCost, baseInfluenceCost,\n      elvenDeforestationSurcharge, wealthCost, prestigeAward: V090_CONFIG.civicFarmPrestige, previousResourceType,\n      ownershipTransferredTo: V090_CONFIG.publicFarmOwnerId };`,
+  );
+  return source;
+}
+
 export async function load(url, context, nextLoad) {
   const result = await nextLoad(url, context);
   if (result.format !== 'module' || result.source == null) return result;
@@ -67,6 +96,10 @@ export async function load(url, context, nextLoad) {
   }
   if (pathname.endsWith('/js/v102-base.js')) {
     source = patchExternalDemand(source);
+    changed = true;
+  }
+  if (pathname.endsWith('/js/v110-ai-engine.js')) {
+    source = patchAutomatedFarmCosts(source);
     changed = true;
   }
 
