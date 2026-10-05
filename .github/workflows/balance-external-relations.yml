@@ -13,6 +13,7 @@ on:
       - 'scripts/elven-quest-autocomplete-loader.mjs'
       - 'scripts/fortification-sim-loader.mjs'
       - 'scripts/run-external-relations-batch.mjs'
+      - 'scripts/run-production-stake-diagnostic.mjs'
       - 'scripts/test-elven-alliance-v130.mjs'
       - 'rules/Appendix_N_External_Relations_v01119_Simulation.md'
   workflow_dispatch:
@@ -45,13 +46,31 @@ jobs:
           MERCHANT_AI: wealth
           EXTERNAL_RELATIONS: on
         run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs ./scripts/run-external-relations-batch.mjs
+      - name: Production Stake diagnostic baseline
+        env:
+          COST_MODE: proposed
+          MERCHANT_AI: wealth
+          EXTERNAL_RELATIONS: off
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs ./scripts/run-production-stake-diagnostic.mjs
+      - name: Production Stake diagnostic with relations
+        env:
+          COST_MODE: proposed
+          MERCHANT_AI: wealth
+          EXTERNAL_RELATIONS: on
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs ./scripts/run-production-stake-diagnostic.mjs
       - name: Print A/B summaries
         run: |
           echo '--- baseline ---'
           node -e "console.log(JSON.stringify(require('./simulation-results/external-relations-baseline.json').summary, null, 2))"
           echo '--- relations ---'
           node -e "console.log(JSON.stringify(require('./simulation-results/external-relations-relations.json').summary, null, 2))"
+          echo '--- stake diagnostic baseline ---'
+          cat simulation-results/production-stake-diagnostic-baseline.json
+          echo '--- stake diagnostic relations ---'
+          cat simulation-results/production-stake-diagnostic-relations.json
       - uses: actions/upload-artifact@v4
         with:
           name: external-relations-ab-results
-          path: simulation-results/external-relations-*.json
+          path: |
+            simulation-results/external-relations-*.json
+            simulation-results/production-stake-diagnostic-*.json
