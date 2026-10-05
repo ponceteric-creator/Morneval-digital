@@ -9,6 +9,7 @@ on:
       - 'js/v130-elven-alliance-engine.js'
       - 'js/v131-food-production-cleanup-engine.js'
       - 'js/v132-production-stake-ai-engine.js'
+      - 'js/v133-influence-cap-engine.js'
       - 'scripts/external-relations-loader.mjs'
       - 'scripts/elven-alliance-sim-loader.mjs'
       - 'scripts/elven-strategy-ai-loader.mjs'
@@ -21,6 +22,7 @@ on:
       - 'scripts/run-production-stake-diagnostic.mjs'
       - 'scripts/test-elven-alliance-v130.mjs'
       - 'scripts/test-no-food-production-stakes.mjs'
+      - 'scripts/test-influence-threshold-v133.mjs'
       - 'rules/Appendix_N_External_Relations_v01119_Simulation.md'
   workflow_dispatch:
 
@@ -42,6 +44,8 @@ jobs:
         run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs ./scripts/test-elven-alliance-v130.mjs
       - name: No Food Production Sector regression test
         run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs ./scripts/test-no-food-production-stakes.mjs
+      - name: Influence threshold 20 regression test
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/test-influence-threshold-v133.mjs
       - name: Baseline without activated diplomacy
         env:
           COST_MODE: proposed

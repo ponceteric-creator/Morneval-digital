@@ -11,13 +11,14 @@ export async function resolve(specifier, context, nextResolve) {
 
   // Current simulation scripts historically import v130 directly. Route only
   // those top-level script imports through the latest simulation wrapper. The
-  // wrapper inherits the v131 Food cleanup and adds the v132 Production Stake
-  // AI model; archived/versioned engine behavior remains untouched.
+  // wrapper inherits the v131 Food cleanup and v132 Production Stake AI model,
+  // then raises the Influence erosion threshold from 12 to 20 in v133.
+  // Archived/versioned engine behavior remains untouched.
   if (candidate
       && parent?.pathname?.includes('/scripts/')
       && candidate.pathname.endsWith('/js/v130-elven-alliance-engine.js')) {
     return {
-      url: `${local('js/v132-production-stake-ai-engine.js')}${candidate.search || '?current=stake-ai-v132'}`,
+      url: `${local('js/v133-influence-cap-engine.js')}${candidate.search || '?current=influence-cap-v133'}`,
       shortCircuit: true,
     };
   }
