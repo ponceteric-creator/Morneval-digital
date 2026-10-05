@@ -40,12 +40,46 @@ function emptySectorRow() {
     tierActivations: 0,
   };
 }
+function emptyAiSector() {
+  return {
+    evaluations: 0,
+    zeroOrLowUtility: 0,
+    zeroOrLowUtilityWithInactiveStake: 0,
+    alreadyLeadingAuction: 0,
+    nextBidAboveMax: 0,
+    nonPositiveBidDelta: 0,
+    insufficientInfluence: 0,
+    candidatesOffered: 0,
+  };
+}
 
 const aggregate = Object.fromEntries(SECTORS.map(id => [id, emptySectorRow()]));
 const placementsByPersonality = {};
 const bidsByPersonality = {};
 const finalTierRows = [];
 const finalStakeRows = [];
+const aiDiagnosticAggregate = {
+  bySector: Object.fromEntries(SECTORS.map(id => [id, emptyAiSector()])),
+  roundsWithProductionCandidate: 0,
+  roundsProductionChosen: 0,
+  roundsProductionLostToOtherAction: 0,
+  lostToKind: {},
+};
+function mergeAiDiagnostic(diag) {
+  if (!diag) return;
+  aiDiagnosticAggregate.roundsWithProductionCandidate += n(diag.roundsWithProductionCandidate);
+  aiDiagnosticAggregate.roundsProductionChosen += n(diag.roundsProductionChosen);
+  aiDiagnosticAggregate.roundsProductionLostToOtherAction += n(diag.roundsProductionLostToOtherAction);
+  for (const [kind, count] of Object.entries(diag.lostToKind ?? {})) {
+    aiDiagnosticAggregate.lostToKind[kind] = (aiDiagnosticAggregate.lostToKind[kind] ?? 0) + n(count);
+  }
+  for (const sectorId of SECTORS) {
+    const source = diag.bySector?.[sectorId] ?? {};
+    const target = aiDiagnosticAggregate.bySector[sectorId];
+    for (const key of Object.keys(target)) target[key] += n(source[key]);
+  }
+}
+
 let totalGenerations = 0;
 let gamesReached = 0;
 
@@ -130,6 +164,7 @@ for (let game = 0; game < GAMES; game += 1) {
     }
   }
 
+  mergeAiDiagnostic(state.__stakeAiDiagnostic);
   if (reached) gamesReached += 1;
   finalTierRows.push(Object.fromEntries(SECTORS.map(id => [id, n(state.productionSectors.find(s => s.id === id)?.tier) || 1])));
   finalStakeRows.push(Object.fromEntries(SECTORS.map(id => [id, state.players.flatMap(p => p.productionStakes ?? []).filter(stake => stake.sectorId === id).length])));
@@ -176,6 +211,7 @@ const summary = {
   bySector,
   placementsByPersonality,
   winningBidInfluenceByPersonality: bidsByPersonality,
+  aiDecisionDiagnostic: aiDiagnosticAggregate,
   notes: [
     'Stake bottleneck means Stakes are below both available Raw capacity and current demand.',
     'Missed Stake opportunity means the sector is Stake-bottlenecked and still has an unused Young slot after the action/auction phase.',
