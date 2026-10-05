@@ -123,8 +123,10 @@ function merchantMarginalPolicyValue(state,player,targetAxis){
 export function patchMerchantAiV136(url, source) {
   if (process.env.MERCHANT_AI_V136 === 'off') return source;
   const pathname = new URL(url).pathname;
+  const scoringEnabled = process.env.MERCHANT_AI_V136_SCORE !== 'off';
+  const politicsEnabled = process.env.MERCHANT_AI_V136_POLITICS !== 'off';
   let patched = source;
-  if (pathname.endsWith('/js/v110-ai-engine.js')) patched = patchMerchantGuildScoring(patched);
-  if (pathname.endsWith('/js/v119-political-influence-ai-engine.js')) patched = patchMerchantPoliticalIntent(patched);
+  if (scoringEnabled && pathname.endsWith('/js/v110-ai-engine.js')) patched = patchMerchantGuildScoring(patched);
+  if (politicsEnabled && pathname.endsWith('/js/v119-political-influence-ai-engine.js')) patched = patchMerchantPoliticalIntent(patched);
   return patched;
 }
