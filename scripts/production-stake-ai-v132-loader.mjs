@@ -1,27 +1,231 @@
+function replaceFunctionBlock(source, startMarker, endMarker, replacement) {
+  const start = source.indexOf(startMarker);
+  if (start < 0) throw new Error(`Missing patch start: ${startMarker}`);
+  const end = source.indexOf(endMarker, start);
+  if (end < 0) throw new Error(`Missing patch end: ${endMarker}`);
+  return source.slice(0, start) + replacement + source.slice(end);
+}
+
 function patchProductionStakeAI(source) {
-  const expectedNeedle = `function expectedStakeValue(state, player, sector) {\n  const currentStakes = state.players.flatMap(p => p.productionStakes).filter(stake => stake.sectorId === sector.id).length;\n  const rawCapacity = base.sectorResourceCapacity(state, sector.id);\n  if (currentStakes >= rawCapacity) return { category: null, utility: 0 };\n  const sequence = allocateDemand(\n    Math.min(rawCapacity, currentStakes + 1), sector.demandThisGeneration, base.getDemandPriorityGroups(state),\n  );\n  const category = sequence[currentStakes] ?? null;\n  if (!category) return { category: null, utility: 0 };\n  const profile = profileFor(state, player);\n  return { category, utility: categoryUtility(category, profile) * annuity(profile, Math.min(3, profile.horizon)) + profile.engine * 0.25 };\n}`;
+  source = replaceFunctionBlock(
+    source,
+    'function expectedStakeValue(state, player, sector) {',
+    '\n\nfunction revealTerrain',
+    `function stakeAgeAfterV132(age, generations) {
+  const ages = ["young", "mature", "elder"];
+  const start = Math.max(0, ages.indexOf(age));
+  const index = start + generations;
+  return index >= ages.length ? null : ages[index];
+}
 
-  if (!source.includes(expectedNeedle)) throw new Error('Could not find legacy expectedStakeValue');
+function stakeAgeRankV132(age) {
+  if (age === "elder") return 3;
+  if (age === "mature") return 2;
+  return 1;
+}
 
-  const expectedReplacement = `function stakeAgeAfterV132(age, generations) {\n  const ages = [\"young\", \"mature\", \"elder\"];\n  const start = Math.max(0, ages.indexOf(age));\n  const index = start + generations;\n  return index >= ages.length ? null : ages[index];\n}\n\nfunction stakeAgeRankV132(age) {\n  if (age === \"elder\") return 3;\n  if (age === \"mature\") return 2;\n  return 1;\n}\n\nfunction projectedSectorStakesV132(state, sectorId, generations) {\n  return state.players\n    .flatMap(p => p.productionStakes ?? [])\n    .filter(stake => stake.sectorId === sectorId)\n    .filter(stake => !(generations === 0 && stake.diplomacyInactiveThisGeneration))\n    .map(stake => ({ ...stake, age: stakeAgeAfterV132(stake.age, generations) }))\n    .filter(stake => stake.age);\n}\n\nfunction rawSourcesForStakeAiV132(state, sector) {\n  return (state.lands ?? [])\n    .filter(land =>\n      land.revealed\n      && land.development !== \"urban\"\n      && land.ownerId\n      && land.ownerId !== \"city\"\n      && land.resourceType === sector.inputResourceType\n      && Math.max(0, Number(land.baseCapacity) || 0) > 0\n    )\n    .sort((a, b) => (a.explorationOrder ?? 999999) - (b.explorationOrder ?? 999999));\n}\n\nfunction marginalLandActivationUtilityV132(state, player, sector, servedWithout, servedWith, profile) {\n  if (servedWith <= servedWithout) return 0;\n  let alreadyConsumed = Math.max(0, servedWithout);\n  for (const land of rawSourcesForStakeAiV132(state, sector)) {\n    const capacity = Math.max(0, Math.floor(Number(land.baseCapacity) || 0));\n    const usedBefore = Math.min(capacity, alreadyConsumed);\n    alreadyConsumed -= usedBefore;\n    if (usedBefore < capacity) {\n      if (usedBefore === 0 && land.ownerId === player.id) {\n        const prestige = Math.max(0, Number(base.V084_CONFIG?.rewards?.productiveLandPrestige) || 1);\n        return prestige * profile.prestige;\n      }\n      return 0;\n    }\n  }\n  return 0;\n}\n\nfunction expectedStakeValue(state, player, sector) {\n  const profile = profileFor(state, player);\n  const priorityGroups = base.getDemandPriorityGroups(state);\n  const rawCapacity = Math.max(0, base.sectorResourceCapacity(state, sector.id));\n  const slotCapacity = Math.max(0, Math.floor(Number(sector.tier) || 1) * 3);\n  const hypothetical = {\n    id: \"__v132_hypothetical_stake__\",\n    ownerId: player.id,\n    sectorId: sector.id,\n    age: \"young\",\n    placementOrder: Number.MAX_SAFE_INTEGER,\n    __v132Hypothetical: true,\n  };\n  const projection = [];\n  let utility = 0;\n  let firstCategory = null;\n\n  for (let t = 0; t < 3; t += 1) {\n    const projectedAge = stakeAgeAfterV132(\"young\", t);\n    if (!projectedAge) break;\n    const existing = projectedSectorStakesV132(state, sector.id, t);\n    const projectedHypothetical = { ...hypothetical, age: projectedAge };\n    const withStake = [...existing, projectedHypothetical]\n      .sort((a, b) => stakeAgeRankV132(b.age) - stakeAgeRankV132(a.age)\n        || (Number(a.placementOrder) || 0) - (Number(b.placementOrder) || 0));\n\n    const supplyWithout = Math.min(rawCapacity, slotCapacity, existing.length);\n    const supplyWith = Math.min(rawCapacity, slotCapacity, withStake.length);\n    const sequenceWithout = allocateDemand(supplyWithout, sector.demandThisGeneration, priorityGroups);\n    const sequenceWith = allocateDemand(supplyWith, sector.demandThisGeneration, priorityGroups);\n    const hypotheticalIndex = withStake.findIndex(stake => stake.__v132Hypothetical);\n    const category = hypotheticalIndex >= 0 && hypotheticalIndex < sequenceWith.length\n      ? sequenceWith[hypotheticalIndex]\n      : null;\n    if (!firstCategory && category) firstCategory = category;\n\n    const directUtility = category ? categoryUtility(category, profile) : 0;\n    const landUtility = marginalLandActivationUtilityV132(\n      state, player, sector, sequenceWithout.length, sequenceWith.length, profile,\n    );\n    const discounted = (directUtility + landUtility) * (profile.discount ** t);\n    utility += discounted;\n    projection.push({\n      generationOffset: t,\n      age: projectedAge,\n      category,\n      directUtility,\n      landUtility,\n      discountedUtility: discounted,\n      activeExistingStakes: existing.length,\n      productionWithout: sequenceWithout.length,\n      productionWith: sequenceWith.length,\n    });\n  }\n\n  return { category: firstCategory, utility, projection };\n}`;
+function projectedSectorStakesV132(state, sectorId, generations) {
+  return state.players
+    .flatMap(p => p.productionStakes ?? [])
+    .filter(stake => stake.sectorId === sectorId)
+    .filter(stake => !(generations === 0 && stake.diplomacyInactiveThisGeneration))
+    .map(stake => ({ ...stake, age: stakeAgeAfterV132(stake.age, generations) }))
+    .filter(stake => stake.age);
+}
 
-  source = source.replace(expectedNeedle, expectedReplacement);
+function expectedStakeValue(state, player, sector) {
+  const profile = profileFor(state, player);
+  const priorityGroups = base.getDemandPriorityGroups(state);
+  const rawCapacity = Math.max(0, base.sectorResourceCapacity(state, sector.id));
+  const slotCapacity = Math.max(0, Math.floor(Number(sector.tier) || 1) * 3);
+  const hypothetical = {
+    id: "__v132_hypothetical_stake__",
+    ownerId: player.id,
+    sectorId: sector.id,
+    age: "young",
+    placementOrder: Number.MAX_SAFE_INTEGER,
+    __v132Hypothetical: true,
+  };
 
-  const bidNeedle = `function productionBidCandidates(state, player, context) {\n  ensureProductionAuctions(state, context);\n  const out = [];\n  for (const auction of context.auctions.values()) {\n    if (auction.type !== \"production_stake\") continue;\n    const sector = state.productionSectors.find(item => item.id === auction.sectorId);\n    if (!sector) continue;\n    const estimate = expectedStakeValue(state, player, sector);\n    const maxBid = estimate.utility >= 1.15 ? Math.max(1, Math.floor(estimate.utility / 1.45)) : 0;\n    if (!maxBid) continue;\n    const high = highestBid(auction);\n    if (high?.playerId === player.id) continue;\n    const nextBid = (high?.amount ?? 0) + 1;\n    const old = auction.bids[player.id]?.amount ?? 0;\n    const delta = nextBid - old;\n    if (nextBid > maxBid || delta <= 0 || player.influence < delta) continue;\n    out.push({ kind: \"auction_bid\", auction, bid: nextBid, score: estimate.utility - nextBid * 0.45,\n      expectedCategory: estimate.category });\n  }\n  return out;\n}`;
+  const projection = [];
+  let capitalUtility = 0;
+  let currentCategory = null;
+  let currentDirectUtility = 0;
+  let futureUtility = 0;
 
-  if (!source.includes(bidNeedle)) throw new Error('Could not find legacy productionBidCandidates');
+  for (let t = 0; t < 3; t += 1) {
+    const projectedAge = stakeAgeAfterV132("young", t);
+    if (!projectedAge) break;
+    const existing = projectedSectorStakesV132(state, sector.id, t);
+    const projectedHypothetical = { ...hypothetical, age: projectedAge };
+    const withStake = [...existing, projectedHypothetical]
+      .sort((a, b) => stakeAgeRankV132(b.age) - stakeAgeRankV132(a.age)
+        || (Number(a.placementOrder) || 0) - (Number(b.placementOrder) || 0));
 
-  const bidReplacement = `function ensureStakeAiDiagnostic(state) {\n  state.__stakeAiDiagnostic ??= {\n    bySector: {},\n    roundsWithProductionCandidate: 0,\n    roundsProductionChosen: 0,\n    roundsProductionLostToOtherAction: 0,\n    lostToKind: {},\n  };\n  return state.__stakeAiDiagnostic;\n}\n\nfunction stakeSectorDiagnostic(state, sectorId) {\n  const root = ensureStakeAiDiagnostic(state);\n  root.bySector[sectorId] ??= {\n    evaluations: 0,\n    zeroOrLowUtility: 0,\n    zeroOrLowUtilityWithInactiveStake: 0,\n    alreadyLeadingAuction: 0,\n    nextBidAboveMax: 0,\n    nonPositiveBidDelta: 0,\n    insufficientInfluence: 0,\n    candidatesOffered: 0,\n  };\n  return root.bySector[sectorId];\n}\n\nfunction productionBidCandidates(state, player, context) {\n  ensureProductionAuctions(state, context);\n  const out = [];\n  for (const auction of context.auctions.values()) {\n    if (auction.type !== \"production_stake\") continue;\n    const sector = state.productionSectors.find(item => item.id === auction.sectorId);\n    if (!sector) continue;\n    const diag = stakeSectorDiagnostic(state, sector.id);\n    diag.evaluations += 1;\n    const estimate = expectedStakeValue(state, player, sector);\n    const profile = profileFor(state, player);\n    const shadowValue = Math.max(0.25, influenceShadowValue(state, player, profile));\n    const maxBid = estimate.utility > 0\n      ? Math.max(0, Math.floor((estimate.utility - 0.001) / shadowValue))\n      : 0;\n    if (!maxBid) {\n      diag.zeroOrLowUtility += 1;\n      const inactive = state.players.flatMap(p => p.productionStakes ?? [])\n        .filter(stake => stake.sectorId === sector.id && stake.diplomacyInactiveThisGeneration).length;\n      if (inactive > 0) diag.zeroOrLowUtilityWithInactiveStake += 1;\n      continue;\n    }\n    const high = highestBid(auction);\n    if (high?.playerId === player.id) { diag.alreadyLeadingAuction += 1; continue; }\n    const nextBid = (high?.amount ?? 0) + 1;\n    const old = auction.bids[player.id]?.amount ?? 0;\n    const delta = nextBid - old;\n    if (nextBid > maxBid) { diag.nextBidAboveMax += 1; continue; }\n    if (delta <= 0) { diag.nonPositiveBidDelta += 1; continue; }\n    if (player.influence < delta) { diag.insufficientInfluence += 1; continue; }\n    const score = estimate.utility - nextBid * shadowValue;\n    diag.candidatesOffered += 1;\n    out.push({\n      kind: \"auction_bid\",\n      auction,\n      bid: nextBid,\n      bidDelta: delta,\n      maxBid,\n      score,\n      stakeUtility: estimate.utility,\n      influenceShadowValue: shadowValue,\n      expectedCategory: estimate.category,\n      stakeProjection: estimate.projection,\n    });\n  }\n  return out;\n}`;
+    const supplyWith = Math.min(rawCapacity, slotCapacity, withStake.length);
+    const sequenceWith = allocateDemand(supplyWith, sector.demandThisGeneration, priorityGroups);
+    const hypotheticalIndex = withStake.findIndex(stake => stake.__v132Hypothetical);
+    const category = hypotheticalIndex >= 0 && hypotheticalIndex < sequenceWith.length
+      ? sequenceWith[hypotheticalIndex]
+      : null;
+    const directUtility = category ? categoryUtility(category, profile) : 0;
+    const discountedUtility = directUtility * (profile.discount ** t);
+    capitalUtility += discountedUtility;
+    if (t === 0) {
+      currentCategory = category;
+      currentDirectUtility = directUtility;
+    } else {
+      futureUtility += discountedUtility;
+    }
+    projection.push({
+      generationOffset: t,
+      age: projectedAge,
+      category,
+      directUtility,
+      discountedUtility,
+      activeExistingStakes: existing.length,
+      productionWith: sequenceWith.length,
+    });
+  }
 
-  source = source.replace(bidNeedle, bidReplacement);
+  // Capital value answers "how much is this asset worth?" and is used to cap
+  // the auction bid. Action priority answers "should I spend my action on it
+  // now?". When the Stake produces now we deliberately preserve the legacy
+  // action scale, so this patch does not make a three-generation asset crowd
+  // out Farms/Exploration simply because its full NPV is larger. A Stake that
+  // is inactive today can still be bought as a replacement option when Elder
+  // turnover makes its discounted future value strong enough.
+  if (capitalUtility > 0) capitalUtility += profile.engine * 0.20;
+  const actionUtility = currentDirectUtility > 0
+    ? currentDirectUtility * annuity(profile, Math.min(3, profile.horizon)) + profile.engine * 0.25
+    : futureUtility * 0.65 + (futureUtility > 0 ? profile.engine * 0.15 : 0);
 
-  const chooserNeedle = `function choosePlayerAction(state, player, context) {\n  const candidates = [];\n  const normal = chooseNormalCandidate(state, player, context.farmBuilt); if (normal) candidates.push(normal);\n  const vote = expansionVoteCandidate(state, player, context); if (vote) candidates.push(vote);\n  candidates.push(...productionBidCandidates(state, player, context));\n  const mercenary = mercenaryBidCandidate(state, player, context); if (mercenary) candidates.push(mercenary);\n  return candidates.sort((a, b) => b.score - a.score)[0] ?? null;\n}`;
+  return {
+    category: currentCategory ?? projection.find(item => item.category)?.category ?? null,
+    utility: capitalUtility,
+    capitalUtility,
+    actionUtility,
+    currentDirectUtility,
+    futureUtility,
+    projection,
+  };
+}`,
+  );
 
-  if (!source.includes(chooserNeedle)) throw new Error('Could not find legacy choosePlayerAction');
+  source = replaceFunctionBlock(
+    source,
+    'function productionBidCandidates(state, player, context) {',
+    '\n\nfunction mercenaryBidCandidate',
+    `function ensureStakeAiDiagnostic(state) {
+  state.__stakeAiDiagnostic ??= {
+    bySector: {},
+    roundsWithProductionCandidate: 0,
+    roundsProductionChosen: 0,
+    roundsProductionLostToOtherAction: 0,
+    lostToKind: {},
+  };
+  return state.__stakeAiDiagnostic;
+}
 
-  const chooserReplacement = `function choosePlayerAction(state, player, context) {\n  const candidates = [];\n  const normal = chooseNormalCandidate(state, player, context.farmBuilt); if (normal) candidates.push(normal);\n  const vote = expansionVoteCandidate(state, player, context); if (vote) candidates.push(vote);\n  const productionCandidates = productionBidCandidates(state, player, context);\n  candidates.push(...productionCandidates);\n  const mercenary = mercenaryBidCandidate(state, player, context); if (mercenary) candidates.push(mercenary);\n  const selected = candidates.sort((a, b) => b.score - a.score)[0] ?? null;\n\n  if (productionCandidates.length) {\n    const diag = ensureStakeAiDiagnostic(state);\n    diag.roundsWithProductionCandidate += 1;\n    if (selected?.auction?.type === \"production_stake\") diag.roundsProductionChosen += 1;\n    else {\n      diag.roundsProductionLostToOtherAction += 1;\n      const kind = String(selected?.kind ?? selected?.actionKind ?? selected?.type ?? \"none\");\n      diag.lostToKind[kind] = (diag.lostToKind[kind] ?? 0) + 1;\n    }\n  }\n  return selected;\n}`;
+function stakeSectorDiagnostic(state, sectorId) {
+  const root = ensureStakeAiDiagnostic(state);
+  root.bySector[sectorId] ??= {
+    evaluations: 0,
+    zeroOrLowUtility: 0,
+    zeroOrLowUtilityWithInactiveStake: 0,
+    alreadyLeadingAuction: 0,
+    nextBidAboveMax: 0,
+    nonPositiveBidDelta: 0,
+    insufficientInfluence: 0,
+    candidatesOffered: 0,
+  };
+  return root.bySector[sectorId];
+}
 
-  source = source.replace(chooserNeedle, chooserReplacement);
+function productionBidCandidates(state, player, context) {
+  ensureProductionAuctions(state, context);
+  const out = [];
+  for (const auction of context.auctions.values()) {
+    if (auction.type !== "production_stake") continue;
+    const sector = state.productionSectors.find(item => item.id === auction.sectorId);
+    if (!sector) continue;
+    const diag = stakeSectorDiagnostic(state, sector.id);
+    diag.evaluations += 1;
+    const estimate = expectedStakeValue(state, player, sector);
+    const profile = profileFor(state, player);
+    const shadowValue = Math.max(0.25, influenceShadowValue(state, player, profile));
+    const maxBid = estimate.capitalUtility > 0
+      ? Math.max(0, Math.floor((estimate.capitalUtility - 0.001) / shadowValue))
+      : 0;
+    if (!maxBid || estimate.actionUtility <= 0) {
+      diag.zeroOrLowUtility += 1;
+      const inactive = state.players.flatMap(p => p.productionStakes ?? [])
+        .filter(stake => stake.sectorId === sector.id && stake.diplomacyInactiveThisGeneration).length;
+      if (inactive > 0) diag.zeroOrLowUtilityWithInactiveStake += 1;
+      continue;
+    }
+    const high = highestBid(auction);
+    if (high?.playerId === player.id) { diag.alreadyLeadingAuction += 1; continue; }
+    const nextBid = (high?.amount ?? 0) + 1;
+    const old = auction.bids[player.id]?.amount ?? 0;
+    const delta = nextBid - old;
+    if (nextBid > maxBid) { diag.nextBidAboveMax += 1; continue; }
+    if (delta <= 0) { diag.nonPositiveBidDelta += 1; continue; }
+    if (player.influence < delta) { diag.insufficientInfluence += 1; continue; }
+
+    // Only the incremental raise is a new action cost; a previous bid is sunk
+    // and already reserved from Influence.
+    const score = estimate.actionUtility - delta * shadowValue;
+    if (score < V090_CONFIG.actionUtilityFloor) {
+      diag.zeroOrLowUtility += 1;
+      continue;
+    }
+    diag.candidatesOffered += 1;
+    out.push({
+      kind: "auction_bid",
+      auction,
+      bid: nextBid,
+      bidDelta: delta,
+      maxBid,
+      score,
+      stakeUtility: estimate.capitalUtility,
+      stakeActionUtility: estimate.actionUtility,
+      influenceShadowValue: shadowValue,
+      expectedCategory: estimate.category,
+      stakeProjection: estimate.projection,
+    });
+  }
+  return out;
+}`,
+  );
+
+  source = replaceFunctionBlock(
+    source,
+    'function choosePlayerAction(state, player, context) {',
+    '\n\nfunction executePlayerAction',
+    `function choosePlayerAction(state, player, context) {
+  const candidates = [];
+  const normal = chooseNormalCandidate(state, player, context.farmBuilt); if (normal) candidates.push(normal);
+  const vote = expansionVoteCandidate(state, player, context); if (vote) candidates.push(vote);
+  const productionCandidates = productionBidCandidates(state, player, context);
+  candidates.push(...productionCandidates);
+  const mercenary = mercenaryBidCandidate(state, player, context); if (mercenary) candidates.push(mercenary);
+  const selected = candidates.sort((a, b) => b.score - a.score)[0] ?? null;
+
+  if (productionCandidates.length) {
+    const diag = ensureStakeAiDiagnostic(state);
+    diag.roundsWithProductionCandidate += 1;
+    if (selected?.auction?.type === "production_stake") diag.roundsProductionChosen += 1;
+    else {
+      diag.roundsProductionLostToOtherAction += 1;
+      const kind = String(selected?.kind ?? selected?.actionKind ?? selected?.type ?? "none");
+      diag.lostToKind[kind] = (diag.lostToKind[kind] ?? 0) + 1;
+    }
+  }
+  return selected;
+}`,
+  );
+
   return source;
 }
 
