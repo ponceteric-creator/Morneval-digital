@@ -1,5 +1,4 @@
 import { pathToFileURL } from 'node:url';
-import { patchMerchantAiV136 } from './merchant-ai-v136-patch.mjs';
 
 const ROOT = pathToFileURL(`${process.cwd()}/`).href;
 function local(rel) { return new URL(rel, ROOT).href; }
@@ -14,7 +13,7 @@ export async function resolve(specifier, context, nextResolve) {
   // those top-level script imports through the latest simulation wrapper. The
   // wrapper inherits the v131 Food cleanup, v132 Production Stake AI model,
   // v133 Influence threshold 20, v134 Investor AI replacing Dynast,
-  // v135 +2 inherent Family Influence, and v136 Merchant AI correction.
+  // v135 +2 inherent Family Influence, and v136 Agent/commerce AI corrections.
   // Archived/versioned engine behavior remains untouched.
   if (candidate
       && parent?.pathname?.includes('/scripts/')
@@ -28,14 +27,7 @@ export async function resolve(specifier, context, nextResolve) {
   return nextResolve(specifier, context);
 }
 
-export async function load(url, context, nextLoad) {
-  const result = await nextLoad(url, context);
-  if (result.format !== 'module' || result.source == null) return result;
-  const pathname = new URL(url).pathname;
-  // The v110 patch is composed inside investor-ai-v134-loader because that
-  // loader already short-circuits v110. This current-loader hook owns only the
-  // later v119 political-intent correction.
-  if (!pathname.endsWith('/js/v119-political-influence-ai-engine.js')) return result;
-  const source = Buffer.isBuffer(result.source) ? result.source.toString('utf8') : String(result.source);
-  return { ...result, source: patchMerchantAiV136(url, source), shortCircuit: true };
-}
+// The experimental v136 political-intent patch was rejected by A/B testing:
+// it raised commercial Wealth but transferred too much advantage to the
+// Contrarian. Current simulation therefore retains the legacy v119 political
+// intent while v136 fixes only objective valuation errors.
