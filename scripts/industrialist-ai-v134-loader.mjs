@@ -18,13 +18,32 @@ function patchIndustrialistActionAI(source) {
   return ownsConvertibleLand || unexploredLand;
 }
 
+function industrialistForcedFarmCandidateV134(state, player, farmBuilt) {
+  if (V090_CONFIG.civicFarm.onePerGeneration && farmBuilt) return null;
+  const influenceCost = base.V084_CONFIG.hinterland.farmInfluenceCost;
+  const wealthCost = base.V084_CONFIG.hinterland.farmWealthCost;
+  if (!canPay(state, player, influenceCost, wealthCost)) return null;
+  const selected = state.lands
+    .filter(land => land.revealed && land.ownerId === player.id && land.development === "natural")
+    .map(land => ({ land, value: expectedPrivateLandValue(state, player, land) }))
+    .sort((a, b) => a.value - b.value
+      || (a.land.explorationOrder ?? 9999) - (b.land.explorationOrder ?? 9999))[0];
+  if (!selected) return null;
+  return {
+    kind: "farm",
+    score: Math.max(V090_CONFIG.actionUtilityFloor + 1.0, 2.0),
+    land: selected.land,
+    target: desiredRawFoodCapacity(state),
+    industrialistInfrastructureOverride: true,
+  };
+}
+
 function industrialistNeedsHinterlandV134(state, player) {
   const unexploredLand = state.lands.some(land => !land.revealed && !land.ownerId);
   if (!unexploredLand) return false;
 
-  // Avoid sweeping the whole Hinterland in one action phase. One acquisition
-  // per Generation is sufficient to express the strategy and leaves room for
-  // Food, Stakes and civic reactions.
+  // One acquisition per Generation is enough to express the strategy while
+  // leaving room for Food security, Stakes and civic reactions.
   if (state.__industrialistExplorationGenerationV134?.[player.id] === state.generation) return false;
 
   const food = base.getFoodSubsistenceStatus(state);
@@ -41,8 +60,6 @@ function industrialistNeedsHinterlandV134(state, player) {
     && ["wool", "ore", "wood"].includes(land.resourceType));
   if (!ownsProductiveLand) return true;
 
-  // Further expansion is strategic only when at least one Production Sector is
-  // actually raw-capacity constrained for its current demand / next useful Stake.
   for (const sector of state.productionSectors) {
     if (sector.id === "food") continue;
     const stakes = state.players.flatMap(p => p.productionStakes ?? [])
@@ -60,11 +77,13 @@ function chooseNormalCandidate(state, player, farmBuilt) {
     const foodTarget = desiredRawFoodCapacity(state);
     const foodNeedsInvestment = food.localCapacity < foodTarget;
 
-    // Food is infrastructure for growth, not a competing strategic path. Keep
-    // enough Raw Food for the current Population and, when growth is plausible,
-    // for the next Population step before tying capital up elsewhere.
-    if (foodNeedsInvestment) {
-      const foodFarm = farmCandidate(state, player, farmBuilt);
+    if (foodNeedsInvestment && !farmBuilt) {
+      // The legacy farm heuristic can rationally reject a conversion because a
+      // productive private land is valuable. For the Industrialist, however,
+      // Food is prerequisite infrastructure: when growth is otherwise blocked,
+      // convert the least valuable eligible land even if its private NPV is high.
+      const foodFarm = farmCandidate(state, player, farmBuilt)
+        ?? industrialistForcedFarmCandidateV134(state, player, farmBuilt);
       if (foodFarm) {
         return { ...foodFarm, score: Math.max(foodFarm.score, V090_CONFIG.actionUtilityFloor + 0.25),
           recallAgentIds: [], industrialistPriority: "food_security" };
@@ -75,9 +94,6 @@ function chooseNormalCandidate(state, player, farmBuilt) {
           return { ...foodExplore, recallAgentIds: [], industrialistPriority: "food_hinterland" };
         }
       }
-      // If Food can be improved but the Family cannot currently pay for the
-      // required action, preserve Influence rather than spending it on fallback
-      // investments and making the Food action impossible next Generation.
       if (industrialistCanImproveFoodV134(state, player)) return null;
     }
 
@@ -86,8 +102,6 @@ function chooseNormalCandidate(state, player, farmBuilt) {
       if (explore) {
         return { ...explore, recallAgentIds: [], industrialistPriority: "productive_hinterland" };
       }
-      // Save for a real raw-capacity expansion rather than burning Influence on
-      // a lower-priority investment merely because Exploration is unaffordable.
       return null;
     }
   }
@@ -123,10 +137,6 @@ function chooseNormalCandidate(state, player, farmBuilt) {
     `${explorationMarker}\n    if (player.aiPersonality === "industrialist") {\n      state.__industrialistExplorationGenerationV134 ??= {};\n      state.__industrialistExplorationGenerationV134[player.id] = state.generation;\n    }`,
   );
 
-  // production-stake-ai-v132-loader runs downstream from this loader, so by the
-  // time nextLoad returns this source already contains the v132 Stake-aware
-  // choosePlayerAction. Replace that final chooser to enforce the Industrialist
-  // hierarchy without changing any auction rule or Stake valuation.
   source = replaceFunctionBlock(
     source,
     'function choosePlayerAction(state, player, context) {',
@@ -145,10 +155,7 @@ function chooseNormalCandidate(state, player, farmBuilt) {
     const foodNeedsInvestment = food.localCapacity < desiredRawFoodCapacity(state);
     const priority = normal?.industrialistPriority ?? null;
 
-    if (foodNeedsInvestment && industrialistCanImproveFoodV134(state, player)) {
-      // A concrete Food/Farm or Food/Hinterland action wins outright. If it is
-      // currently unaffordable, pass and preserve Influence rather than bidding
-      // on a Stake while Population growth is blocked.
+    if (foodNeedsInvestment && !context.farmBuilt && industrialistCanImproveFoodV134(state, player)) {
       selected = ["food_security", "food_hinterland"].includes(priority) ? normal : null;
     } else if (priority === "productive_hinterland") {
       selected = normal;
@@ -220,12 +227,7 @@ function patchIndustrialistInstitutionAI(source) {
       ? Math.max(0, n(legacy.sectorResourceCapacity(state, sector.id)))
       : 0;
 
-    // A productive Stake slot has priority over Institution development.
     if (young < tier && rawCapacity > stakes.length && demand > stakes.length) return true;
-
-    // Hinterland expansion has priority only when Raw capacity constrains the
-    // next useful unit of sector production, not simply because unrevealed land
-    // happens to remain on the board.
     const usefulSupplyTarget = Math.min(demand, stakes.length + 1);
     if (unexploredLand && rawCapacity < usefulSupplyTarget) return true;
   }
