@@ -7,7 +7,9 @@ assert.equal(state.simulationVersion, '0.11.28-sim');
 assert.equal(state.merchantAiModel?.guildScoringModel, 'current_wealth_based');
 assert.equal(state.merchantAiModel?.politicalIntentModel, 'external_market_wealth_and_agent_capacity');
 assert.equal(state.merchantAiModel?.rulesChanged, false);
-assert.equal(state.familyInfluenceIncome?.amountPerGeneration, 2, 'v136 must preserve locked +2 Family Influence');
+assert.equal(state.familyInfluenceIncome?.incomePerGeneration, 2, 'v136 must preserve locked +2 Family Influence');
+assert.equal(state.familyInfluenceIncome?.timing, 'start_of_generation_before_actions');
+assert.equal(state.familyInfluenceIncome?.appliesTo, 'each_family');
 assert.ok(!state.productionSectors.some(sector => sector.id === 'food'), 'v136 must preserve Food cleanup');
 assert.ok(state.players.some(player => player.aiPersonality === 'merchant'), 'Merchant personality must remain present');
 
