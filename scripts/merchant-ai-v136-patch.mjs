@@ -65,6 +65,9 @@ function patchMerchantPoliticalIntent(source) {
 }
 
 export function patchMerchantAiV136(url, source) {
+  // Diagnostic escape hatch only. Current simulation defaults to the corrected
+  // model; CI uses this switch to run identical-seed legacy-vs-v136 A/B tests.
+  if (process.env.MERCHANT_AI_V136 === 'off') return source;
   const pathname = new URL(url).pathname;
   let patched = source;
   if (pathname.endsWith('/js/v110-ai-engine.js')) patched = patchMerchantGuildScoring(patched);
