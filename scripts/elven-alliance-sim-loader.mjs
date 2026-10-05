@@ -25,7 +25,7 @@ function patchPermanentPoliticalRenown(source) {
   );
 }
 
-function patchPopulationCapacityAndForce(source) {
+function patchPopulationCapacityForceAndFoodAI(source) {
   const capacityNeedle = 'function currentUrbanCapacity(state) {\n  return currentUrbanTiles(state) * base.V084_CONFIG.urban.populationPerTile;\n}';
   if (!source.includes(capacityNeedle)) throw new Error('Could not find currentUrbanCapacity in v110 AI engine');
   source = source.replace(
@@ -34,6 +34,20 @@ function patchPopulationCapacityAndForce(source) {
       + '  const urban = currentUrbanTiles(state) * base.V084_CONFIG.urban.populationPerTile;\n'
       + '  const forestCapacity = Math.max(0, Math.floor(Number(state.city?.elvenPopulationCapacityBonus) || 0));\n'
       + '  return urban + forestCapacity;\n'
+      + '}',
+  );
+
+  const foodNeedle = 'function desiredRawFoodCapacity(state) {\n  const population = Math.max(1, Number(state.city.population) || 1);\n  const currentFood = base.getFoodSubsistenceStatus(state).localCapacity;\n  const growthPlausible = currentFood >= population && currentUrbanCapacity(state) > population && state.city.squalor < population;\n  return population + (growthPlausible ? 1 : 0);\n}';
+  if (!source.includes(foodNeedle)) throw new Error('Could not find desiredRawFoodCapacity in v110 AI engine');
+  source = source.replace(
+    foodNeedle,
+    'function desiredRawFoodCapacity(state) {\n'
+      + '  const population = Math.max(1, Number(state.city.population) || 1);\n'
+      + '  const foodPerPopulation = Math.max(1, Number(base.V084_CONFIG?.population?.rawFoodPerPopulation) || 1);\n'
+      + '  const currentFood = base.getFoodSubsistenceStatus(state).localCapacity;\n'
+      + '  const currentNeed = population * foodPerPopulation;\n'
+      + '  const growthPlausible = currentFood >= currentNeed && currentUrbanCapacity(state) > population && state.city.squalor < population;\n'
+      + '  return currentNeed + (growthPlausible ? foodPerPopulation : 0);\n'
       + '}',
   );
 
@@ -55,7 +69,8 @@ function patchExternalRelationLandEffects(source) {
   if (!source.includes(gnomeNeedle)) throw new Error('Could not find Gnome improved-land bonus in v128');
   source = source.replace(
     gnomeNeedle,
-    '    if (rel.levels.gnomes >= 2 && (land.gnomeImproved || land.gnomeImprovementPermanent)) delta += 1;',
+    '    if (land.gnomeImproved || land.gnomeImprovementPermanent) delta += 1;\n'
+      + '    if (rel.levels.gnomes >= 2 && (land.gnomeImproved || land.gnomeImprovementPermanent)) delta += 1;',
   );
 
   const elfFoodNeedle = "      synthetic.push(makeSyntheticLand(state, `elf_food_${forest.id}`, 'farm', 'grain', 1));";
@@ -82,7 +97,7 @@ export async function load(url, context, nextLoad) {
     changed = true;
   }
   if (pathname.endsWith('/js/v110-ai-engine.js')) {
-    source = patchPopulationCapacityAndForce(source);
+    source = patchPopulationCapacityForceAndFoodAI(source);
     changed = true;
   }
   if (pathname.endsWith('/js/v128-external-relations-engine.js')) {
