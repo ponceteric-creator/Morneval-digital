@@ -7,6 +7,7 @@ on:
       - '.github/workflows/merchant-ai-v136.yml'
       - 'js/v136-merchant-ai-engine.js'
       - 'scripts/merchant-ai-v136-patch.mjs'
+      - 'scripts/institution-agent-marginal-v136-patch.mjs'
       - 'scripts/investor-ai-v134-loader.mjs'
       - 'scripts/current-food-production-cleanup-loader.mjs'
       - 'scripts/test-investor-ai-v134.mjs'
@@ -34,7 +35,7 @@ jobs:
         run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/test-investor-ai-v134.mjs
       - name: Family +2 Influence regression test
         run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/test-family-influence-v135.mjs
-      - name: Legacy Merchant AI — 100 games
+      - name: Legacy AI — 100 games
         env:
           GAMES: 100
           EXTERNAL_RELATIONS: on
@@ -49,21 +50,24 @@ jobs:
           COST_MODE: proposed
           MERCHANT_AI: wealth
           MERCHANT_AI_V136_POLITICS: off
+          INSTITUTION_AGENT_MARGINAL_V136: off
         run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-merchant-ai-v136-diagnostic.mjs
-      - name: Merchant politics only — 100 games
+      - name: Agent marginal value only — 100 games
         env:
           GAMES: 100
           EXTERNAL_RELATIONS: on
           COST_MODE: proposed
           MERCHANT_AI: wealth
           MERCHANT_AI_V136_SCORE: off
+          MERCHANT_AI_V136_POLITICS: off
         run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-merchant-ai-v136-diagnostic.mjs
-      - name: Score + politics — 100 games
+      - name: Merchant score + Agent marginal value — 100 games
         env:
           GAMES: 100
           EXTERNAL_RELATIONS: on
           COST_MODE: proposed
           MERCHANT_AI: wealth
+          MERCHANT_AI_V136_POLITICS: off
         run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-merchant-ai-v136-diagnostic.mjs
       - name: Print comparison
         run: |
