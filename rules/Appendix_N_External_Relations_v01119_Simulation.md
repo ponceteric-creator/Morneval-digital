@@ -1,4 +1,4 @@
-# Appendix N — External Relations Tracks (v0.11.21 Simulation)
+# Appendix N — External Relations Tracks (v0.11.22 Simulation)
 
 **Status:** simulation implementation of the currently agreed External Relations structure.  
 **Scope:** Elves, Gnomes, Orcs and Mainland.  
@@ -97,7 +97,7 @@ Retain +1 effects. In addition:
 
 Strategic Alliance effects:
 
-- each productive Forest provides **2 Raw Food total**;
+- retain the **+1 Raw Food per productive Forest** from +1; there is **no additional Raw Food bonus** at +3;
 - each active Forest provides **+2 Population Capacity total**;
 - retain the +1 Raw Textile material per productive Forest;
 - **9–11 Forests: +4 Force**;
@@ -259,13 +259,14 @@ Raid losses remove current-Generation Production rather than destroying Stakes o
 
 # N.6 — Simulation Notes
 
-For v0.11.21 batch testing:
+For v0.11.22 batch testing:
 
-- Raw Food subsistence is **2 Raw Food per Population**;
+- Population subsistence is **1 Raw Food per Population**;
+- Elven +3 does not add additional Raw Food beyond the +1-per-Forest effect unlocked at Elven +1;
 - External Relations activate at Population 3 only as a stand-in for Meet the Neighbours;
 - the public web prototype is not routed to this engine;
-- automated AI does not yet deliberately choose Reforestation, Improve Land, Orc Food Trading, Imperial Appeasement or Study the Elf Ways;
-- Strategic Alliance Quests are therefore not auto-completed in ordinary A/B batches;
+- the Elven-strategy AI can deliberately choose Reforestation and Study the Elf Ways and can complete One with the Forest;
+- Gnome Improve Land, Orc Food Trading and Imperial Appeasement remain available as rule hooks but are not yet deliberately chosen by the automated AI;
 - a deterministic Elven Quest smoke test verifies the full +3 completion path separately;
 - exact Mainland Aid/Demand modifiers remain TBD;
 - exact Orc +3 alliance Force remains TBD.
