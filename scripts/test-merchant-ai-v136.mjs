@@ -12,21 +12,20 @@ assert.ok(merchantGuild, 'Merchant Guild institution must exist');
 
 // The AI valuation must use the same structural Wealth basis as the current
 // Merchant Guild rule: total Family Wealth above the permanent 2W/family base,
-// capped by Institution Tier (2 / 4 / 8).
+// capped by Institution Tier (2 / 4 / 8). Call the evaluator directly so the
+// controlled Wealth values are not replaced by an economy preview.
 state.players[0].wealthCapacity = 4;
 state.players[1].wealthCapacity = 3;
 state.players[2].wealthCapacity = 2;
 merchantGuild.tier = 1;
-let economy = engine.previewEconomy(state);
-let scores = engine.calculateInstitutionScores(state, economy.reports ?? [], [], state.city.order, state.city.population);
+let scores = engine.calculateInstitutionScores(state, [], [], state.city.order, state.city.population);
 assert.equal(scores.merchant_guild.score, 2);
 assert.equal(scores.merchant_guild.commercialWealth, 3);
 assert.equal(scores.merchant_guild.institutionPrestigeCap, 2);
 assert.equal(scores.merchant_guild.aiValuationModel, 'v136_current_wealth_based');
 
 merchantGuild.tier = 2;
-economy = engine.previewEconomy(state);
-scores = engine.calculateInstitutionScores(state, economy.reports ?? [], [], state.city.order, state.city.population);
+scores = engine.calculateInstitutionScores(state, [], [], state.city.order, state.city.population);
 assert.equal(scores.merchant_guild.score, 3);
 assert.equal(scores.merchant_guild.institutionPrestigeCap, 4);
 
