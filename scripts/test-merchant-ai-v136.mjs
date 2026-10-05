@@ -7,7 +7,8 @@ const engine = await import('../js/v130-elven-alliance-engine.js?test=merchant-a
 const state = engine.createV084Game(['Valenne', "D'Arcy", 'Corven']);
 
 assert.equal(state.simulationVersion, '0.11.28-sim');
-assert.equal(state.merchantAiModel?.guildScoringModel, 'current_wealth_forward');
+assert.equal(state.merchantAiModel?.guildScoringModel, 'current_wealth_based');
+assert.equal(state.merchantAiModel?.experimentalGuildScoringModel, 'wealth_forward');
 assert.equal(
   state.merchantAiModel?.agentPortfolioModel,
   'marginal_single_association_prestige_and_tier_capped_influence',
@@ -36,7 +37,7 @@ assert.ok(patched.includes('Math.min(cap,other+own)-Math.min(cap,other)'));
 // Run a complete generation through the composed current-simulation loader chain.
 const summary = engine.resolveAutomatedGeneration(state);
 assert.equal(summary.simulationVersion, '0.11.28-sim');
-assert.equal(summary.merchantAiModel?.guildScoringModel, 'current_wealth_forward');
+assert.equal(summary.merchantAiModel?.guildScoringModel, 'current_wealth_based');
 assert.equal(summary.merchantAiModel?.politicalIntentModel, 'legacy_v119_preserved');
 assert.equal(summary.merchantAiModel?.rulesChanged, false);
 assert.ok(Array.isArray(summary.actions));
