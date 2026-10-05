@@ -2,7 +2,7 @@ import * as base from './v129-terrain-actions-engine.js?base=0.11.20-sim';
 
 export * from './v129-terrain-actions-engine.js?base=0.11.20-sim';
 
-export const V130_VERSION = '0.11.21-sim';
+export const V130_VERSION = '0.11.22-sim';
 export const ELF_STUDY_TOTAL_REQUIRED = 10;
 export const ELF_STUDY_MAX_PER_ACTION = 2;
 export const ELF_ALLIANCE_RENOWN = 2;
@@ -105,7 +105,7 @@ export function getElvenSocietyEffects(state) {
   const level = int(rel.levels.elves, -3);
   const populationCapacityPerForest = level >= 3 ? 2 : level >= 2 ? 1 : 0;
   const populationCapacityBonus = forests * populationCapacityPerForest;
-  const rawFoodPerProductiveForest = level >= 3 ? 2 : level >= 1 ? 1 : 0;
+  const rawFoodPerProductiveForest = level >= 1 ? 1 : 0;
   const forceBonus = level >= 3 && forests >= 9 ? (forests >= 12 ? 5 : 4) : 0;
   return {
     forests,
@@ -250,7 +250,7 @@ export function resolveAutomatedGeneration(state) {
       effectsAtStart,
       effectsAfter,
       level2: '+1 Population Capacity per Forest',
-      level3: '2 Raw Food +2 Population Capacity per Forest; +4 Force at 9-11 Forests, +5 Force at 12 Forests',
+      level3: '+2 Population Capacity per Forest; +4 Force at 9-11 Forests, +5 Force at 12 Forests; no extra Raw Food beyond the +1 level effect',
       studyElfWays: `10 Influence total; max ${ELF_STUDY_MAX_PER_ACTION} per action; Scholarium Agent required to contribute`,
       completionRenown: ELF_ALLIANCE_RENOWN,
     };
