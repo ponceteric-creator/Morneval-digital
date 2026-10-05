@@ -171,7 +171,8 @@ const summary = {
   finalForestCountMean: mean(rows.map(r => r.forestCount)),
   finalForceMean: mean(rows.map(r => r.force)),
   notes: [
-    'Raw Food subsistence is 2 per Population in this simulation.',
+    'Raw Food subsistence is 1 Raw Food per Population.',
+    'Elven +3 does not add additional Raw Food: Forests retain the +1 Raw Food effect unlocked at Elven +1.',
     'The Elven-strategy AI can choose Reforestation and Study the Elf Ways, values Scholarium access for the Quest, and auto-completes One with the Forest when all three conditions are met.',
     'Gnome Improve Land, Orc Food Trading, and Imperial Appeasement are still exposed as rule hooks rather than deliberate automated AI choices.',
     'Mainland exact Imperial Aid/Demand numeric modifiers remain intentionally pending.',
