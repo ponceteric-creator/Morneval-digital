@@ -1,8 +1,8 @@
-# Appendix N — External Relations Tracks (v0.11.19 Simulation)
+# Appendix N — External Relations Tracks (v0.11.21 Simulation)
 
 **Status:** simulation implementation of the currently agreed External Relations structure.  
 **Scope:** Elves, Gnomes, Orcs and Mainland.  
-**Important:** this appendix does not yet define the Event deck. In automated batches, Population 3 is used only as a stand-in trigger for the future **Meet the Neighbours** Event.
+**Important:** the Event deck is not yet implemented. In automated batches, Population 3 is used only as a stand-in trigger for the future **Meet the Neighbours** Event.
 
 ---
 
@@ -14,13 +14,11 @@ Relations use a track from **-3 to +3**.
 
 For Elves, Gnomes and Orcs:
 
-- **+1 / +2** can be reached through the structural behaviour of Morneval;
+- **+1 / +2** can be reached through structural behaviour;
 - **+3** represents a **Strategic Alliance** and is never reached automatically;
-- +3 requires a dedicated triggered Quest once its prerequisites are met.
+- +3 requires a dedicated triggered Quest.
 
-External Relations are not raised by a generic Diplomacy action.
-
-Events may still modify relations directly once the Event system is implemented.
+External Relations are not raised by a generic Diplomacy action. Events may modify relations directly once the Event system is implemented.
 
 ---
 
@@ -28,15 +26,12 @@ Events may still modify relations directly once the Event system is implemented.
 
 Mainland starts at **+2** when External Relations are activated.
 
-The first time each foreign nation reaches **+2**:
+For each foreign nation independently:
 
-- Mainland **-1**.
+- first time it reaches **+2**: Mainland **-1**;
+- first time it reaches **+3**: Mainland **-2 additional**.
 
-The first time each foreign nation reaches **+3** Strategic Alliance:
-
-- Mainland **-2 additional**.
-
-These are historical triggers. Each nation/threshold can penalise Mainland **once only**. Dropping below the threshold and later returning to it does not trigger the penalty again.
+Each threshold consequence happens once only. Falling below and later recovering does not repeat the penalty and never refunds Mainland relation.
 
 ### Imperial Appeasement
 
@@ -45,11 +40,9 @@ One Family may perform **Imperial Appeasement**:
 - 1 normal Player Action;
 - **4 Influence**;
 - Mainland **+1**, maximum +3;
-- only **one Imperial Appeasement total per Generation**, regardless of Family.
+- only **one Imperial Appeasement total per Generation**.
 
-Appeasement does not reset any historical foreign-alignment trigger.
-
-The exact numeric effects of Mainland relation on **Imperial Aid** and **Imperial Demand** are still TBD. The simulation records the Mainland track but deliberately does not invent those unresolved values.
+Exact numeric Mainland effects on Imperial Aid / Imperial Demand remain TBD.
 
 ---
 
@@ -57,9 +50,17 @@ The exact numeric effects of Mainland relation on **Imperial Aid** and **Imperia
 
 ## Identity
 
-Elven relations measure Morneval's treatment of the forest and its willingness to develop in harmony with the land.
+Elven relations measure Morneval's treatment of the forest and its willingness to adopt a forest-based way of life.
 
-**Reforestation becomes available as soon as Meet the Neighbours occurs**, regardless of current Elven relation. It is therefore always possible to recover from a hostile Elven relationship through territorial change.
+**Reforestation** is available as soon as Meet the Neighbours occurs, regardless of current Elven relation.
+
+### Reforestation action
+
+- 1 normal Player Action;
+- **2 Influence**;
+- target any revealed non-Urban land owned by the acting Family or by the City/public;
+- convert it permanently into a Forest;
+- acting Family gains **+1 Prestige**.
 
 ## Relation from active Forest count
 
@@ -74,7 +75,7 @@ Elven relations measure Morneval's treatment of the forest and its willingness t
 | 9+ | +2, with Strategic Alliance Quest available |
 | 9+ after successful Quest | +3 |
 
-The simulation counts both revealed natural Forests and Forests still present in the unexplored terrain pool so that the initial four-forest landscape is represented before every tile is explored.
+The simulation counts both revealed natural Forests and Forests still present in the unexplored terrain pool for the diplomatic track.
 
 ## Positive effects
 
@@ -85,17 +86,58 @@ Each productive Forest changes its output by:
 - **-1 Raw Wood**;
 - **+1 Raw Food**.
 
-### +2 — Advanced symbiosis
+### +2 — Woodland Settlements
 
-Retain the +1 effects, and each productive Forest also provides:
+Retain +1 effects. In addition:
 
-- **+1 Raw Textile material** (wool/silk-equivalent input, not finished Textiles).
+- each productive Forest provides **+1 Raw Textile material**;
+- each active Forest provides **+1 Population Capacity**.
 
-### +3 — Strategic Alliance
+### +3 — One with the Forest
 
-Triggered Quest at 9+ Forests. The thematic reward is military support from Ents / forest guardians.
+Strategic Alliance effects:
 
-The exact +Force value remains **TBD** and is not applied automatically in v0.11.19 simulation.
+- each productive Forest provides **2 Raw Food total**;
+- each active Forest provides **+2 Population Capacity total**;
+- retain the +1 Raw Textile material per productive Forest;
+- **9–11 Forests: +4 Force**;
+- **12 Forests: +5 Force**.
+
+The Population Capacity represents people living in woodland settlements rather than conventional Urban districts.
+
+## Strategic Alliance Quest — One with the Forest
+
+The Quest may be completed only when all three conditions are fulfilled:
+
+1. **9+ Forests**;
+2. **0 Farms** remaining in Morneval's territory;
+3. **Study the Elf Ways:** **10 Influence** spent cumulatively.
+
+### Study the Elf Ways
+
+- contribution costs 1 normal Player Action;
+- a Family must have at least **1 Agent in the Scholarium** to contribute;
+- spend **1–2 Influence per action**;
+- maximum **2 Influence per action**;
+- contributions remain recorded across Generations.
+
+When the Study condition completes:
+
+- every Family that contributed at least 1 Influence receives **+1 Prestige** when the Quest completes;
+- the Family with the highest total contribution receives **+1 additional Prestige**;
+- in a tie for highest contribution, all tied highest contributors receive the additional +1 Prestige in the simulation.
+
+### Quest completion
+
+When all three conditions are met and the Quest resolves:
+
+- Elves become **+3**;
+- Mainland takes its one-time **-2** Strategic Alliance consequence;
+- Morneval gains **+2 permanent Renown**;
+- that +2 Renown counts toward the normal **12 Renown endgame trigger**;
+- One with the Forest effects become active.
+
+The +2 Renown represents the major political signal created by Morneval's transformation and partially compensates for the lower Population Renown expected from the Elven development path.
 
 ## Negative effects
 
@@ -117,100 +159,75 @@ The -1 deforestation surcharge remains cumulative.
 
 At the end of each Generation, the Elves convert **1 Civic Farm into a Forest**.
 
-This normally increases the Forest count and therefore naturally moves Elven relations back toward -2, creating the intended self-correcting territorial cycle.
-
 ---
 
 # N.4 — Gnomes
 
-## Identity
-
-Gnomes favour commerce, engineering and productive sophistication. They become hostile when Morneval adopts a sustained militarist orientation.
-
-## Relation movement at end of Generation
+## Relation movement
 
 | Military ↔ Mercantile Inclination | Relation movement |
 |---|---|
-| **Mercantile II** | +1, maximum +2; enables the +3 Quest when already at +2 |
+| **Mercantile II** | +1, maximum +2; enables +3 Quest at +2 |
 | **Mercantile I** | +1, maximum +2 |
 | **Neutral** | no movement |
-| **Military I** | -1, but this stance alone cannot push the relation below -1 |
+| **Military I** | -1, floor -1 from this stance alone |
 | **Military II** | -1, down to -3 |
 
 Only one normal relation step occurs per Generation.
 
-### +3 Quest
-
-At Gnomes +2 and Mercantile II, the **Great Engineering Project** Strategic Alliance Quest becomes eligible.
-
 ## Positive effects
 
-### +1 — Technical exchange
+### +1 — Technical Exchange / Improve Land
 
-Unlocks **Improve Land**.
+**Improve Land:**
 
-The permanent action/cost of Improve Land remains TBD. The simulation provides a rule hook that can mark a land as Gnome-improved.
+- 1 normal Player Action;
+- **2 Influence**;
+- target a revealed non-Urban land owned by the acting Family or City/public;
+- gain **+1 Prestige**;
+- land gains **+1 permanent Production**.
 
-### +2 — Infrastructure
+A standard Capacity-2 land therefore becomes Capacity 3.
 
-Each Gnome-improved land provides **+1 Raw Resource Capacity**.
+### +2 — Engineering Partnership
 
-### +3 — Grand engineering alliance
+Every Gnome-improved land receives **+1 additional Production while Gnome relation is +2 or +3**.
 
-Excess Raw Resources may count as Raw Food **for Population growth**.
+A standard improved land therefore produces:
 
-This conversion is specifically for supporting Population growth, not for replacing ordinary Raw Food in every use case.
+- base 2;
+- +1 permanent Improvement;
+- +1 active Gnome partnership;
+- **total 4** at Gnomes +2/+3.
 
-## Negative effects — sabotage
+If relations fall below +2, the permanent Improvement remains but the partnership bonus disappears.
 
-### -1
+### +3 — Grand Engineering Alliance
 
-Morneval's **External Demand is reduced by 1** per Production Sector, minimum 0.
+Excess Raw Resources may count as Raw Food specifically for Population growth. Exact final restrictions remain subject to playtest.
 
-### -2
+## Negative effects
 
-Each **Elder Stake** requires **1 Influence** to remain active for the Generation.
+- **-1:** External Demand reduced by 1 per Production Sector, minimum 0.
+- **-2:** each Elder Stake requires 1 Influence to remain active for the Generation.
+- **-3:** every active Stake requires 1 Influence to remain active for the Generation.
 
-### -3
-
-**Every active Stake** requires **1 Influence** to remain active for the Generation.
-
-If the maintenance Influence is not paid, the Stake remains physically present and continues its normal ageing, but is **inactive for Production that Generation** rather than being destroyed.
-
-For automated simulation only, Families pay as much required maintenance as their available Influence permits. This is an AI policy, not a tabletop priority rule.
+Unpaid Stakes remain physically present and age normally but are inactive for Production that Generation.
 
 ---
 
 # N.5 — Orcs
 
-## Identity
-
-Orc relations represent respect for strength. A weak Morneval is treated as a source of plunder; a strong Morneval can become a trading partner and ultimately a military ally.
-
-## Relation movement at end of Generation
+## Relation movement
 
 | City Force | Relation movement |
 |---:|---|
 | **0–2** | -1, down to -3 |
 | **3–5** | no movement |
 | **6+** | +1, maximum +2 |
-| **9+** | +1 toward +2 and makes the Strategic Alliance Quest eligible once other requirements are met |
+| **9+** | +1 toward +2 and makes the +3 Quest eligible when other requirements are met |
 
 Only one normal relation step occurs per Generation.
-
-### +3 Quest
-
-Current simulation prerequisite:
-
-- Orc relation +2;
-- City Force **9+**;
-- **Fortification Level III+**.
-
-Successful Quest creates a Strategic Military Alliance and sets Orc relation to +3.
-
-The exact Orc +Force contribution remains TBD.
-
-## Positive effects
 
 ### +2 — Food Trading
 
@@ -218,58 +235,37 @@ A Family may exchange:
 
 - **1 Influence → 1 Raw Food + 1 Prestige**.
 
-The simulation exposes this as an explicit rule hook. Automated players do not yet choose this action.
-
 ### +3 — Military Alliance
 
-Orcs contribute significant Force, intended to matter especially if Morneval later confronts the Mainland during an independence ending.
+Current Quest prerequisite:
 
-Exact Force value remains TBD.
+- Orc relation +2;
+- Force 9+;
+- Fortification III+.
 
-## Negative effects — raids
+Exact Orc alliance Force contribution remains TBD.
 
-Orcs remove current-Generation Production rather than permanently destroying Stakes or lands:
+### Negative raids
 
-| Orc relation | Production lost to raids |
+| Orc relation | Production lost |
 |---:|---:|
-| -1 | **1** |
-| -2 | **2** |
-| -3 | **4** |
+| -1 | 1 |
+| -2 | 2 |
+| -3 | 4 |
 
-In the current automated simulation, raid losses are allocated after Player Actions, beginning with the sectors that would otherwise produce the most that Generation. This allocation priority is a simulation policy and can be replaced later by a tabletop choice rule.
-
----
-
-# N.6 — Strategic Alliance / Quest Hooks
-
-The simulation exposes explicit Strategic Alliance completion hooks. Quests are **not random Events**.
-
-Current eligibility checks:
-
-- **Elves:** relation +2, at least 9 active Forests;
-- **Gnomes:** relation +2, Mercantile II;
-- **Orcs:** relation +2, Force 9+, Fortification III+.
-
-Completing the relevant Quest:
-
-1. sets that nation to +3;
-2. records the Strategic Alliance permanently;
-3. triggers the one-time **Mainland -2** threshold consequence.
-
-Automated balance batches intentionally do **not** auto-complete these Quests until the Event/Quest decision logic is designed.
+Raid losses remove current-Generation Production rather than destroying Stakes or land.
 
 ---
 
-# N.7 — Simulation Activation and Known Open Items
+# N.6 — Simulation Notes
 
-For v0.11.19 batch testing only:
+For v0.11.21 batch testing:
 
-- External Relations are automatically activated when Population first reaches **3**;
-- this is only a proxy for the future **Meet the Neighbours** Event;
+- Raw Food subsistence is **2 Raw Food per Population**;
+- External Relations activate at Population 3 only as a stand-in for Meet the Neighbours;
 - the public web prototype is not routed to this engine;
-- automated AI does not yet deliberately choose Reforestation, Improve Land, Orc Food Trading or Imperial Appeasement;
-- Mainland Aid/Demand modifiers remain numerically TBD;
-- exact +3 Alliance bonuses remain TBD;
-- exact Improve Land action cost remains TBD.
-
-These omissions are intentional: the simulation can measure organic relation movement and negative pressure without inventing unresolved tabletop rules.
+- automated AI does not yet deliberately choose Reforestation, Improve Land, Orc Food Trading, Imperial Appeasement or Study the Elf Ways;
+- Strategic Alliance Quests are therefore not auto-completed in ordinary A/B batches;
+- a deterministic Elven Quest smoke test verifies the full +3 completion path separately;
+- exact Mainland Aid/Demand modifiers remain TBD;
+- exact Orc +3 alliance Force remains TBD.
