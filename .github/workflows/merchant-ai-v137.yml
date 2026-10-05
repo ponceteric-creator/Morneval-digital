@@ -1,19 +1,11 @@
-name: Merchant AI v137 clean A/B
+name: Merchant AI v137 full clean validation
 
 on:
   push:
     branches: [merchant-ai-v137-clean]
     paths:
       - '.github/workflows/merchant-ai-v137.yml'
-      - 'js/v137-merchant-ai-clean-engine.js'
       - 'scripts/merchant-ai-v137-patch.mjs'
-      - 'scripts/institution-agent-marginal-v137-patch.mjs'
-      - 'scripts/investor-ai-v134-loader.mjs'
-      - 'scripts/current-food-production-cleanup-loader.mjs'
-      - 'scripts/test-merchant-ai-v137.mjs'
-      - 'scripts/test-investor-ai-v134.mjs'
-      - 'scripts/test-family-influence-v135.mjs'
-      - 'scripts/run-merchant-ai-v137-diagnostic.mjs'
   workflow_dispatch:
 
 permissions:
@@ -22,7 +14,7 @@ permissions:
 jobs:
   diagnostic:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -36,31 +28,6 @@ jobs:
         run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/test-investor-ai-v134.mjs
       - name: Family +2 Influence regression
         run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/test-family-influence-v135.mjs
-      - name: Legacy implementation and AI — 500 games
-        env:
-          GAMES: 500
-          EXTERNAL_RELATIONS: on
-          COST_MODE: proposed
-          MERCHANT_AI: wealth
-          MERCHANT_AI_V137: off
-        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-merchant-ai-v137-diagnostic.mjs
-      - name: Correct rule only — 500 games
-        env:
-          GAMES: 500
-          EXTERNAL_RELATIONS: on
-          COST_MODE: proposed
-          MERCHANT_AI: wealth
-          MERCHANT_GUILD_AI_SCORE_V137: off
-          INSTITUTION_AGENT_MARGINAL_V137: off
-        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-merchant-ai-v137-diagnostic.mjs
-      - name: Correct rule plus marginal Agents — 500 games
-        env:
-          GAMES: 500
-          EXTERNAL_RELATIONS: on
-          COST_MODE: proposed
-          MERCHANT_AI: wealth
-          MERCHANT_GUILD_AI_SCORE_V137: off
-        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-merchant-ai-v137-diagnostic.mjs
       - name: Correct rule plus full clean AI — 500 games
         env:
           GAMES: 500
@@ -68,9 +35,9 @@ jobs:
           COST_MODE: proposed
           MERCHANT_AI: wealth
         run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-merchant-ai-v137-diagnostic.mjs
-      - name: Print comparison
-        run: for f in simulation-results/merchant-ai-v137-*.json; do echo "--- $f ---"; jq '.summary' "$f"; done
+      - name: Print summary
+        run: jq '.summary' simulation-results/merchant-ai-v137-rule_full_ai.json
       - uses: actions/upload-artifact@v4
         with:
-          name: merchant-ai-v137-results
-          path: simulation-results/merchant-ai-v137-*.json
+          name: merchant-ai-v137-full-clean-results
+          path: simulation-results/merchant-ai-v137-rule_full_ai.json
