@@ -9,6 +9,7 @@ on:
       - 'js/v130-elven-alliance-engine.js'
       - 'js/v131-food-production-cleanup-engine.js'
       - 'js/v132-production-stake-ai-engine.js'
+      - 'js/v133-influence-cap-engine.js'
       - 'scripts/external-relations-loader.mjs'
       - 'scripts/elven-alliance-sim-loader.mjs'
       - 'scripts/elven-strategy-ai-loader.mjs'
