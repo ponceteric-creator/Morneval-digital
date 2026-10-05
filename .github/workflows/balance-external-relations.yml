@@ -10,6 +10,7 @@ on:
       - 'js/v131-food-production-cleanup-engine.js'
       - 'js/v132-production-stake-ai-engine.js'
       - 'js/v133-influence-cap-engine.js'
+      - 'js/v134-investor-ai-engine.js'
       - 'scripts/external-relations-loader.mjs'
       - 'scripts/elven-alliance-sim-loader.mjs'
       - 'scripts/elven-strategy-ai-loader.mjs'
@@ -17,12 +18,14 @@ on:
       - 'scripts/fortification-sim-loader.mjs'
       - 'scripts/stake-ai-diagnostic-loader.mjs'
       - 'scripts/production-stake-ai-v132-loader.mjs'
+      - 'scripts/investor-ai-v134-loader.mjs'
       - 'scripts/current-food-production-cleanup-loader.mjs'
       - 'scripts/run-external-relations-batch.mjs'
       - 'scripts/run-production-stake-diagnostic.mjs'
       - 'scripts/test-elven-alliance-v130.mjs'
       - 'scripts/test-no-food-production-stakes.mjs'
       - 'scripts/test-influence-threshold-v133.mjs'
+      - 'scripts/test-investor-ai-v134.mjs'
       - 'rules/Appendix_N_External_Relations_v01119_Simulation.md'
   workflow_dispatch:
 
@@ -45,31 +48,33 @@ jobs:
       - name: No Food Production Sector regression test
         run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs ./scripts/test-no-food-production-stakes.mjs
       - name: Influence threshold 20 regression test
-        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/test-influence-threshold-v133.mjs
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/test-influence-threshold-v133.mjs
+      - name: Investor AI regression test
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/test-investor-ai-v134.mjs
       - name: Baseline without activated diplomacy
         env:
           COST_MODE: proposed
           MERCHANT_AI: wealth
           EXTERNAL_RELATIONS: off
-        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-external-relations-batch.mjs
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-external-relations-batch.mjs
       - name: External Relations active
         env:
           COST_MODE: proposed
           MERCHANT_AI: wealth
           EXTERNAL_RELATIONS: on
-        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-external-relations-batch.mjs
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-external-relations-batch.mjs
       - name: Production Stake diagnostic baseline
         env:
           COST_MODE: proposed
           MERCHANT_AI: wealth
           EXTERNAL_RELATIONS: off
-        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-production-stake-diagnostic.mjs
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-production-stake-diagnostic.mjs
       - name: Production Stake diagnostic with relations
         env:
           COST_MODE: proposed
           MERCHANT_AI: wealth
           EXTERNAL_RELATIONS: on
-        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-production-stake-diagnostic.mjs
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-production-stake-diagnostic.mjs
       - name: Print A/B summaries
         run: |
           echo '--- baseline ---'
