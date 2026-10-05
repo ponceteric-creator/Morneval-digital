@@ -12,13 +12,14 @@ export async function resolve(specifier, context, nextResolve) {
   // Current simulation scripts historically import v130 directly. Route only
   // those top-level script imports through the latest simulation wrapper. The
   // wrapper inherits the v131 Food cleanup, v132 Production Stake AI model,
-  // v133 Influence threshold 20, and v134 Investor AI replacing Dynast.
+  // v133 Influence threshold 20, v134 Investor AI replacing Dynast, and
+  // v135 +2 inherent Family Influence at the start of each generation.
   // Archived/versioned engine behavior remains untouched.
   if (candidate
       && parent?.pathname?.includes('/scripts/')
       && candidate.pathname.endsWith('/js/v130-elven-alliance-engine.js')) {
     return {
-      url: `${local('js/v134-investor-ai-engine.js')}${candidate.search || '?current=investor-ai-v134'}`,
+      url: `${local('js/v135-family-influence-engine.js')}${candidate.search || '?current=family-influence-v135'}`,
       shortCircuit: true,
     };
   }
