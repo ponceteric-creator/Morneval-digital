@@ -9,6 +9,8 @@ on:
       - 'js/v130-elven-alliance-engine.js'
       - 'scripts/external-relations-loader.mjs'
       - 'scripts/elven-alliance-sim-loader.mjs'
+      - 'scripts/elven-strategy-ai-loader.mjs'
+      - 'scripts/elven-quest-autocomplete-loader.mjs'
       - 'scripts/fortification-sim-loader.mjs'
       - 'scripts/run-external-relations-batch.mjs'
       - 'scripts/test-elven-alliance-v130.mjs'
@@ -30,19 +32,19 @@ jobs:
       - name: Enable ESM
         run: echo '{"type":"module"}' > package.json
       - name: Elven alliance deterministic smoke test
-        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/fortification-sim-loader.mjs ./scripts/test-elven-alliance-v130.mjs
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs ./scripts/test-elven-alliance-v130.mjs
       - name: Baseline without activated diplomacy
         env:
           COST_MODE: proposed
           MERCHANT_AI: wealth
           EXTERNAL_RELATIONS: off
-        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/fortification-sim-loader.mjs ./scripts/run-external-relations-batch.mjs
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs ./scripts/run-external-relations-batch.mjs
       - name: External Relations active
         env:
           COST_MODE: proposed
           MERCHANT_AI: wealth
           EXTERNAL_RELATIONS: on
-        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/fortification-sim-loader.mjs ./scripts/run-external-relations-batch.mjs
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs ./scripts/run-external-relations-batch.mjs
       - name: Print A/B summaries
         run: |
           echo '--- baseline ---'
