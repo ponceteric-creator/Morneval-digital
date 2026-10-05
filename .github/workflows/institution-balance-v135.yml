@@ -1,0 +1,27 @@
+name: Institution balance v135
+on:
+  push:
+    branches: [institution-balance-v135]
+  workflow_dispatch:
+
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Enable ESM
+        run: echo '{"type":"module"}' > package.json
+      - name: Institution balance with Relations
+        env:
+          COST_MODE: proposed
+          MERCHANT_AI: wealth
+          EXTERNAL_RELATIONS: on
+          GAMES: 100
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-institution-balance-v135.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: institution-balance-v135
+          path: simulation-results/institution-balance-v135-*.json
