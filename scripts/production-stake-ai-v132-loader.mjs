@@ -173,9 +173,13 @@ function productionBidCandidates(state, player, context) {
     if (delta <= 0) { diag.nonPositiveBidDelta += 1; continue; }
     if (player.influence < delta) { diag.insufficientInfluence += 1; continue; }
 
-    // Only the incremental raise is a new action cost; a previous bid is sunk
-    // and already reserved from Influence.
-    const score = estimate.actionUtility - delta * shadowValue;
+    // The dynamic shadow price determines the maximum rational capital bid.
+    // Action ordering stays on the existing AI utility scale: other action
+    // heuristics currently charge roughly 0.20-0.30 utility per Influence, so
+    // applying a ~1+ shadow price only here would systematically handicap Stakes.
+    // We retain the legacy 0.45 action-scale penalty, but charge only the new
+    // incremental raise rather than re-charging Influence already reserved.
+    const score = estimate.actionUtility - delta * 0.45;
     if (score < V090_CONFIG.actionUtilityFloor) {
       diag.zeroOrLowUtility += 1;
       continue;
