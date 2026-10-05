@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 
-const engine = await import('../js/v128-external-relations-engine.js?sim=external-relations-batch');
+const engine = await import('../js/v130-elven-alliance-engine.js?sim=external-relations-batch');
 
 const MODE = process.env.EXTERNAL_RELATIONS === 'off' ? 'baseline' : 'relations';
 const GAMES = Math.max(1, Number(process.env.GAMES) || 100);
@@ -71,7 +71,7 @@ for (let i = 0; i < GAMES; i += 1) {
       for (const nation of ['elves', 'gnomes', 'orcs']) {
         if (n(levels[nation]) >= 2) localPlus2Ever[nation] = true;
         if (n(levels[nation]) >= 3) localPlus3Ever[nation] = true;
-        if (ext.questEligible?.[nation]) localQuestEver[nation] = true;
+        if (ext.questEligible?.[nation] || (nation === 'elves' && ext.elvenAllianceQuest?.readyToComplete)) localQuestEver[nation] = true;
       }
 
       const maintenanceRows = ext.gnomeStakeMaintenance ?? [];
@@ -171,8 +171,9 @@ const summary = {
   finalForestCountMean: mean(rows.map(r => r.forestCount)),
   finalForceMean: mean(rows.map(r => r.force)),
   notes: [
-    'No strategic-alliance Quest is auto-completed by the batch; +3 should therefore normally remain unreachable here.',
-    'The automated AI does not yet choose Reforestation, Gnome Improve Land, Orc Food Trading, or Imperial Appeasement actions. Their rule hooks exist in v128.',
+    'Raw Food subsistence is 2 per Population in this simulation.',
+    'No strategic-alliance Quest is auto-completed by the batch; +3 remains unreachable until dedicated Quest AI is added.',
+    'The automated AI does not yet deliberately choose Reforestation, Gnome Improve Land, Orc Food Trading, Imperial Appeasement, or Study the Elf Ways.',
     'Mainland exact Imperial Aid/Demand numeric modifiers remain intentionally pending.',
   ],
 };
