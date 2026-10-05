@@ -6,14 +6,15 @@ const masterEnabled = process.env.MERCHANT_AI_V136 !== 'off';
 const scoreEnabled = masterEnabled && process.env.MERCHANT_AI_V136_SCORE !== 'off';
 const marginalEnabled = masterEnabled && process.env.INSTITUTION_AGENT_MARGINAL_V136 !== 'off';
 const politicsEnabled = masterEnabled && process.env.MERCHANT_AI_V136_POLITICS === 'on';
+const scoreMode = scoreEnabled && process.env.MERCHANT_AI_V136_SCORE_MODE === 'forward' ? 'forward' : 'current';
 const AI_MODE = !scoreEnabled && !marginalEnabled && !politicsEnabled
   ? 'legacy_ai'
-  : scoreEnabled && !marginalEnabled && !politicsEnabled
-    ? 'score_only'
-    : !scoreEnabled && marginalEnabled && !politicsEnabled
-      ? 'marginal_only'
-      : scoreEnabled && marginalEnabled && !politicsEnabled
-        ? 'score_marginal'
+  : !scoreEnabled && marginalEnabled && !politicsEnabled
+    ? 'marginal_only'
+    : scoreEnabled && marginalEnabled && !politicsEnabled
+      ? `${scoreMode}_score_marginal`
+      : scoreEnabled && !marginalEnabled && !politicsEnabled
+        ? `${scoreMode}_score_only`
         : 'experimental_mixed';
 const MAX_GENERATIONS = 60;
 const RENOWN_TRIGGER = 12;
@@ -177,7 +178,7 @@ const agentPlacementsPerGameByPersonality = Object.fromEntries(Object.entries(ag
 
 const summary = {
   aiMode: AI_MODE,
-  patches: { scoreEnabled, marginalEnabled, politicsEnabled },
+  patches: { scoreEnabled, scoreMode, marginalEnabled, politicsEnabled },
   games: GAMES,
   simulationVersion: engine.V136_VERSION ?? '0.11.28-sim',
   generationMean: mean(finals.map(x => x.generations)),
