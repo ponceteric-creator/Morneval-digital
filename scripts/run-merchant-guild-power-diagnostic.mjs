@@ -100,6 +100,7 @@ const scoreDistribution = Object.fromEntries([
 ].map(([label, predicate]) => [label, samples.filter(predicate).length]));
 
 const representedDistribution = Object.fromEntries([0, 1, 2, 3].map(count => [String(count), samples.filter(row => row.representedFamilies === count).length]));
+const theoreticalAllFamiliesTotal = games.reduce((sum, row) => sum + row.theoreticalAllFamilies, 0);
 const summary = {
   games: GAMES,
   simulationVersion: '0.11.29-sim',
@@ -110,7 +111,7 @@ const summary = {
   actualGuildPrestigePerGame: actualGuildPrestige / GAMES,
   theoreticalSingleFamilyAlwaysRepresentedPerGame: mean(games.map(row => row.theoreticalSingleTicket)),
   theoreticalAllFamiliesAlwaysRepresentedPerGame: mean(games.map(row => row.theoreticalAllFamilies)),
-  captureEfficiency: theoreticalAllFamilies ? actualGuildPrestige / theoreticalAllFamilies : 0,
+  captureEfficiency: theoreticalAllFamiliesTotal ? actualGuildPrestige / theoreticalAllFamiliesTotal : 0,
   freeRiderPrestigePerGame: freeRiderPrestige / GAMES,
   freeRiderShareOfActualGuildPrestige: actualGuildPrestige ? freeRiderPrestige / actualGuildPrestige : 0,
   freeRiderShareOfRepresentedAwards: representedAwards ? freeRiderAwards / representedAwards : 0,
