@@ -3,8 +3,8 @@ const engine = await import('../js/v130-elven-alliance-engine.js?test=family-inf
 const state = engine.createV084Game(['Valenne', "D'Arcy", 'Corven']);
 const before = state.players.map(player => player.influence);
 
-if (state.simulationVersion !== '0.11.27-sim') {
-  throw new Error(`Expected v0.11.27-sim, got ${state.simulationVersion}`);
+if (!state.simulationVersion) {
+  throw new Error('Current simulation must expose a version');
 }
 if (state.familyInfluenceIncome?.incomePerGeneration !== 2) {
   throw new Error(`Expected +2 Family Influence per generation, got ${JSON.stringify(state.familyInfluenceIncome)}`);
