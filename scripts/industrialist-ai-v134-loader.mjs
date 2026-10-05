@@ -6,7 +6,7 @@ function replaceFunctionBlock(source, startMarker, endMarker, replacement) {
   return source.slice(0, start) + replacement + source.slice(end);
 }
 
-function patchIndustrialistAI(source) {
+function patchIndustrialistActionAI(source) {
   return replaceFunctionBlock(
     source,
     'function chooseNormalCandidate(state, player, farmBuilt) {',
@@ -67,11 +67,89 @@ function patchIndustrialistAI(source) {
   );
 }
 
+function patchIndustrialistInstitutionAI(source) {
+  return replaceFunctionBlock(
+    source,
+    'function runInstitutionDevelopmentAI(state) {',
+    '\n\nfunction applyInfluenceCaps',
+    `function industrialistHasPriorityInvestmentV134(state, player) {
+  if (player.aiPersonality !== 'industrialist') return false;
+
+  const influence = Math.max(0, n(player.influence));
+  const acquisitionInfluenceCost = Math.max(0, n(legacy.V084_CONFIG?.hinterland?.acquisitionInfluenceCost ?? 3));
+  const acquisitionWealthCost = Math.max(0, n(legacy.V084_CONFIG?.hinterland?.acquisitionWealthCost ?? 1));
+  const availableWealth = Math.max(0,
+    n(player.wealthCapacity ?? player.wealthGeneratedThisGeneration)
+    - n(player.wealthCommittedThisGeneration));
+  const unexploredLand = (state.lands ?? []).some(land => !land.revealed && !land.ownerId);
+
+  if (unexploredLand
+      && influence >= acquisitionInfluenceCost
+      && availableWealth >= acquisitionWealthCost) {
+    return true;
+  }
+
+  if (influence < 1) return false;
+  for (const sector of state.productionSectors ?? []) {
+    if (sector.id === 'food') continue;
+    const tier = Math.max(1, Math.floor(n(sector.tier) || 1));
+    const stakes = (state.players ?? []).flatMap(p => p.productionStakes ?? [])
+      .filter(stake => stake.sectorId === sector.id && !stake.diplomacyInactiveThisGeneration);
+    const young = stakes.filter(stake => stake.age === 'young').length;
+    if (young >= tier) continue;
+
+    const demand = Math.max(0, n(sector.demandThisGeneration?.population))
+      + Math.max(0, n(sector.demandThisGeneration?.imperial))
+      + Math.max(0, n(sector.demandThisGeneration?.external_markets));
+    const rawCapacity = typeof legacy.sectorResourceCapacity === 'function'
+      ? Math.max(0, n(legacy.sectorResourceCapacity(state, sector.id)))
+      : 0;
+    if (Math.min(rawCapacity, demand) > stakes.length) return true;
+  }
+  return false;
+}
+
+function runInstitutionDevelopmentAI(state) {
+  ensureInstitutionTierState(state);
+  const actions = [];
+  const scores = currentInstitutionScores(state);
+  for (const player of turnOrder(state)) {
+    // Institution development is a simulation pre-action in v122. Without this
+    // guard it can consume Influence before the normal action engine has a chance
+    // to express the Industrialist's stated priority. Defer it only when a
+    // currently affordable Hinterland acquisition or productive Stake slot exists.
+    if (industrialistHasPriorityInvestmentV134(state, player)) continue;
+
+    let used = 0;
+    while (used < MAX_SIM_INSTITUTION_DEVELOPMENTS_PER_FAMILY) {
+      const candidates = state.institutions
+        .map(inst => institutionDevelopmentCandidate(state, player, inst, scores))
+        .filter(Boolean)
+        .sort((a, b) => b.score - a.score || a.cost.influenceCost - b.cost.influenceCost);
+      const pick = candidates[0];
+      if (!pick || pick.score < 2.0) break;
+      const action = executeInstitutionDevelopment(state, player, pick);
+      if (!action) break;
+      actions.push(action);
+      used += 1;
+    }
+  }
+  return actions;
+}`,
+  );
+}
+
 export async function load(url, context, nextLoad) {
   const result = await nextLoad(url, context);
   if (result.format !== 'module' || result.source == null) return result;
   const pathname = new URL(url).pathname;
-  if (!pathname.endsWith('/js/v110-ai-engine.js')) return result;
   const source = Buffer.isBuffer(result.source) ? result.source.toString('utf8') : String(result.source);
-  return { ...result, source: patchIndustrialistAI(source), shortCircuit: true };
+
+  if (pathname.endsWith('/js/v110-ai-engine.js')) {
+    return { ...result, source: patchIndustrialistActionAI(source), shortCircuit: true };
+  }
+  if (pathname.endsWith('/js/v122-institution-tier-full-engine.js')) {
+    return { ...result, source: patchIndustrialistInstitutionAI(source), shortCircuit: true };
+  }
+  return result;
 }
