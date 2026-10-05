@@ -22,6 +22,7 @@ on:
       - 'scripts/current-food-production-cleanup-loader.mjs'
       - 'scripts/run-external-relations-batch.mjs'
       - 'scripts/run-production-stake-diagnostic.mjs'
+      - 'scripts/run-zero-stake-opportunity-diagnostic.mjs'
       - 'scripts/test-elven-alliance-v130.mjs'
       - 'scripts/test-no-food-production-stakes.mjs'
       - 'scripts/test-influence-threshold-v133.mjs'
@@ -75,6 +76,18 @@ jobs:
           MERCHANT_AI: wealth
           EXTERNAL_RELATIONS: on
         run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-production-stake-diagnostic.mjs
+      - name: Zero Stake placement despite productive opportunity baseline
+        env:
+          COST_MODE: proposed
+          MERCHANT_AI: wealth
+          EXTERNAL_RELATIONS: off
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-zero-stake-opportunity-diagnostic.mjs
+      - name: Zero Stake placement despite productive opportunity with relations
+        env:
+          COST_MODE: proposed
+          MERCHANT_AI: wealth
+          EXTERNAL_RELATIONS: on
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-zero-stake-opportunity-diagnostic.mjs
       - name: Print A/B summaries
         run: |
           echo '--- baseline ---'
@@ -85,9 +98,14 @@ jobs:
           cat simulation-results/production-stake-diagnostic-baseline.json
           echo '--- stake diagnostic relations ---'
           cat simulation-results/production-stake-diagnostic-relations.json
+          echo '--- zero-stake opportunity baseline ---'
+          cat simulation-results/zero-stake-opportunity-baseline.json
+          echo '--- zero-stake opportunity relations ---'
+          cat simulation-results/zero-stake-opportunity-relations.json
       - uses: actions/upload-artifact@v4
         with:
           name: external-relations-ab-results
           path: |
             simulation-results/external-relations-*.json
             simulation-results/production-stake-diagnostic-*.json
+            simulation-results/zero-stake-opportunity-*.json
