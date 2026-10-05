@@ -5,10 +5,10 @@ export * from './v133-influence-cap-engine.js?base=0.11.25-sim';
 export const V134_VERSION = '0.11.26-sim';
 export const V134_INDUSTRIALIST_PROFILE = Object.freeze({
   label: 'Industrialist',
-  prestige: 1.05,
-  wealth: 1.20,
-  engine: 1.55,
-  civic: 0.90,
+  prestige: 1.35,
+  wealth: 1.00,
+  engine: 1.30,
+  civic: 1.00,
   horizon: 4,
   discount: 0.90,
 });
@@ -16,9 +16,10 @@ export const V134_INDUSTRIALIST_PROFILE = Object.freeze({
 export const V134_INDUSTRIALIST_PRIORITY = Object.freeze({
   first: 'food_security_for_next_growth_step',
   buildStage: 'secure_productive_hinterland_and_two_production_stakes',
-  monetizationStage: 'prefer_vertical_integration_then_convert_engine_into_prestige',
+  monetizationStage: 'develop_controlled_sectors_and_score_prestige',
   economicPriority: ['productive_hinterland_when_needed', 'production_stakes'],
-  fallback: 'development_agents_institutions_and_other_actions',
+  verticalIntegration: 'prefer_stakes_and_development_linked_to_owned_raw_land',
+  fallback: 'institutions_agents_and_other_actions',
   hinterlandGate: 'opening_private_land_or_raw_capacity_constraint',
   institutionDeferral: 'build_stage_or_direct_raw_constraint_only',
 });
