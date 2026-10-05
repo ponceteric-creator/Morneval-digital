@@ -10,13 +10,14 @@ export async function resolve(specifier, context, nextResolve) {
   try { parent = context.parentURL ? new URL(context.parentURL) : null; } catch {}
 
   // Current simulation scripts historically import v130 directly. Route only
-  // those top-level script imports through v131. The v131 module itself still
-  // imports v130 as its base, so archived/versioned engine behavior is untouched.
+  // those top-level script imports through the latest simulation wrapper. The
+  // wrapper inherits the v131 Food cleanup and adds the v132 Production Stake
+  // AI model; archived/versioned engine behavior remains untouched.
   if (candidate
       && parent?.pathname?.includes('/scripts/')
       && candidate.pathname.endsWith('/js/v130-elven-alliance-engine.js')) {
     return {
-      url: `${local('js/v131-food-production-cleanup-engine.js')}${candidate.search || '?current=food-cleanup'}`,
+      url: `${local('js/v132-production-stake-ai-engine.js')}${candidate.search || '?current=stake-ai-v132'}`,
       shortCircuit: true,
     };
   }
