@@ -109,11 +109,11 @@ function runInstitutionDevelopmentAI(state) {
   const actions = [];
   const scores = currentInstitutionScores(state);
   for (const player of turnOrder(state)) {
-    // Institution development is a simulation pre-action in v122. Without this
-    // guard it can consume Influence before the normal action engine has a chance
-    // to express the Industrialist's strategy. If a primary economic investment
-    // remains, the Industrialist keeps the Influence rather than taking this
-    // fallback investment.
+    // Institution development is a simulation pre-action in v121/v122. Without
+    // this guard it can consume Influence before the normal action engine has a
+    // chance to express the Industrialist's strategy. If a primary economic
+    // investment remains, the Industrialist keeps the Influence rather than
+    // taking this fallback investment.
     if (industrialistHasPriorityInvestmentV134(state, player)) continue;
 
     let used = 0;
@@ -144,7 +144,8 @@ export async function load(url, context, nextLoad) {
   if (pathname.endsWith('/js/v110-ai-engine.js')) {
     return { ...result, source: patchIndustrialistActionAI(source), shortCircuit: true };
   }
-  if (pathname.endsWith('/js/v122-institution-tier-full-engine.js')) {
+  if (pathname.endsWith('/js/v121-institution-tier-engine.js')
+      || pathname.endsWith('/js/v122-institution-tier-full-engine.js')) {
     return { ...result, source: patchIndustrialistInstitutionAI(source), shortCircuit: true };
   }
   return result;
