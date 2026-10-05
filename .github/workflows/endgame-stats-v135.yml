@@ -1,0 +1,45 @@
+name: Endgame statistics v135
+
+on:
+  push:
+    paths:
+      - '.github/workflows/endgame-stats-v135.yml'
+      - 'scripts/run-endgame-stats-v135.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Enable ESM
+        run: echo '{"type":"module"}' > package.json
+      - name: Baseline endgame stats
+        env:
+          COST_MODE: proposed
+          MERCHANT_AI: wealth
+          EXTERNAL_RELATIONS: off
+          GAMES: 100
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-endgame-stats-v135.mjs
+      - name: Relations endgame stats
+        env:
+          COST_MODE: proposed
+          MERCHANT_AI: wealth
+          EXTERNAL_RELATIONS: on
+          GAMES: 100
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-endgame-stats-v135.mjs
+      - name: Print summaries
+        run: |
+          node -e "console.log(JSON.stringify(require('./simulation-results/endgame-stats-v135-baseline.json').summary, null, 2))"
+          node -e "console.log(JSON.stringify(require('./simulation-results/endgame-stats-v135-relations.json').summary, null, 2))"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: endgame-stats-v135
+          path: simulation-results/endgame-stats-v135-*.json
