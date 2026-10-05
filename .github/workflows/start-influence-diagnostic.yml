@@ -1,0 +1,45 @@
+name: Start Influence diagnostic
+
+on:
+  push:
+    paths:
+      - '.github/workflows/start-influence-diagnostic.yml'
+      - 'scripts/run-start-influence-diagnostic.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Enable ESM
+        run: echo '{"type":"module"}' > package.json
+      - name: Baseline start Influence
+        env:
+          GAMES: 100
+          COST_MODE: proposed
+          MERCHANT_AI: wealth
+          EXTERNAL_RELATIONS: off
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-start-influence-diagnostic.mjs
+      - name: Relations start Influence
+        env:
+          GAMES: 100
+          COST_MODE: proposed
+          MERCHANT_AI: wealth
+          EXTERNAL_RELATIONS: on
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-start-influence-diagnostic.mjs
+      - name: Print summaries
+        run: |
+          cat simulation-results/start-influence-baseline.json
+          cat simulation-results/start-influence-relations.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: start-influence-results
+          path: simulation-results/start-influence-*.json
