@@ -12,6 +12,7 @@ on:
       - 'scripts/elven-strategy-ai-loader.mjs'
       - 'scripts/elven-quest-autocomplete-loader.mjs'
       - 'scripts/fortification-sim-loader.mjs'
+      - 'scripts/stake-ai-diagnostic-loader.mjs'
       - 'scripts/run-external-relations-batch.mjs'
       - 'scripts/run-production-stake-diagnostic.mjs'
       - 'scripts/test-elven-alliance-v130.mjs'
@@ -51,13 +52,13 @@ jobs:
           COST_MODE: proposed
           MERCHANT_AI: wealth
           EXTERNAL_RELATIONS: off
-        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs ./scripts/run-production-stake-diagnostic.mjs
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/stake-ai-diagnostic-loader.mjs ./scripts/run-production-stake-diagnostic.mjs
       - name: Production Stake diagnostic with relations
         env:
           COST_MODE: proposed
           MERCHANT_AI: wealth
           EXTERNAL_RELATIONS: on
-        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs ./scripts/run-production-stake-diagnostic.mjs
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/stake-ai-diagnostic-loader.mjs ./scripts/run-production-stake-diagnostic.mjs
       - name: Print A/B summaries
         run: |
           echo '--- baseline ---'
