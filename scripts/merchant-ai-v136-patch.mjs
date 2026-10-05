@@ -7,6 +7,7 @@ function replaceFunctionBlock(source, startMarker, endMarker, replacement, label
 }
 
 function patchMerchantGuildScoring(source) {
+  if (source.includes('aiValuationModel: "v136_current_wealth_based"')) return source;
   const scoreNeedle = '  const merchantRaw = externalServed * 2 - merchantPenalty;';
   if (!source.includes(scoreNeedle)) throw new Error('Missing Merchant Guild legacy score calculation in v110');
   source = source.replace(scoreNeedle, `${scoreNeedle}\n\n  // v136 AI correction: evaluate the Merchant Guild with the current v0.11.18+\n  // Wealth-based rule instead of the obsolete External Market formula. This is\n  // an AI valuation change only; v127 remains authoritative for actual scoring.\n  const merchantInstitution = (state.institutions ?? []).find(inst => inst.id === "merchant_guild");\n  const merchantTier = Math.max(1, Math.min(3, Math.floor(Number(merchantInstitution?.tier) || 1)));\n  const merchantPrestigeCap = ({ 1: 2, 2: 4, 3: 8 })[merchantTier] ?? 2;\n  const totalFamilyWealth = (state.players ?? []).reduce(\n    (sum, family) => sum + Math.max(2, Number(family.wealthCapacity) || 0),\n    0,\n  );\n  const totalBaseWealth = 2 * (state.players ?? []).length;\n  const commercialWealth = Math.max(0, totalFamilyWealth - totalBaseWealth);\n  const merchantCurrentRuleScore = Math.min(merchantPrestigeCap, commercialWealth);`);
@@ -18,6 +19,7 @@ function patchMerchantGuildScoring(source) {
 }
 
 function patchMerchantPoliticalIntent(source) {
+  if (source.includes('const externalCapturePotential=Math.min(s.ownStakes,s.externalDemand);')) return source;
   const replacement = `function poleUtilities(state,player){
   const hand=ownHandByInstitution(state,player),s=boardSignals(state,player);
   const base={
@@ -65,8 +67,6 @@ function patchMerchantPoliticalIntent(source) {
 }
 
 export function patchMerchantAiV136(url, source) {
-  // Diagnostic escape hatch only. Current simulation defaults to the corrected
-  // model; CI uses this switch to run identical-seed legacy-vs-v136 A/B tests.
   if (process.env.MERCHANT_AI_V136 === 'off') return source;
   const pathname = new URL(url).pathname;
   let patched = source;
