@@ -12,6 +12,7 @@ on:
       - 'js/v133-influence-cap-engine.js'
       - 'js/v134-investor-ai-engine.js'
       - 'js/v135-family-influence-engine.js'
+      - 'js/v137-merchant-ai-clean-engine.js'
       - 'scripts/external-relations-loader.mjs'
       - 'scripts/elven-alliance-sim-loader.mjs'
       - 'scripts/elven-strategy-ai-loader.mjs'
@@ -21,6 +22,8 @@ on:
       - 'scripts/production-stake-ai-v132-loader.mjs'
       - 'scripts/investor-ai-v134-loader.mjs'
       - 'scripts/current-food-production-cleanup-loader.mjs'
+      - 'scripts/merchant-ai-v137-patch.mjs'
+      - 'scripts/institution-agent-marginal-v137-patch.mjs'
       - 'scripts/run-external-relations-batch.mjs'
       - 'scripts/run-production-stake-diagnostic.mjs'
       - 'scripts/run-zero-stake-opportunity-diagnostic.mjs'
@@ -29,6 +32,7 @@ on:
       - 'scripts/test-influence-threshold-v133.mjs'
       - 'scripts/test-investor-ai-v134.mjs'
       - 'scripts/test-family-influence-v135.mjs'
+      - 'scripts/test-merchant-ai-v137.mjs'
       - 'rules/Appendix_N_External_Relations_v01119_Simulation.md'
   workflow_dispatch:
 
@@ -49,13 +53,15 @@ jobs:
       - name: Elven alliance deterministic smoke test
         run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs ./scripts/test-elven-alliance-v130.mjs
       - name: No Food Production Sector regression test
-        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs ./scripts/test-no-food-production-stakes.mjs
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs ./scripts/test-no-food-production-stakes.mjs
       - name: Influence threshold 20 regression test
         run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/test-influence-threshold-v133.mjs
       - name: Investor AI regression test
         run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/test-investor-ai-v134.mjs
       - name: Family +2 Influence regression test
         run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/test-family-influence-v135.mjs
+      - name: Merchant AI v137 regression test
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/test-merchant-ai-v137.mjs
       - name: Baseline without activated diplomacy
         env:
           COST_MODE: proposed
