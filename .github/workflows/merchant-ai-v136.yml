@@ -1,0 +1,57 @@
+name: Merchant AI v136 A/B
+
+on:
+  push:
+    branches: [merchant-ai-v136-final]
+    paths:
+      - '.github/workflows/merchant-ai-v136.yml'
+      - 'js/v136-merchant-ai-engine.js'
+      - 'scripts/merchant-ai-v136-patch.mjs'
+      - 'scripts/current-food-production-cleanup-loader.mjs'
+      - 'scripts/test-merchant-ai-v136.mjs'
+      - 'scripts/run-merchant-ai-v136-diagnostic.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Enable ESM
+        run: echo '{"type":"module"}' > package.json
+      - name: Merchant AI v136 regression test
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/test-merchant-ai-v136.mjs
+      - name: Family +2 Influence regression test
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/test-family-influence-v135.mjs
+      - name: Legacy Merchant AI — 100 games
+        env:
+          GAMES: 100
+          EXTERNAL_RELATIONS: on
+          COST_MODE: proposed
+          MERCHANT_AI: wealth
+          MERCHANT_AI_V136: off
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-merchant-ai-v136-diagnostic.mjs
+      - name: Corrected Merchant AI — 100 games
+        env:
+          GAMES: 100
+          EXTERNAL_RELATIONS: on
+          COST_MODE: proposed
+          MERCHANT_AI: wealth
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-merchant-ai-v136-diagnostic.mjs
+      - name: Print comparison
+        run: |
+          echo '--- legacy AI ---'
+          cat simulation-results/merchant-ai-v136-legacy_ai.json
+          echo '--- corrected AI ---'
+          cat simulation-results/merchant-ai-v136-corrected_ai.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: merchant-ai-v136-results
+          path: simulation-results/merchant-ai-v136-*.json
