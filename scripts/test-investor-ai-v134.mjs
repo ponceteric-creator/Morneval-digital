@@ -3,8 +3,8 @@ const engine = await import('../js/v130-elven-alliance-engine.js?test=investor-a
 const state = engine.createV084Game(['Valenne', "D'Arcy", 'Corven']);
 const personalities = state.players.map(player => player.aiPersonality);
 
-if (state.simulationVersion !== '0.11.26-sim') {
-  throw new Error(`Expected v0.11.26-sim, got ${state.simulationVersion}`);
+if (state.simulationVersion !== '0.11.27-sim') {
+  throw new Error(`Expected v0.11.27-sim, got ${state.simulationVersion}`);
 }
 if (state.city.influenceErosionThreshold !== 20) {
   throw new Error(`Expected Influence threshold 20, got ${state.city.influenceErosionThreshold}`);
@@ -22,4 +22,5 @@ console.log(JSON.stringify({
   influenceErosionThreshold: state.city.influenceErosionThreshold,
   personalities,
   investorAiModel: state.investorAiModel,
+  familyInfluenceIncome: state.familyInfluenceIncome,
 }, null, 2));
