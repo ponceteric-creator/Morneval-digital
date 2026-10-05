@@ -113,7 +113,7 @@ const byInstitution = Object.fromEntries(INSTITUTIONS.map(id => {
 const summary = {
   aiMode: AI_MODE,
   games: GAMES,
-  simulationVersion: engine.V136_VERSION ?? state?.simulationVersion ?? null,
+  simulationVersion: engine.V136_VERSION ?? '0.11.28-sim',
   generationMean: mean(finals.map(x => x.generations)),
   populationMean: mean(finals.map(x => x.population)),
   wins,
