@@ -24,13 +24,6 @@ function patchInvestorAI(source) {
     `  const baseScore = cost.prestige * profile.prestige + profile.engine * (sector.developmentPhase > 0 ? 1.8 : 0.9)\n    + profile.wealth * Math.min(2, Number(sector.demandThisGeneration.external_markets) || 0) * 0.35\n    - cost.influenceCost * 0.25 - cost.wealthCost * 0.35;\n  const score = player.aiPersonality === "investor" ? baseScore * 0.70 : baseScore;\n  return { kind: "development", score, sector, cost };`,
   );
 
-  const agentNeedle = `  const score = agentContinuationValue(state, player, provisional);\n  return score > V090_CONFIG.agents.minimumUtility\n    ? { kind: "agent", score, institutionId, estimatedInstitutionScore: estimatedInstitutionScore(state, institutionId) }\n    : null;`;
-  if (!source.includes(agentNeedle)) throw new Error('Could not find agent scoring block in v110');
-  source = source.replace(
-    agentNeedle,
-    `  const baseScore = agentContinuationValue(state, player, provisional);\n  const score = player.aiPersonality === "investor" ? baseScore * 0.60 : baseScore;\n  return score > V090_CONFIG.agents.minimumUtility\n    ? { kind: "agent", score, institutionId, estimatedInstitutionScore: estimatedInstitutionScore(state, institutionId) }\n    : null;`,
-  );
-
   return source;
 }
 
