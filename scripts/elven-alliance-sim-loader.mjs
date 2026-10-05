@@ -1,9 +1,3 @@
-function patchRawFoodConsumption(source) {
-  const needle = 'rawFoodPerPopulation: 1,';
-  if (!source.includes(needle)) throw new Error('Could not find rawFoodPerPopulation in v084 engine');
-  return source.replace(needle, 'rawFoodPerPopulation: 2,');
-}
-
 function patchPermanentPoliticalRenown(source) {
   const cardNeedle = '  const permanentCardRenown = permanentWealthCardRenown(state);\n  const total = populationRenown\n    + productionRenown\n    + institutionRenown\n    + permanentCardRenown;';
   if (!source.includes(cardNeedle)) throw new Error('Could not find structural Renown total in v102-base');
@@ -67,17 +61,10 @@ function patchPopulationCapacityForceAndFoodAI(source) {
 function patchExternalRelationLandEffects(source) {
   const gnomeNeedle = '    if (rel.levels.gnomes >= 2 && land.gnomeImproved) delta += 1;';
   if (!source.includes(gnomeNeedle)) throw new Error('Could not find Gnome improved-land bonus in v128');
-  source = source.replace(
+  return source.replace(
     gnomeNeedle,
     '    if (land.gnomeImproved || land.gnomeImprovementPermanent) delta += 1;\n'
       + '    if (rel.levels.gnomes >= 2 && (land.gnomeImproved || land.gnomeImprovementPermanent)) delta += 1;',
-  );
-
-  const elfFoodNeedle = "      synthetic.push(makeSyntheticLand(state, `elf_food_${forest.id}`, 'farm', 'grain', 1));";
-  if (!source.includes(elfFoodNeedle)) throw new Error('Could not find Elven forest food in v128');
-  return source.replace(
-    elfFoodNeedle,
-    "      synthetic.push(makeSyntheticLand(state, `elf_food_${forest.id}`, 'farm', 'grain', rel.levels.elves >= 3 ? 2 : 1));",
   );
 }
 
@@ -88,10 +75,6 @@ export async function load(url, context, nextLoad) {
   let source = Buffer.isBuffer(result.source) ? result.source.toString('utf8') : String(result.source);
   let changed = false;
 
-  if (pathname.endsWith('/js/v084-engine.js')) {
-    source = patchRawFoodConsumption(source);
-    changed = true;
-  }
   if (pathname.endsWith('/js/v102-base.js')) {
     source = patchPermanentPoliticalRenown(source);
     changed = true;
