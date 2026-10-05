@@ -1,3 +1,4 @@
+// Diagnostic loader only: no tabletop or main-branch rule change.
 export async function load(url, context, nextLoad) {
   const result = await nextLoad(url, context);
   if (!url.includes('/js/v110-ai-engine.js') || typeof result.source !== 'string') return result;
