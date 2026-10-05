@@ -4,14 +4,17 @@ const engine = await import('../js/v130-elven-alliance-engine.js?sim=merchant-ai
 const GAMES = Math.max(1, Number(process.env.GAMES) || 100);
 const masterEnabled = process.env.MERCHANT_AI_V136 !== 'off';
 const scoreEnabled = masterEnabled && process.env.MERCHANT_AI_V136_SCORE !== 'off';
-const politicsEnabled = masterEnabled && process.env.MERCHANT_AI_V136_POLITICS !== 'off';
-const AI_MODE = !scoreEnabled && !politicsEnabled
+const marginalEnabled = masterEnabled && process.env.INSTITUTION_AGENT_MARGINAL_V136 !== 'off';
+const politicsEnabled = masterEnabled && process.env.MERCHANT_AI_V136_POLITICS === 'on';
+const AI_MODE = !scoreEnabled && !marginalEnabled && !politicsEnabled
   ? 'legacy_ai'
-  : scoreEnabled && !politicsEnabled
+  : scoreEnabled && !marginalEnabled && !politicsEnabled
     ? 'score_only'
-    : !scoreEnabled && politicsEnabled
-      ? 'politics_only'
-      : 'corrected_ai';
+    : !scoreEnabled && marginalEnabled && !politicsEnabled
+      ? 'marginal_only'
+      : scoreEnabled && marginalEnabled && !politicsEnabled
+        ? 'score_marginal'
+        : 'experimental_mixed';
 const MAX_GENERATIONS = 60;
 const RENOWN_TRIGGER = 12;
 const INSTITUTIONS = ['city_guard', 'temple', 'merchant_guild', 'scholarium'];
@@ -19,8 +22,8 @@ const AXES = [-2, -1, 0, 1, 2];
 
 const n = v => Number(v) || 0;
 const mean = a => a.length ? a.reduce((s, v) => s + v, 0) / a.length : 0;
-const pk = p => p.aiPersonality ?? 'unknown';
-const agentCount = (p, id) => (p.institutionAgentRoster ?? []).filter(a => a.institutionId === id).length;
+const pk = p => p?.aiPersonality ?? 'unknown';
+const agentCount = (p, id) => (p?.institutionAgentRoster ?? []).filter(a => a.institutionId === id).length;
 const tier = (state, id) => Math.max(1, Math.min(3, Math.floor(n((state.institutions ?? []).find(x => x.id === id)?.tier) || 1)));
 
 const personalities = {};
@@ -31,14 +34,38 @@ const institutions = Object.fromEntries(INSTITUTIONS.map(id => [id, {
   finalAgents: [],
 }]));
 const political = { merchant: 0, military: 0, byPersonality: {} };
+const prestigeByPersonality = {};
+const agentPlacements = {};
 const finals = [];
 const wins = {};
+const finalPrestigeByPersonality = {};
 
 function personalityRow(key) {
-  return personalities[key] ??= { samples: 0, wealth: 0, influence: 0, agents: 0, merchantAgents: 0, guardAgents: 0 };
+  return personalities[key] ??= {
+    samples: 0,
+    wealth: 0,
+    influence: 0,
+    agents: 0,
+    merchantAgents: 0,
+    guardAgents: 0,
+    templeAgents: 0,
+    scholariumAgents: 0,
+  };
 }
 function politicalRow(key) {
   return political.byPersonality[key] ??= { merchant: 0, military: 0 };
+}
+function prestigeRow(key) {
+  return prestigeByPersonality[key] ??= { total: 0, byReason: {} };
+}
+function placementRow(key) {
+  return agentPlacements[key] ??= Object.fromEntries(INSTITUTIONS.map(id => [id, 0]));
+}
+function addPrestige(key, reason, amount) {
+  const row = prestigeRow(key);
+  const value = n(amount);
+  row.total += value;
+  row.byReason[reason] = (row.byReason[reason] ?? 0) + value;
 }
 
 for (let i = 0; i < GAMES; i += 1) {
@@ -59,6 +86,18 @@ for (let i = 0; i < GAMES; i += 1) {
         .reduce((sum, row) => sum + Math.max(0, n(row.amount)), 0);
     }
 
+    for (const result of summary.prestigeScoring ?? []) {
+      const player = state.players.find(p => p.id === result.playerId);
+      const key = pk(player);
+      for (const entry of result.entries ?? []) addPrestige(key, String(entry.reason ?? 'unknown'), entry.amount);
+    }
+
+    for (const action of summary.actions ?? []) {
+      if (action.actionKind !== 'agent_placement' || !INSTITUTIONS.includes(action.institutionId)) continue;
+      const player = state.players.find(p => p.id === action.playerId);
+      placementRow(pk(player))[action.institutionId] += 1;
+    }
+
     for (const bid of summary.cityInclinationBids?.bids ?? []) {
       if (bid.pole !== 'merchant' && bid.pole !== 'military') continue;
       political[bid.pole] += 1;
@@ -74,6 +113,8 @@ for (let i = 0; i < GAMES; i += 1) {
       row.agents += (player.institutionAgentRoster ?? []).length;
       row.merchantAgents += agentCount(player, 'merchant_guild');
       row.guardAgents += agentCount(player, 'city_guard');
+      row.templeAgents += agentCount(player, 'temple');
+      row.scholariumAgents += agentCount(player, 'scholarium');
     }
 
     if (state.endgame?.triggered || n(state.city?.renown) >= RENOWN_TRIGGER) break;
@@ -82,6 +123,10 @@ for (let i = 0; i < GAMES; i += 1) {
   for (const id of INSTITUTIONS) {
     institutions[id].finalTiers.push(tier(state, id));
     institutions[id].finalAgents.push(state.players.reduce((sum, p) => sum + agentCount(p, id), 0));
+  }
+
+  for (const player of state.players) {
+    (finalPrestigeByPersonality[pk(player)] ??= []).push(n(player.prestige));
   }
 
   const maxPrestige = Math.max(...state.players.map(p => n(p.prestige)));
@@ -106,6 +151,9 @@ const byPersonality = Object.fromEntries(Object.entries(personalities).map(([key
   agentsMean: row.samples ? row.agents / row.samples : 0,
   merchantAgentsMean: row.samples ? row.merchantAgents / row.samples : 0,
   guardAgentsMean: row.samples ? row.guardAgents / row.samples : 0,
+  templeAgentsMean: row.samples ? row.templeAgents / row.samples : 0,
+  scholariumAgentsMean: row.samples ? row.scholariumAgents / row.samples : 0,
+  finalPrestigeMean: mean(finalPrestigeByPersonality[key] ?? []),
 }]));
 
 const byInstitution = Object.fromEntries(INSTITUTIONS.map(id => {
@@ -119,15 +167,25 @@ const byInstitution = Object.fromEntries(INSTITUTIONS.map(id => {
   }];
 }));
 
+const prestigePerGameByPersonality = Object.fromEntries(Object.entries(prestigeByPersonality).map(([key, row]) => [key, {
+  totalPerGame: row.total / GAMES,
+  byReasonPerGame: Object.fromEntries(Object.entries(row.byReason).map(([reason, value]) => [reason, value / GAMES])),
+}]));
+const agentPlacementsPerGameByPersonality = Object.fromEntries(Object.entries(agentPlacements).map(([key, row]) => [key,
+  Object.fromEntries(Object.entries(row).map(([id, value]) => [id, value / GAMES])),
+]));
+
 const summary = {
   aiMode: AI_MODE,
-  patches: { scoreEnabled, politicsEnabled },
+  patches: { scoreEnabled, marginalEnabled, politicsEnabled },
   games: GAMES,
   simulationVersion: engine.V136_VERSION ?? '0.11.28-sim',
   generationMean: mean(finals.map(x => x.generations)),
   populationMean: mean(finals.map(x => x.population)),
   wins,
   byPersonality,
+  prestigePerGameByPersonality,
+  agentPlacementsPerGameByPersonality,
   political: {
     merchantBids: political.merchant,
     militaryBids: political.military,
