@@ -7,7 +7,9 @@ on:
       - '.github/workflows/merchant-ai-v136.yml'
       - 'js/v136-merchant-ai-engine.js'
       - 'scripts/merchant-ai-v136-patch.mjs'
+      - 'scripts/investor-ai-v134-loader.mjs'
       - 'scripts/current-food-production-cleanup-loader.mjs'
+      - 'scripts/test-investor-ai-v134.mjs'
       - 'scripts/test-merchant-ai-v136.mjs'
       - 'scripts/run-merchant-ai-v136-diagnostic.mjs'
   workflow_dispatch:
@@ -28,6 +30,8 @@ jobs:
         run: echo '{"type":"module"}' > package.json
       - name: Merchant AI v136 regression test
         run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/test-merchant-ai-v136.mjs
+      - name: Investor AI regression test
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/test-investor-ai-v134.mjs
       - name: Family +2 Influence regression test
         run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/test-family-influence-v135.mjs
       - name: Legacy Merchant AI — 100 games
