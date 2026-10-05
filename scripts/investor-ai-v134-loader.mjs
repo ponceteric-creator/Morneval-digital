@@ -10,6 +10,13 @@ function patchInvestorAI(source) {
     `  const source = key === "investor"\n    ? { label: "Investor", prestige: 0.90, wealth: 1.30, engine: 1.70, civic: 0.70, horizon: 5, discount: 0.92 }\n    : (V090_CONFIG.personalities[key] ?? V090_CONFIG.personalities.opportunist);`,
   );
 
+  const farmReturnNeedle = '  return score >= V090_CONFIG.civicFarm.minimumUtility ? { kind: "farm", score, land: selected.land, target } : null;';
+  if (!source.includes(farmReturnNeedle)) throw new Error('Could not find farm return block in v110');
+  source = source.replace(
+    farmReturnNeedle,
+    `  // Investor treats food security as infrastructure, not as a competing\n  // discretionary investment. If the city is below the AI food target and the\n  // Investor controls convertible land, Farm conversion outranks capital\n  // deployment; once food is secure, normal Investor priorities resume.\n  const investorFoodFloor = player.aiPersonality === "investor" ? 12 + Math.max(0, target - food.localCapacity) : 0;\n  const adjustedScore = Math.max(score, investorFoodFloor);\n  return adjustedScore >= V090_CONFIG.civicFarm.minimumUtility\n    ? { kind: "farm", score: adjustedScore, land: selected.land, target }\n    : null;`,
+  );
+
   const exploreNeedle = `  const score = profile.prestige * annuity(profile) * 0.45 + profile.engine * annuity(profile) * 0.65\n    + (noPrivateLand ? 1 : 0) - influenceCost * 0.30 - wealthCost * 0.30;\n  return { kind: "explore", score, land };`;
   if (!source.includes(exploreNeedle)) throw new Error('Could not find exploration scoring block in v110');
   source = source.replace(
