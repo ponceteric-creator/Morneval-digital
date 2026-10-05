@@ -4,10 +4,11 @@ export * from './v131-food-production-cleanup-engine.js?base=0.11.23-sim';
 
 export const V132_VERSION = '0.11.24-sim';
 export const V132_PRODUCTION_STAKE_AI = Object.freeze({
-  valuation: 'three_generation_projected_marginal_value',
+  capitalValuation: 'three_generation_projected_marginal_value',
+  actionPriority: 'legacy_scale_when_productive_future_option_when_replacement',
   demandProjection: 'current_demand_static',
-  landSynergy: 'marginal_productive_land_activation',
-  bidPricing: 'dynamic_influence_shadow_value',
+  landSynergy: 'none_pending_competition_aware_model',
+  bidPricing: 'dynamic_influence_shadow_value_incremental_raise_cost',
   influenceReservation: 'none',
 });
 
