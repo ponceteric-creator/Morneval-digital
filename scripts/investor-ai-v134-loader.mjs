@@ -1,4 +1,5 @@
 import { patchMerchantAiV136 } from './merchant-ai-v136-patch.mjs';
+import { patchInstitutionAgentMarginalV136 } from './institution-agent-marginal-v136-patch.mjs';
 
 function replaceFunctionBlock(source, startMarker, endMarker, replacement) {
   const start = source.indexOf(startMarker);
@@ -84,6 +85,7 @@ export async function load(url, context, nextLoad) {
   if (!pathname.endsWith('/js/v110-ai-engine.js')) return result;
   const source = Buffer.isBuffer(result.source) ? result.source.toString('utf8') : String(result.source);
   const investorPatched = patchInvestorAI(source);
-  const composed = patchMerchantAiV136(url, investorPatched);
+  const merchantPatched = patchMerchantAiV136(url, investorPatched);
+  const composed = patchInstitutionAgentMarginalV136(url, merchantPatched);
   return { ...result, source: composed, shortCircuit: true };
 }
