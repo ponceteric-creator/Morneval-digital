@@ -4,11 +4,11 @@ function patchFortificationAI(source) {
   const candidateFunction = `function fortificationCandidate(state, player) {\n  if (!state.externalRelations?.active || Number(state.externalRelations?.levels?.orcs) >= 0) return null;\n  const level = Math.max(0, Math.min(3, Math.floor(Number(state.city?.fortificationLevel) || 0)));\n  if (level >= 3) return null;\n  const nextLevel = level + 1;\n  const influenceCost = ({ 1: 2, 2: 3, 3: 4 })[nextLevel];\n  const prestige = ({ 1: 2, 2: 3, 3: 4 })[nextLevel];\n  const forceTrack = [0, 1, 3, 6];\n  const forceGain = forceTrack[nextLevel] - forceTrack[level];\n  if (player.influence < influenceCost) return null;\n  const profile = profileFor(state, player);\n  const orcPressure = Math.max(1, -Number(state.externalRelations?.levels?.orcs || 0));\n  const score = prestige * profile.prestige\n    + forceGain * (profile.civic * 0.85 + orcPressure * 0.85)\n    - influenceCost * 0.45;\n  return score >= V090_CONFIG.actionUtilityFloor\n    ? { kind: "fortification", score, nextLevel, influenceCost, prestige, forceGain }\n    : null;\n}\n\n`;
   source = source.replace(insertBefore, candidateFunction + insertBefore);
 
-  const collectNeedle = `const candidates = [];\n  const farm = farmCandidate(state, player, farmBuilt); if (farm) candidates.push(farm);`;
-  if (!source.includes(collectNeedle)) throw new Error('Could not find candidate collection head in v110 AI engine');
+  const farmLine = `  const farm = farmCandidate(state, player, farmBuilt); if (farm) candidates.push(farm);`;
+  if (!source.includes(farmLine)) throw new Error('Could not find farm candidate line in v110 AI engine');
   source = source.replace(
-    collectNeedle,
-    `const candidates = [];\n  const fortification = fortificationCandidate(state, player); if (fortification) candidates.push(fortification);\n  const farm = farmCandidate(state, player, farmBuilt); if (farm) candidates.push(farm);`,
+    farmLine,
+    `  const fortification = fortificationCandidate(state, player); if (fortification) candidates.push(fortification);\n${farmLine}`,
   );
 
   const executeNeedle = `if (candidate.kind === "development") {`;
@@ -16,11 +16,11 @@ function patchFortificationAI(source) {
   const execution = `if (candidate.kind === "fortification") {\n    if (player.influence < candidate.influenceCost) return null;\n    const currentLevel = Math.max(0, Math.min(3, Math.floor(Number(state.city?.fortificationLevel) || 0)));\n    if (candidate.nextLevel !== currentLevel + 1 || candidate.nextLevel > 3) return null;\n    player.influence -= candidate.influenceCost;\n    state.city.fortificationLevel = candidate.nextLevel;\n    currentForce(state);\n    return { sequence, type: "fortification_construction", actionKind: "fortification_construction",\n      playerId: player.id, newLevel: candidate.nextLevel, influenceCost: candidate.influenceCost,\n      prestigeAward: candidate.prestige, forceGain: candidate.forceGain, forceAfter: state.city.force };\n  }\n  `;
   source = source.replace(executeNeedle, execution + executeNeedle);
 
-  const prestigeNeedle = `if (action.type === "farm_conversion") add(action.playerId, Number(action.prestigeAward) || 0, "civic_farm");\n    if (action.type === "sector_development") add(action.playerId, Number(action.prestige) || 0, "sector_development");`;
-  if (!source.includes(prestigeNeedle)) throw new Error('Could not find action Prestige scoring block in v110 AI engine');
+  const prestigeLine = `    if (action.type === "sector_development") add(action.playerId, Number(action.prestige) || 0, "sector_development");`;
+  if (!source.includes(prestigeLine)) throw new Error('Could not find sector-development Prestige line in v110 AI engine');
   source = source.replace(
-    prestigeNeedle,
-    `if (action.type === "farm_conversion") add(action.playerId, Number(action.prestigeAward) || 0, "civic_farm");\n    if (action.type === "sector_development") add(action.playerId, Number(action.prestige) || 0, "sector_development");\n    if (action.type === "fortification_construction") add(action.playerId, Number(action.prestigeAward) || 0, "fortification_construction");`,
+    prestigeLine,
+    `${prestigeLine}\n    if (action.type === "fortification_construction") add(action.playerId, Number(action.prestigeAward) || 0, "fortification_construction");`,
   );
   return source;
 }
