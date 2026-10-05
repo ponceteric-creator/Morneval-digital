@@ -55,7 +55,13 @@ function patchMerchantGuildMissingAward(source) {
 export function patchMerchantAiV137(url, source) {
   if (process.env.MERCHANT_AI_V137 === 'off') return source;
   const pathname = new URL(url).pathname;
-  if (pathname.endsWith('/js/v110-ai-engine.js')) return patchMerchantGuildAiScore(source);
-  if (pathname.endsWith('/js/v127-merchant-guild-wealth-engine.js')) return patchMerchantGuildMissingAward(source);
+  if (pathname.endsWith('/js/v110-ai-engine.js')) {
+    if (process.env.MERCHANT_GUILD_AI_SCORE_V137 === 'off') return source;
+    return patchMerchantGuildAiScore(source);
+  }
+  if (pathname.endsWith('/js/v127-merchant-guild-wealth-engine.js')) {
+    if (process.env.MERCHANT_GUILD_RULE_COMPAT_V137 === 'off') return source;
+    return patchMerchantGuildMissingAward(source);
+  }
   return source;
 }
