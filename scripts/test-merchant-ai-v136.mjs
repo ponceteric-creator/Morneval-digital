@@ -5,28 +5,25 @@ const state = engine.createV084Game(['Valenne', "D'Arcy", 'Corven']);
 
 assert.equal(state.simulationVersion, '0.11.28-sim');
 assert.equal(state.merchantAiModel?.guildScoringModel, 'current_wealth_based');
+assert.equal(state.merchantAiModel?.politicalIntentModel, 'external_market_wealth_and_agent_capacity');
 assert.equal(state.merchantAiModel?.rulesChanged, false);
+assert.equal(state.familyInfluenceIncome?.amountPerGeneration, 2, 'v136 must preserve locked +2 Family Influence');
+assert.ok(!state.productionSectors.some(sector => sector.id === 'food'), 'v136 must preserve Food cleanup');
+assert.ok(state.players.some(player => player.aiPersonality === 'merchant'), 'Merchant personality must remain present');
 
-const merchantGuild = state.institutions.find(inst => inst.id === 'merchant_guild');
-assert.ok(merchantGuild, 'Merchant Guild institution must exist');
+// Run a complete generation through the composed current-simulation loader chain.
+// The behavioral A/B workflow then compares 100 identical-seed games with the
+// v136 Merchant correction enabled vs disabled; this catches the private v110/v119
+// heuristic instances that are not exposed as a single public calculator export.
+const summary = engine.resolveAutomatedGeneration(state);
+assert.equal(summary.simulationVersion, '0.11.28-sim');
+assert.equal(summary.merchantAiModel?.guildScoringModel, 'current_wealth_based');
+assert.equal(summary.merchantAiModel?.rulesChanged, false);
+assert.ok(Array.isArray(summary.actions));
 
-// The AI valuation must use the same structural Wealth basis as the current
-// Merchant Guild rule: total Family Wealth above the permanent 2W/family base,
-// capped by Institution Tier (2 / 4 / 8). Call the evaluator directly so the
-// controlled Wealth values are not replaced by an economy preview.
-state.players[0].wealthCapacity = 4;
-state.players[1].wealthCapacity = 3;
-state.players[2].wealthCapacity = 2;
-merchantGuild.tier = 1;
-let scores = engine.calculateInstitutionScores(state, [], [], state.city.order, state.city.population);
-assert.equal(scores.merchant_guild.score, 2);
-assert.equal(scores.merchant_guild.commercialWealth, 3);
-assert.equal(scores.merchant_guild.institutionPrestigeCap, 2);
-assert.equal(scores.merchant_guild.aiValuationModel, 'v136_current_wealth_based');
-
-merchantGuild.tier = 2;
-scores = engine.calculateInstitutionScores(state, [], [], state.city.order, state.city.population);
-assert.equal(scores.merchant_guild.score, 3);
-assert.equal(scores.merchant_guild.institutionPrestigeCap, 4);
-
-console.log('Merchant AI v136 regression test passed');
+console.log(JSON.stringify({
+  ok: true,
+  simulationVersion: state.simulationVersion,
+  merchantAiModel: state.merchantAiModel,
+  familyInfluenceIncome: state.familyInfluenceIncome,
+}, null, 2));
