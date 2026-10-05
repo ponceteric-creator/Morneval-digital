@@ -2,7 +2,16 @@ import fs from 'node:fs';
 
 const engine = await import('../js/v130-elven-alliance-engine.js?sim=merchant-ai-v136');
 const GAMES = Math.max(1, Number(process.env.GAMES) || 100);
-const AI_MODE = process.env.MERCHANT_AI_V136 === 'off' ? 'legacy_ai' : 'corrected_ai';
+const masterEnabled = process.env.MERCHANT_AI_V136 !== 'off';
+const scoreEnabled = masterEnabled && process.env.MERCHANT_AI_V136_SCORE !== 'off';
+const politicsEnabled = masterEnabled && process.env.MERCHANT_AI_V136_POLITICS !== 'off';
+const AI_MODE = !scoreEnabled && !politicsEnabled
+  ? 'legacy_ai'
+  : scoreEnabled && !politicsEnabled
+    ? 'score_only'
+    : !scoreEnabled && politicsEnabled
+      ? 'politics_only'
+      : 'corrected_ai';
 const MAX_GENERATIONS = 60;
 const RENOWN_TRIGGER = 12;
 const INSTITUTIONS = ['city_guard', 'temple', 'merchant_guild', 'scholarium'];
@@ -112,6 +121,7 @@ const byInstitution = Object.fromEntries(INSTITUTIONS.map(id => {
 
 const summary = {
   aiMode: AI_MODE,
+  patches: { scoreEnabled, politicsEnabled },
   games: GAMES,
   simulationVersion: engine.V136_VERSION ?? '0.11.28-sim',
   generationMean: mean(finals.map(x => x.generations)),
