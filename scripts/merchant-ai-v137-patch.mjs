@@ -3,13 +3,17 @@
 // 2) Rule-engine compatibility: v127 must create a Merchant Guild Prestige entry for a
 //    represented Family even when the legacy pre-v127 score produced no entry.
 
+function replaceFunctionBlock(source, startMarker, endMarker, replacement, label) {
+  const start = source.indexOf(startMarker);
+  if (start < 0) throw new Error(`Missing ${label} start: ${startMarker}`);
+  const end = source.indexOf(endMarker, start);
+  if (end < 0) throw new Error(`Missing ${label} end: ${endMarker}`);
+  return source.slice(0, start) + replacement + source.slice(end);
+}
+
 function patchMerchantGuildAiScore(source) {
   if (source.includes('v137_merchant_current_wealth_score')) return source;
-  const oldBlock = `function estimatedInstitutionScore(state, institutionId) {
-  const economy = base.previewEconomy(state);
-  return calculateInstitutionScores(state, economy.reports, [], state.city.order, state.city.population)[institutionId]?.score ?? 0;
-}`;
-  const newBlock = `function estimatedInstitutionScore(state, institutionId) {
+  const replacement = `function estimatedInstitutionScore(state, institutionId) {
   if (institutionId === "merchant_guild") {
     const institution = (state.institutions ?? []).find(row => row.id === "merchant_guild");
     const tier = Math.max(1, Math.min(3, Math.floor(Number(institution?.tier) || 1)));
@@ -25,8 +29,13 @@ function patchMerchantGuildAiScore(source) {
   const economy = base.previewEconomy(state);
   return calculateInstitutionScores(state, economy.reports, [], state.city.order, state.city.population)[institutionId]?.score ?? 0;
 }`;
-  if (!source.includes(oldBlock)) throw new Error('Missing estimatedInstitutionScore block in v110');
-  return source.replace(oldBlock, newBlock);
+  return replaceFunctionBlock(
+    source,
+    'function estimatedInstitutionScore(state, institutionId) {',
+    '\n\nfunction agentUtilityWeights',
+    replacement,
+    'estimatedInstitutionScore',
+  );
 }
 
 function patchMerchantGuildMissingAward(source) {
