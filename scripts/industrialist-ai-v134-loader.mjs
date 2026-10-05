@@ -75,21 +75,16 @@ function patchIndustrialistInstitutionAI(source) {
     `function industrialistHasPriorityInvestmentV134(state, player) {
   if (player.aiPersonality !== 'industrialist') return false;
 
-  const influence = Math.max(0, n(player.influence));
-  const acquisitionInfluenceCost = Math.max(0, n(legacy.V084_CONFIG?.hinterland?.acquisitionInfluenceCost ?? 3));
-  const acquisitionWealthCost = Math.max(0, n(legacy.V084_CONFIG?.hinterland?.acquisitionWealthCost ?? 1));
-  const availableWealth = Math.max(0,
-    n(player.wealthCapacity ?? player.wealthGeneratedThisGeneration)
-    - n(player.wealthCommittedThisGeneration));
+  // The Industrialist saves for productive Hinterland instead of spending its
+  // current Influence on an Institution merely because the Hinterland purchase
+  // is not affordable yet. This is what makes the priority strategic rather
+  // than a one-action utility bonus.
   const unexploredLand = (state.lands ?? []).some(land => !land.revealed && !land.ownerId);
+  if (unexploredLand) return true;
 
-  if (unexploredLand
-      && influence >= acquisitionInfluenceCost
-      && availableWealth >= acquisitionWealthCost) {
-    return true;
-  }
-
-  if (influence < 1) return false;
+  // Once the Hinterland pool is exhausted, reserve Institution spending only
+  // when there is a real productive Stake gap: a Young slot exists and current
+  // Raw capacity + demand can support an additional Stake.
   for (const sector of state.productionSectors ?? []) {
     if (sector.id === 'food') continue;
     const tier = Math.max(1, Math.floor(n(sector.tier) || 1));
@@ -116,8 +111,9 @@ function runInstitutionDevelopmentAI(state) {
   for (const player of turnOrder(state)) {
     // Institution development is a simulation pre-action in v122. Without this
     // guard it can consume Influence before the normal action engine has a chance
-    // to express the Industrialist's stated priority. Defer it only when a
-    // currently affordable Hinterland acquisition or productive Stake slot exists.
+    // to express the Industrialist's strategy. If a primary economic investment
+    // remains, the Industrialist keeps the Influence rather than taking this
+    // fallback investment.
     if (industrialistHasPriorityInvestmentV134(state, player)) continue;
 
     let used = 0;
