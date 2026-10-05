@@ -8,7 +8,7 @@ export const V132_PRODUCTION_STAKE_AI = Object.freeze({
   actionPriority: 'legacy_scale_when_productive_future_option_when_replacement',
   demandProjection: 'current_demand_static',
   landSynergy: 'none_pending_competition_aware_model',
-  bidPricing: 'dynamic_influence_shadow_value_incremental_raise_cost',
+  bidPricing: 'dynamic_shadow_bid_cap_legacy_scale_incremental_action_cost',
   influenceReservation: 'none',
 });
 
