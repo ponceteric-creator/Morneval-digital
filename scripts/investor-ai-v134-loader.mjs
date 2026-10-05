@@ -1,3 +1,5 @@
+import { patchMerchantAiV136 } from './merchant-ai-v136-patch.mjs';
+
 function replaceFunctionBlock(source, startMarker, endMarker, replacement) {
   const start = source.indexOf(startMarker);
   if (start < 0) throw new Error(`Missing Investor patch start: ${startMarker}`);
@@ -53,10 +55,6 @@ function patchInvestorAI(source) {
 
   let selected = candidates.sort((a, b) => b.score - a.score)[0] ?? null;
   if (player.aiPersonality === "investor") {
-    // Food security is a hard infrastructure prerequisite. After that, build a
-    // vertically integrated production engine: buy a profitable Stake whenever
-    // one is available; otherwise acquire Hinterland before discretionary
-    // Development, Agents, votes or mercenary bidding.
     if (normal?.kind === "farm") selected = normal;
     else if (productionCandidates.length) selected = [...productionCandidates].sort((a, b) => b.score - a.score)[0];
     else if (normal?.kind === "explore") selected = normal;
@@ -85,5 +83,7 @@ export async function load(url, context, nextLoad) {
   const pathname = new URL(url).pathname;
   if (!pathname.endsWith('/js/v110-ai-engine.js')) return result;
   const source = Buffer.isBuffer(result.source) ? result.source.toString('utf8') : String(result.source);
-  return { ...result, source: patchInvestorAI(source), shortCircuit: true };
+  const investorPatched = patchInvestorAI(source);
+  const composed = patchMerchantAiV136(url, investorPatched);
+  return { ...result, source: composed, shortCircuit: true };
 }
