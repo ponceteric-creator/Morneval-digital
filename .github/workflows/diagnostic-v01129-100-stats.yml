@@ -1,0 +1,34 @@
+name: v0.11.29 100-game balance diagnostic
+
+on:
+  push:
+    branches: [diagnostic-v01129-100-stats]
+    paths:
+      - '.github/workflows/diagnostic-v01129-100-stats.yml'
+      - 'scripts/run-v01129-100-balance-summary.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Enable ESM
+        run: echo '{"type":"module"}' > package.json
+      - name: Run 100-game v0.11.29 balance summary
+        env:
+          COST_MODE: proposed
+          MERCHANT_AI: wealth
+          EXTERNAL_RELATIONS: on
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-v01129-100-balance-summary.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v01129-100-balance-summary
+          path: simulation-results/v01129-100-balance-summary.json
