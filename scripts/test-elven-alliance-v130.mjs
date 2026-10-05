@@ -5,6 +5,12 @@ const engine = await import('../js/v130-elven-alliance-engine.js?test=elven-alli
 const state = engine.createV084Game(['Valenne', "D'Arcy", 'Corven']);
 engine.activateExternalRelations(state);
 
+assert.equal(
+  engine.V084_CONFIG.population.rawFoodPerPopulation,
+  1,
+  'Population must consume exactly 1 Raw Food per Population',
+);
+
 // Build a deterministic 9-Forest, 0-Farm landscape for the Quest test.
 state.terrainPool = [];
 for (let i = 0; i < state.lands.length; i += 1) {
@@ -64,13 +70,14 @@ assert.equal(state.players[2].prestige, 1);
 
 const effects = engine.getElvenSocietyEffects(state);
 assert.equal(effects.forests, 9);
-assert.equal(effects.rawFoodPerProductiveForest, 2);
+assert.equal(effects.rawFoodPerProductiveForest, 1, 'Elven +3 must not add extra Raw Food beyond the +1 level effect');
 assert.equal(effects.populationCapacityPerForest, 2);
 assert.equal(effects.populationCapacityBonus, 18);
 assert.equal(effects.forceBonus, 4);
 
 console.log(JSON.stringify({
   ok: true,
+  rawFoodPerPopulation: engine.V084_CONFIG.population.rawFoodPerPopulation,
   quest: status,
   completion,
   effects,
