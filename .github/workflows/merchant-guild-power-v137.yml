@@ -1,0 +1,35 @@
+name: Merchant Guild power v137
+
+on:
+  push:
+    branches: [merchant-ai-v137-clean]
+    paths:
+      - '.github/workflows/merchant-guild-power-v137.yml'
+      - 'scripts/run-merchant-guild-power-diagnostic.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Enable ESM
+        run: echo '{"type":"module"}' > package.json
+      - name: Merchant Guild structural power — 500 games
+        env:
+          GAMES: 500
+          EXTERNAL_RELATIONS: on
+          COST_MODE: proposed
+          MERCHANT_AI: wealth
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-merchant-guild-power-diagnostic.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: merchant-guild-power-v137-results
+          path: simulation-results/merchant-guild-power-v137.json
