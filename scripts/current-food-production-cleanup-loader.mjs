@@ -32,8 +32,10 @@ export async function load(url, context, nextLoad) {
   const result = await nextLoad(url, context);
   if (result.format !== 'module' || result.source == null) return result;
   const pathname = new URL(url).pathname;
-  if (!pathname.endsWith('/js/v110-ai-engine.js')
-      && !pathname.endsWith('/js/v119-political-influence-ai-engine.js')) return result;
+  // The v110 patch is composed inside investor-ai-v134-loader because that
+  // loader already short-circuits v110. This current-loader hook owns only the
+  // later v119 political-intent correction.
+  if (!pathname.endsWith('/js/v119-political-influence-ai-engine.js')) return result;
   const source = Buffer.isBuffer(result.source) ? result.source.toString('utf8') : String(result.source);
   return { ...result, source: patchMerchantAiV136(url, source), shortCircuit: true };
 }
