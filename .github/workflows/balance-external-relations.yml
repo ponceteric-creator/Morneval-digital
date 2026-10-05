@@ -53,7 +53,7 @@ jobs:
       - name: Elven alliance deterministic smoke test
         run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs ./scripts/test-elven-alliance-v130.mjs
       - name: No Food Production Sector regression test
-        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs ./scripts/test-no-food-production-stakes.mjs
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs ./scripts/test-no-food-production-stakes.mjs
       - name: Influence threshold 20 regression test
         run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/test-influence-threshold-v133.mjs
       - name: Investor AI regression test
