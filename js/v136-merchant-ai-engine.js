@@ -5,8 +5,10 @@ export * from './v135-family-influence-engine.js?base=0.11.27-sim';
 export const V136_VERSION = '0.11.28-sim';
 export const V136_MERCHANT_AI = Object.freeze({
   personality: 'merchant',
-  guildScoringModel: 'current_wealth_based',
-  politicalIntentModel: 'external_market_wealth_and_agent_capacity',
+  guildScoringModel: 'current_wealth_forward',
+  agentPortfolioModel: 'marginal_single_association_prestige_and_tier_capped_influence',
+  politicalIntentModel: 'legacy_v119_preserved',
+  rejectedExperimentalPoliticalIntent: 'marginal_commercial_policy',
   rulesChanged: false,
 });
 
