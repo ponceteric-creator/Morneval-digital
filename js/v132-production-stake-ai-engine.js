@@ -8,7 +8,7 @@ export const V132_PRODUCTION_STAKE_AI = Object.freeze({
   demandProjection: 'current_demand_static',
   landSynergy: 'marginal_productive_land_activation',
   bidPricing: 'dynamic_influence_shadow_value',
-  influenceReservation: 'best_viable_stake_bid_delta',
+  influenceReservation: 'none',
 });
 
 function stampVersion(state, summary = null) {
