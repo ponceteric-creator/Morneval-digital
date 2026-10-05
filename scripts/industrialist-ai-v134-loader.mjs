@@ -11,7 +11,26 @@ function patchIndustrialistActionAI(source) {
     source,
     'function chooseNormalCandidate(state, player, farmBuilt) {',
     '\n\nfunction executeNormalCandidate',
-    `function industrialistCanImproveFoodV134(state, player) {
+    `const INDUSTRIALIST_ENGINE_STAKE_TARGET_V134 = 2;
+
+function industrialistActiveStakesV134(player, sectorId = null) {
+  return (player.productionStakes ?? []).filter(stake =>
+    !stake.diplomacyInactiveThisGeneration
+    && (sectorId == null || stake.sectorId === sectorId));
+}
+
+function industrialistOwnedRawCapacityV134(state, player, sectorId) {
+  const sector = state.productionSectors.find(item => item.id === sectorId);
+  if (!sector) return 0;
+  return state.lands
+    .filter(land => land.revealed
+      && land.ownerId === player.id
+      && land.development === "natural"
+      && land.resourceType === sector.inputResourceType)
+    .reduce((sum, land) => sum + Math.max(0, Number(land.baseCapacity) || 0), 0);
+}
+
+function industrialistCanImproveFoodV134(state, player) {
   const ownsConvertibleLand = state.lands.some(land =>
     land.revealed && land.ownerId === player.id && land.development === "natural");
   const unexploredLand = state.lands.some(land => !land.revealed && !land.ownerId);
@@ -25,7 +44,13 @@ function industrialistForcedFarmCandidateV134(state, player, farmBuilt) {
   if (!canPay(state, player, influenceCost, wealthCost)) return null;
   const selected = state.lands
     .filter(land => land.revealed && land.ownerId === player.id && land.development === "natural")
-    .map(land => ({ land, value: expectedPrivateLandValue(state, player, land) }))
+    .map(land => {
+      const sectorId = RESOURCE_TO_SECTOR[land.resourceType] ?? null;
+      const integrationProtection = sectorId
+        ? industrialistActiveStakesV134(player, sectorId).length * 1.25
+        : 0;
+      return { land, value: expectedPrivateLandValue(state, player, land) + integrationProtection };
+    })
     .sort((a, b) => a.value - b.value
       || (a.land.explorationOrder ?? 9999) - (b.land.explorationOrder ?? 9999))[0];
   if (!selected) return null;
@@ -41,9 +66,6 @@ function industrialistForcedFarmCandidateV134(state, player, farmBuilt) {
 function industrialistNeedsHinterlandV134(state, player) {
   const unexploredLand = state.lands.some(land => !land.revealed && !land.ownerId);
   if (!unexploredLand) return false;
-
-  // One acquisition per Generation is enough to express the strategy while
-  // leaving room for Food security, Stakes and civic reactions.
   if (state.__industrialistExplorationGenerationV134?.[player.id] === state.generation) return false;
 
   const food = base.getFoodSubsistenceStatus(state);
@@ -60,15 +82,38 @@ function industrialistNeedsHinterlandV134(state, player) {
     && ["wool", "ore", "wood"].includes(land.resourceType));
   if (!ownsProductiveLand) return true;
 
+  const buildStage = industrialistActiveStakesV134(player).length < INDUSTRIALIST_ENGINE_STAKE_TARGET_V134;
   for (const sector of state.productionSectors) {
     if (sector.id === "food") continue;
-    const stakes = state.players.flatMap(p => p.productionStakes ?? [])
-      .filter(stake => stake.sectorId === sector.id && !stake.diplomacyInactiveThisGeneration).length;
+    const allStakes = state.players.flatMap(p => p.productionStakes ?? [])
+      .filter(stake => stake.sectorId === sector.id && !stake.diplomacyInactiveThisGeneration);
+    const ownStakes = industrialistActiveStakesV134(player, sector.id).length;
     const rawCapacity = Math.max(0, base.sectorResourceCapacity(state, sector.id));
-    const usefulSupplyTarget = Math.min(demandTotal(sector), stakes + 1);
-    if (rawCapacity < usefulSupplyTarget) return true;
+    const demand = demandTotal(sector);
+
+    if (buildStage) {
+      const nextUsefulUnit = Math.min(demand, allStakes.length + 1);
+      if (rawCapacity < nextUsefulUnit) return true;
+    } else if (ownStakes > 0) {
+      // Once the engine exists, do not expand shared Raw supply for hypothetical
+      // rival growth. Add Hinterland only if current production containing this
+      // Family's own Stake is already Raw-constrained.
+      const currentUsefulSupply = Math.min(demand, allStakes.length);
+      if (rawCapacity < currentUsefulSupply) return true;
+    }
   }
   return false;
+}
+
+function industrialistNormalScoreV134(state, player, candidate) {
+  let score = Number(candidate?.score) || 0;
+  if (candidate?.kind === "development" && candidate.sector) {
+    const ownStakes = industrialistActiveStakesV134(player, candidate.sector.id).length;
+    const ownedRaw = industrialistOwnedRawCapacityV134(state, player, candidate.sector.id);
+    if (ownStakes > 0) score += 0.45 + Math.min(0.90, ownStakes * 0.30 + ownedRaw * 0.15);
+    if (industrialistActiveStakesV134(player).length >= INDUSTRIALIST_ENGINE_STAKE_TARGET_V134) score += 0.35;
+  }
+  return score;
 }
 
 function chooseNormalCandidate(state, player, farmBuilt) {
@@ -78,10 +123,6 @@ function chooseNormalCandidate(state, player, farmBuilt) {
     const foodNeedsInvestment = food.localCapacity < foodTarget;
 
     if (foodNeedsInvestment && !farmBuilt) {
-      // The legacy farm heuristic can rationally reject a conversion because a
-      // productive private land is valuable. For the Industrialist, however,
-      // Food is prerequisite infrastructure: when growth is otherwise blocked,
-      // convert the least valuable eligible land even if its private NPV is high.
       const foodFarm = farmCandidate(state, player, farmBuilt)
         ?? industrialistForcedFarmCandidateV134(state, player, farmBuilt);
       if (foodFarm) {
@@ -104,6 +145,14 @@ function chooseNormalCandidate(state, player, farmBuilt) {
       }
       return null;
     }
+
+    // After infrastructure needs are covered, choose normal investments on their
+    // utility scale but reward Development that monetizes the Family's own
+    // vertically integrated Raw land + Stakes into Prestige and slot capacity.
+    const candidates = collectNormalCandidates(state, player, farmBuilt)
+      .map(candidate => ({ ...candidate, score: industrialistNormalScoreV134(state, player, candidate), recallAgentIds: [] }))
+      .sort((a, b) => b.score - a.score);
+    return candidates[0] ?? null;
   }
 
   let best = collectNormalCandidates(state, player, farmBuilt)[0] ?? null;
@@ -129,9 +178,7 @@ function chooseNormalCandidate(state, player, farmBuilt) {
   );
 
   const explorationMarker = `candidate.land.ownerId = player.id; candidate.land.explorationOrder = state.nextExplorationOrder;\n    candidate.land.acquisitionOrder = state.nextExplorationOrder; state.nextExplorationOrder += 1;`;
-  if (!source.includes(explorationMarker)) {
-    throw new Error('Missing Industrialist exploration execution marker');
-  }
+  if (!source.includes(explorationMarker)) throw new Error('Missing Industrialist exploration execution marker');
   source = source.replace(
     explorationMarker,
     `${explorationMarker}\n    if (player.aiPersonality === "industrialist") {\n      state.__industrialistExplorationGenerationV134 ??= {};\n      state.__industrialistExplorationGenerationV134[player.id] = state.generation;\n    }`,
@@ -141,7 +188,19 @@ function chooseNormalCandidate(state, player, farmBuilt) {
     source,
     'function choosePlayerAction(state, player, context) {',
     '\n\nfunction executePlayerAction',
-    `function choosePlayerAction(state, player, context) {
+    `function industrialistProductionScoreV134(state, player, candidate) {
+  const sectorId = candidate?.auction?.sectorId;
+  if (!sectorId) return Number(candidate?.score) || 0;
+  const buildStage = industrialistActiveStakesV134(player).length < INDUSTRIALIST_ENGINE_STAKE_TARGET_V134;
+  const ownedRaw = industrialistOwnedRawCapacityV134(state, player, sectorId);
+  const ownSectorStakes = industrialistActiveStakesV134(player, sectorId).length;
+  let bonus = buildStage ? 1.15 : 0.45;
+  bonus += Math.min(0.75, ownedRaw * 0.20);
+  if (ownedRaw > ownSectorStakes) bonus += 0.35;
+  return (Number(candidate.score) || 0) + bonus;
+}
+
+function choosePlayerAction(state, player, context) {
   const candidates = [];
   const normal = chooseNormalCandidate(state, player, context.farmBuilt); if (normal) candidates.push(normal);
   const vote = expansionVoteCandidate(state, player, context); if (vote) candidates.push(vote);
@@ -154,15 +213,25 @@ function chooseNormalCandidate(state, player, farmBuilt) {
     const food = base.getFoodSubsistenceStatus(state);
     const foodNeedsInvestment = food.localCapacity < desiredRawFoodCapacity(state);
     const priority = normal?.industrialistPriority ?? null;
+    const buildStage = industrialistActiveStakesV134(player).length < INDUSTRIALIST_ENGINE_STAKE_TARGET_V134;
+    const rankedProduction = productionCandidates
+      .map(candidate => ({ ...candidate, score: industrialistProductionScoreV134(state, player, candidate) }))
+      .sort((a, b) => b.score - a.score);
 
     if (foodNeedsInvestment && !context.farmBuilt && industrialistCanImproveFoodV134(state, player)) {
       selected = ["food_security", "food_hinterland"].includes(priority) ? normal : null;
     } else if (priority === "productive_hinterland") {
       selected = normal;
-    } else if (productionCandidates.length) {
-      selected = [...productionCandidates].sort((a, b) => b.score - a.score)[0];
+    } else if (buildStage && rankedProduction.length) {
+      // Establish a minimum private production engine before diversifying.
+      selected = rankedProduction[0];
     } else {
-      selected = [normal, vote, mercenary].filter(Boolean).sort((a, b) => b.score - a.score)[0] ?? null;
+      // Mature engine: Stakes retain a preference, especially when vertically
+      // integrated with owned Raw land, but a high-value Development / civic /
+      // institutional action can now beat them and convert the engine to Prestige.
+      selected = [normal, vote, mercenary, ...rankedProduction]
+        .filter(Boolean)
+        .sort((a, b) => b.score - a.score)[0] ?? null;
     }
   } else {
     selected = candidates.sort((a, b) => b.score - a.score)[0] ?? null;
@@ -190,7 +259,9 @@ function patchIndustrialistInstitutionAI(source) {
     source,
     'function runInstitutionDevelopmentAI(state) {',
     '\n\nfunction applyInfluenceCaps',
-    `function industrialistHasPriorityInvestmentV134(state, player) {
+    `const INDUSTRIALIST_ENGINE_STAKE_TARGET_V134 = 2;
+
+function industrialistHasPriorityInvestmentV134(state, player) {
   if (player.aiPersonality !== 'industrialist') return false;
 
   const population = Math.max(1, Math.floor(n(state.city?.population) || 1));
@@ -209,17 +280,21 @@ function patchIndustrialistInstitutionAI(source) {
 
   if (n(food.localCapacity) < foodTarget && (ownsConvertibleLand || unexploredLand)) return true;
 
+  const ownActiveStakes = (player.productionStakes ?? [])
+    .filter(stake => !stake.diplomacyInactiveThisGeneration);
+  const buildStage = ownActiveStakes.length < INDUSTRIALIST_ENGINE_STAKE_TARGET_V134;
   const ownsProductiveLand = (state.lands ?? []).some(land =>
     land.revealed && land.ownerId === player.id && land.development === 'natural'
     && ['wool', 'ore', 'wood'].includes(land.resourceType));
-  if (unexploredLand && !ownsProductiveLand) return true;
+  if (buildStage && unexploredLand && !ownsProductiveLand) return true;
 
   for (const sector of state.productionSectors ?? []) {
     if (sector.id === 'food') continue;
     const tier = Math.max(1, Math.floor(n(sector.tier) || 1));
-    const stakes = (state.players ?? []).flatMap(p => p.productionStakes ?? [])
+    const allStakes = (state.players ?? []).flatMap(p => p.productionStakes ?? [])
       .filter(stake => stake.sectorId === sector.id && !stake.diplomacyInactiveThisGeneration);
-    const young = stakes.filter(stake => stake.age === 'young').length;
+    const ownSectorStakes = ownActiveStakes.filter(stake => stake.sectorId === sector.id).length;
+    const young = allStakes.filter(stake => stake.age === 'young').length;
     const demand = Math.max(0, n(sector.demandThisGeneration?.population))
       + Math.max(0, n(sector.demandThisGeneration?.imperial))
       + Math.max(0, n(sector.demandThisGeneration?.external_markets));
@@ -227,9 +302,13 @@ function patchIndustrialistInstitutionAI(source) {
       ? Math.max(0, n(legacy.sectorResourceCapacity(state, sector.id)))
       : 0;
 
-    if (young < tier && rawCapacity > stakes.length && demand > stakes.length) return true;
-    const usefulSupplyTarget = Math.min(demand, stakes.length + 1);
-    if (unexploredLand && rawCapacity < usefulSupplyTarget) return true;
+    if (buildStage && young < tier && rawCapacity > allStakes.length && demand > allStakes.length) return true;
+
+    // After the minimum engine exists, defer Institutions for Hinterland only
+    // when the Family already owns a Stake in the Raw-constrained sector. This
+    // prevents it from financing generic shared supply for rivals indefinitely.
+    const currentUsefulSupply = Math.min(demand, allStakes.length);
+    if (unexploredLand && ownSectorStakes > 0 && rawCapacity < currentUsefulSupply) return true;
   }
   return false;
 }
