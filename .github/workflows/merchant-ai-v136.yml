@@ -42,7 +42,23 @@ jobs:
           MERCHANT_AI: wealth
           MERCHANT_AI_V136: off
         run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-merchant-ai-v136-diagnostic.mjs
-      - name: Corrected Merchant AI — 100 games
+      - name: Merchant Guild score only — 100 games
+        env:
+          GAMES: 100
+          EXTERNAL_RELATIONS: on
+          COST_MODE: proposed
+          MERCHANT_AI: wealth
+          MERCHANT_AI_V136_POLITICS: off
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-merchant-ai-v136-diagnostic.mjs
+      - name: Merchant politics only — 100 games
+        env:
+          GAMES: 100
+          EXTERNAL_RELATIONS: on
+          COST_MODE: proposed
+          MERCHANT_AI: wealth
+          MERCHANT_AI_V136_SCORE: off
+        run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-merchant-ai-v136-diagnostic.mjs
+      - name: Score + politics — 100 games
         env:
           GAMES: 100
           EXTERNAL_RELATIONS: on
@@ -51,10 +67,10 @@ jobs:
         run: node --loader ./scripts/development-cost-loader.mjs --loader ./scripts/external-relations-loader.mjs --loader ./scripts/elven-alliance-sim-loader.mjs --loader ./scripts/elven-strategy-ai-loader.mjs --loader ./scripts/elven-quest-autocomplete-loader.mjs --loader ./scripts/fortification-sim-loader.mjs --loader ./scripts/production-stake-ai-v132-loader.mjs --loader ./scripts/investor-ai-v134-loader.mjs --loader ./scripts/current-food-production-cleanup-loader.mjs ./scripts/run-merchant-ai-v136-diagnostic.mjs
       - name: Print comparison
         run: |
-          echo '--- legacy AI ---'
-          cat simulation-results/merchant-ai-v136-legacy_ai.json
-          echo '--- corrected AI ---'
-          cat simulation-results/merchant-ai-v136-corrected_ai.json
+          for f in simulation-results/merchant-ai-v136-*.json; do
+            echo "--- $f ---"
+            cat "$f"
+          done
       - uses: actions/upload-artifact@v4
         with:
           name: merchant-ai-v136-results
