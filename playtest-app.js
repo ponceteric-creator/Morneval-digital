@@ -3868,8 +3868,8 @@ function resolveAutomatedGeneration4(state) {
   applyAutoDemand3(state);
   if (state.__playtestCaptureBeforeActions) {
     const payload = {
-      state: structuredClone(state),
-      context: structuredClone(context),
+      state,
+      context,
       generation,
       firstPlayerBefore
     };
