@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - human-playtest-ui-v1
+      - main
     paths:
       - 'playtest.html'
       - 'playtest.css'
