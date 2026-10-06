@@ -1,33 +1,16 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#171a16" />
-  <title>Morneval — Base Wealth Test v0.11.17</title>
-  <link rel="stylesheet" href="./styles.css?v=0.11.1" />
-  <link rel="stylesheet" href="./sandbox.css?v=0.11.1" />
-  <link rel="stylesheet" href="./v05.css?v=0.11.1" />
-  <link rel="stylesheet" href="./v06.css?v=0.11.1" />
-  <link rel="stylesheet" href="./v08.css?v=0.11.1" />
-  <script type="importmap">
-  {
-    "imports": {
-      "./js/v084-engine.js": "./js/v126-base-wealth-engine.js?v=0.11.17",
-      "./js/v090-engine.js?base=0.9.0": "./js/v121-institution-tier-engine.js?v=0.11.17",
-      "./js/v111-ai-engine.js?direct=0.11.1-v112-tithe": "./js/v121-institution-tier-engine.js?v=0.11.17",
-      "./js/v111-ai-engine.js?intrigue=0.11.5": "./js/v121-institution-tier-engine.js?v=0.11.17",
-      "./js/v089-engine.js?base=0.8.9": "./js/v111-base.js?v=0.11.11-renown"
-    }
-  }
-  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#161a17">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Morneval — Human Playtest</title>
+  <link rel="stylesheet" href="./playtest.css?v=0.1.0">
 </head>
 <body>
-  <div id="telemetry"></div>
-  <div id="app"></div>
-  <script type="module" src="./js/v119-ui-patch.js?v=0.11.17"></script>
-  <script type="module" src="./js/v112-telemetry-placement-v3.js?v=0.11.2-safe5"></script>
-  <script type="module" src="./js/v112-safe-telemetry-v4.js?v=0.11.2-safe5"></script>
-  <script type="module" src="./js/v112-safe-disease-cleanup.js?v=0.11.2-safe1"></script>
+  <div id="playtest-app"></div>
+  <script type="module" src="./playtest-app.js"></script>
 </body>
 </html>
