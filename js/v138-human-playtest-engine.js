@@ -198,6 +198,9 @@ export function advanceUntilHuman(session, { singleAiStep = false } = {}) {
       return session;
     }
 
+    // Once an AI decision is revealed after a human action, Undo is no longer
+    // legal: reverting would let the player exploit newly revealed information.
+    session.undo = null;
     const candidate = V110_PLAYTEST_API.chooseAiAction(session.planningState, playerId, session.context);
     if (!candidate || Number(candidate.score) < Number(V090_CONFIG.actionUtilityFloor ?? 0.5)) {
       session.active.delete(playerId);
@@ -393,4 +396,4 @@ export function externalRelations(state) {
   return clone(state.externalRelations?.levels ?? { elves: 0, gnomes: 0, orcs: 0, mainland: 2 });
 }
 
-export { current as engine };
+export { current as engine, V110_PLAYTEST_API };
