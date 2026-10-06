@@ -1330,9 +1330,13 @@ export function resolveAutomatedGeneration(state) {
   for (const player of state.players) player.wealthCommittedThisGeneration = 0;
   base.applyAutoDemand(state);
   if (state.__playtestCaptureBeforeActions) {
+    // The interactive controller already runs this generation on an isolated
+    // cloned probe state. Returning the probe by reference avoids a second
+    // structuredClone here; loader instrumentation can attach callable cost
+    // helpers that structuredClone cannot serialize.
     const payload = {
-      state: structuredClone(state),
-      context: structuredClone(context),
+      state,
+      context,
       generation,
       firstPlayerBefore,
     };
