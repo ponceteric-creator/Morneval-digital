@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - main
+      - pages-root-bundle-sync
     paths:
       - 'playtest.html'
       - 'playtest.css'
@@ -21,7 +22,7 @@ on:
       - '.github/workflows/deploy-playtest-pages.yml'
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -49,6 +50,21 @@ jobs:
         run: node ./scripts/build-playtest-browser.mjs
       - name: Verify bundled engine
         run: node ./dist/playtest-parity-test.mjs
+      - name: Sync compiled bundle to legacy Pages root
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/pages-root-bundle-sync'
+        run: |
+          cp dist/playtest/index.html index.html
+          cp dist/playtest/playtest-app.js playtest-app.js
+          cp dist/playtest/playtest.css playtest.css
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html playtest-app.js playtest.css
+          if git diff --cached --quiet; then
+            echo "Compiled Pages root already current."
+          else
+            git commit -m "Publish compiled playtest bundle [skip ci]"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:
@@ -59,6 +75,7 @@ jobs:
           path: dist/playtest
 
   deploy:
+    if: github.ref == 'refs/heads/main'
     needs: build
     environment:
       name: github-pages
