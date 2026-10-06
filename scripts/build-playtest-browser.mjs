@@ -110,7 +110,18 @@ async function buildParityTest() {
     bundle: true,
     format: 'esm',
     platform: 'node',
-    target: ['node20'],
+    target: ['node24'],
+    plugins: [mornevalLoaderPlugin()],
+    logLevel: 'info',
+  });
+
+  await esbuild.build({
+    entryPoints: ['scripts/playtest-parity-snapshot.mjs'],
+    outfile: 'dist/playtest-browser-snapshot.mjs',
+    bundle: true,
+    format: 'esm',
+    platform: 'node',
+    target: ['node24'],
     plugins: [mornevalLoaderPlugin()],
     logLevel: 'info',
   });
