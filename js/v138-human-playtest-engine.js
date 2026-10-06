@@ -28,6 +28,10 @@ V090_CONFIG.personalities.investor ??= {
 };
 
 function clone(value) { return structuredClone(value); }
+function dataClone(value) {
+  if (value == null) return value;
+  return JSON.parse(JSON.stringify(value, (_key, row) => typeof row === 'function' ? undefined : row));
+}
 function player(state, id) { return (state.players ?? []).find(row => row.id === id) ?? null; }
 
 export function createHumanPlaytest({
@@ -168,7 +172,7 @@ function recordAction(session, action, source) {
   session.coreLog.push({
     generation: session.generation,
     source,
-    ...clone(action),
+    ...dataClone(action),
     label: actionLabel(action, session.planningState),
   });
 }
@@ -330,7 +334,7 @@ function summarizeAnalytics(summary, state, humanPlayerId) {
   return {
     generation: summary.generation,
     prestigeDelta: Number(prestige?.delta ?? 0),
-    prestigeEntries: clone(prestige?.entries ?? []),
+    prestigeEntries: dataClone(prestige?.entries ?? []),
     institutionPrestige,
     agentInfluence: Number(influence?.received ?? influence?.requested ?? 0),
     wealthGross: Number(wealth?.gross ?? player(state, humanPlayerId)?.wealthCapacity ?? 0),
@@ -340,7 +344,7 @@ function summarizeAnalytics(summary, state, humanPlayerId) {
     squalor: Number(state.city?.squalor ?? 0),
     order: Number(state.city?.order ?? 0),
     force: Number(state.city?.force ?? 0),
-    relations: clone(state.externalRelations?.levels ?? {}),
+    relations: dataClone(state.externalRelations?.levels ?? {}),
   };
 }
 
@@ -365,7 +369,7 @@ export function finishInteractiveGeneration(session) {
   );
   const analytic = summarizeAnalytics(summary, root, session.humanPlayerId);
   root.playtest.analytics.push(analytic);
-  root.playtest.lastSummary = clone(summary);
+  root.playtest.lastSummary = dataClone(summary);
   return { ok: true, state: root, summary, analytics: analytic };
 }
 
