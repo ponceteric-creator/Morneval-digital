@@ -849,6 +849,118 @@ function executePlayerAction(state, player, candidate, context, sequence) {
   return { sequence: action ? sequence + 1 : sequence, action };
 }
 
+function playtestCandidateSpec(candidate) {
+  if (!candidate) return { kind: "pass" };
+  if (candidate.kind === "auction_bid") return {
+    kind: "auction_bid",
+    auctionId: candidate.auction?.auctionId ?? null,
+    bid: Math.max(0, Math.floor(Number(candidate.bid) || 0)),
+  };
+  if (candidate.kind === "development") return { kind: "development", sectorId: candidate.sector?.id ?? null };
+  if (candidate.kind === "agent") return { kind: "agent", institutionId: candidate.institutionId ?? null };
+  if (candidate.kind === "farm") return { kind: "farm", landId: candidate.land?.id ?? null };
+  if (candidate.kind === "explore") return { kind: "explore", landId: candidate.land?.id ?? null };
+  if (candidate.kind === "expansion_vote") return { kind: "expansion_vote", landId: candidate.target?.id ?? null };
+  return { kind: String(candidate.kind ?? "pass") };
+}
+
+function playtestHumanCandidates(state, player, context) {
+  ensureProductionAuctions(state, context);
+  const candidates = [];
+
+  if (!context.farmBuilt) {
+    const food = base.getFoodSubsistenceStatus(state);
+    const target = desiredRawFoodCapacity(state);
+    if (food.localCapacity < target) {
+      const influenceCost = base.V084_CONFIG.hinterland.farmInfluenceCost;
+      const wealthCost = base.V084_CONFIG.hinterland.farmWealthCost;
+      if (canPay(state, player, influenceCost, wealthCost)) {
+        for (const land of state.lands.filter(row => row.revealed && row.ownerId === player.id && row.development === "natural")) {
+          candidates.push({ kind: "farm", score: 1, land, target });
+        }
+      }
+    }
+  }
+
+  const influenceCost = base.V084_CONFIG.hinterland.acquisitionInfluenceCost;
+  const wealthCost = base.V084_CONFIG.hinterland.acquisitionWealthCost;
+  if (canPay(state, player, influenceCost, wealthCost)) {
+    for (const land of state.lands.filter(row => !row.revealed && !row.ownerId)) {
+      candidates.push({ kind: "explore", score: 1, land });
+    }
+  }
+
+  for (const sector of state.productionSectors) {
+    const candidate = developmentCandidate(state, player, sector);
+    if (candidate) candidates.push({ ...candidate, score: Math.max(1, candidate.score ?? 1) });
+  }
+  for (const institutionId of INSTITUTION_IDS) {
+    const candidate = agentCandidate(state, player, institutionId);
+    if (candidate) candidates.push({ ...candidate, score: Math.max(1, candidate.score ?? 1) });
+  }
+
+  const expansion = expansionVoteCandidate(state, player, context);
+  if (expansion) candidates.push({ ...expansion, score: Math.max(1, expansion.score ?? 1) });
+
+  for (const auction of context.auctions.values()) {
+    if (auction.closed) continue;
+    if (auction.type === "production_stake") {
+      const sector = state.productionSectors.find(row => row.id === auction.sectorId);
+      if (!sector) continue;
+      const occupancy = base.getSectorOccupancy(state, auction.sectorId);
+      if (occupancy.young >= sector.tier) continue;
+    }
+    if (auction.type === "mercenary_contract") {
+      if ((player.institutionAgents?.city_guard ?? 0) <= 0) continue;
+      if (base.getFoodSubsistenceStatus(state).surplusForRefining < 1) continue;
+    }
+    const high = highestBid(auction);
+    if (high?.playerId === player.id) continue;
+    const old = auction.bids[player.id]?.amount ?? 0;
+    const minimumBid = (high?.amount ?? 0) + 1;
+    const delta = minimumBid - old;
+    if (delta > 0 && player.influence >= delta) {
+      candidates.push({
+        kind: "auction_bid", auction, bid: minimumBid, minimumBid,
+        maximumBid: old + player.influence, score: 1,
+        expectedCategory: auction.type === "mercenary_contract" ? "mercenary_contract" : null,
+      });
+    }
+  }
+  return candidates;
+}
+
+function playtestCandidateFromSpec(state, player, context, spec) {
+  if (!spec || spec.kind === "pass") return null;
+  if (spec.kind === "auction_bid") {
+    ensureProductionAuctions(state, context);
+    const auction = context.auctions.get(spec.auctionId);
+    if (!auction || auction.closed) return null;
+    const old = auction.bids[player.id]?.amount ?? 0;
+    const high = highestBid(auction);
+    const minimum = Math.max((high?.amount ?? 0) + 1, old + 1);
+    const bid = Math.max(minimum, Math.floor(Number(spec.bid) || minimum));
+    if (player.influence < bid - old) return null;
+    return { kind: "auction_bid", auction, bid, score: 1, expectedCategory: spec.expectedCategory ?? null };
+  }
+  return playtestHumanCandidates(state, player, context).find(candidate => {
+    const row = playtestCandidateSpec(candidate);
+    if (row.kind !== spec.kind) return false;
+    if (row.sectorId != null && row.sectorId !== spec.sectorId) return false;
+    if (row.institutionId != null && row.institutionId !== spec.institutionId) return false;
+    if (row.landId != null && row.landId !== spec.landId) return false;
+    return true;
+  }) ?? null;
+}
+
+function scriptedHumanCandidate(state, player, context) {
+  const controller = state.__playtestHumanController;
+  if (!controller || controller.playerId !== player.id) return choosePlayerAction(state, player, context);
+  controller.cursor ??= 0;
+  const spec = controller.actions?.[controller.cursor++] ?? { kind: "pass" };
+  return playtestCandidateFromSpec(state, player, context, spec);
+}
+
 function runActionPhase(state, context) {
   const turnOrder = base.getTurnOrder(state);
   const active = new Set(turnOrder.map(player => player.id));
@@ -858,7 +970,7 @@ function runActionPhase(state, context) {
     let anyAction = false;
     for (const player of turnOrder) {
       if (!active.has(player.id)) continue;
-      const candidate = choosePlayerAction(state, player, context);
+      const candidate = scriptedHumanCandidate(state, player, context);
       if (!candidate || candidate.score < V090_CONFIG.actionUtilityFloor) {
         active.delete(player.id);
         context.actions.push({ sequence: sequence++, type: "pass", actionKind: "pass", playerId: player.id });
@@ -1136,6 +1248,35 @@ function setupMercenaryAuction(state, context) {
   return { playerId: owner.id, amount };
 }
 
+export const V110_PLAYTEST_API = Object.freeze({
+  listHumanCandidates(state, playerId, context) {
+    const player = getPlayer(state, playerId);
+    return player ? playtestHumanCandidates(state, player, context) : [];
+  },
+  candidateSpec: playtestCandidateSpec,
+  candidateFromSpec: playtestCandidateFromSpec,
+  chooseAiAction(state, playerId, context) {
+    const player = getPlayer(state, playerId);
+    return player ? choosePlayerAction(state, player, context) : null;
+  },
+  executeAction(state, playerId, candidate, context, sequence = 1) {
+    const player = getPlayer(state, playerId);
+    if (!player || !candidate) return { sequence, action: null };
+    return executePlayerAction(state, player, candidate, context, sequence);
+  },
+  getTurnOrder(state) { return base.getTurnOrder(state).map(player => player.id); },
+  ensureProductionAuctions,
+  highestBid,
+  institutionScores(state) {
+    try {
+      const economy = previewEconomy(state);
+      return calculateInstitutionScores(state, economy.reports ?? [], [], state.city?.order, state.city?.population);
+    } catch {
+      return {};
+    }
+  },
+});
+
 export function applyAutoDemand(state) {
   ensureV110State(state);
   if (typeof base.recalculateRenown === "function") base.recalculateRenown(state);
@@ -1188,6 +1329,18 @@ export function resolveAutomatedGeneration(state) {
   state.phase = "player_actions";
   for (const player of state.players) player.wealthCommittedThisGeneration = 0;
   base.applyAutoDemand(state);
+  if (state.__playtestCaptureBeforeActions) {
+    const payload = {
+      state: structuredClone(state),
+      context: structuredClone(context),
+      generation,
+      firstPlayerBefore,
+    };
+    const error = new Error("MORNEVAL_PLAYTEST_ACTION_PHASE");
+    error.code = "MORNEVAL_PLAYTEST_ACTION_PHASE";
+    error.playtest = payload;
+    throw error;
+  }
   const actionPhase = runActionPhase(state, context);
   context.actions.forEach((action, index) => { action.sequence = index + 1; });
 

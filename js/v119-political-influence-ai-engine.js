@@ -138,16 +138,28 @@ function runPoliticalInfluenceBids(state){
   const order=turnOrder(state);
   const intents={};
   for(const player of order){
+    if(player.aiPersonality==="human"){ intents[player.id]=[]; continue; }
     intents[player.id]=[
       axisIntent(state,player,'religionArcane'),
       axisIntent(state,player,'militaryMercantile'),
     ].filter(Boolean);
   }
   const bids=[];
+  const queued=Array.isArray(state.__playtestPoliticalBidQueue)?state.__playtestPoliticalBidQueue.splice(0):[];
+  for(const spec of queued){
+    const player=(state.players??[]).find(row=>row.id===spec.playerId);
+    const pole=String(spec.pole??"");
+    const axis=(pole==="military"||pole==="merchant")?"militaryMercantile":(pole==="temple"||pole==="scholarium")?"religionArcane":null;
+    if(!player||!axis||n(player.influence)<1)continue;
+    player.influence-=1;
+    totals[pole]=(totals[pole]??0)+1;
+    bids.push({playerId:player.id,familyName:player.familyName,axis,pole,influenceSpent:1,allPay:true,round:0,utilityStrength:null,provisionalTotals:{...totals},humanPlaytest:true});
+  }
   let round=0,progress=true;
   while(progress&&round<MAX_SIM_BIDS_PER_FAMILY*2){
     progress=false;round+=1;
     for(const player of order){
+      if(player.aiPersonality==="human")continue;
       if(n(player.influence)<=MIN_RESERVE)continue;
       const choices=(intents[player.id]??[]).map(intent=>({intent,urgency:bidUrgency(intent,totals,intents)})).filter(x=>Number.isFinite(x.urgency)&&x.urgency>0).sort((a,b)=>b.urgency-a.urgency);
       const pick=choices[0];if(!pick)continue;
@@ -180,6 +192,22 @@ function injectBidActions(summary,political){
   summary.actions=[...rows,...(summary.actions ?? [])];
   summary.actions.forEach((action,index)=>{ action.sequence=index+1; });
 }
+
+export const V119_PLAYTEST_API=Object.freeze({
+  applyPoliticalBidNow(state,playerId,pole){
+    const player=(state.players??[]).find(row=>row.id===playerId);
+    const valid=["military","merchant","temple","scholarium"].includes(pole);
+    if(!player||!valid||n(player.influence)<1)return {ok:false,reason:!valid?"invalid_pole":"insufficient_influence"};
+    player.influence-=1;
+    state.__playtestPoliticalPreview??=[];
+    state.__playtestPoliticalPreview.push({playerId,pole,influenceSpent:1});
+    return {ok:true,playerId,pole,influenceSpent:1};
+  },
+  queuePoliticalBid(state,playerId,pole){
+    state.__playtestPoliticalBidQueue??=[];
+    state.__playtestPoliticalBidQueue.push({playerId,pole});
+  },
+});
 
 export function prepareV111State(state,options={}){ return legacy.prepareV111State(state,options); }
 export function createV084Game(familyNames=['Valenne',"D'Arcy",'Corven']){ return legacy.createV084Game(familyNames); }
