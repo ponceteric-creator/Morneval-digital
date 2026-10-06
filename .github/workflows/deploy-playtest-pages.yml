@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - main
+      - pages-workflow-source
     paths:
       - 'playtest.html'
       - 'playtest.css'
@@ -64,6 +65,7 @@ jobs:
           path: dist/playtest
 
   deploy:
+    if: github.ref == 'refs/heads/main'
     needs: build
     environment:
       name: github-pages
