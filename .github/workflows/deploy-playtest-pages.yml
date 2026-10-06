@@ -1,0 +1,65 @@
+
+name: Deploy Morneval Playtest
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - human-playtest-ui-v1
+    paths:
+      - 'playtest.html'
+      - 'playtest.css'
+      - 'js/playtest-app.js'
+      - 'js/v138-human-playtest-engine.js'
+      - 'js/v110-ai-engine.js'
+      - 'js/v115-intrigue-sim-engine.js'
+      - 'js/v119-political-influence-ai-engine.js'
+      - 'js/v121-institution-tier-engine.js'
+      - 'js/v122-institution-tier-full-engine.js'
+      - 'scripts/build-playtest-browser.mjs'
+      - 'scripts/**loader.mjs'
+      - '.github/workflows/deploy-playtest-pages.yml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: morneval-playtest-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: \${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install browser bundler
+        run: |
+          echo '{"type":"module"}' > package.json
+          npm install --no-save esbuild
+      - name: Build playtest from v0.11.29 simulation loaders
+        env:
+          COST_MODE: proposed
+          MERCHANT_AI: wealth
+        run: node ./scripts/build-playtest-browser.mjs
+      - name: Verify bundled engine
+        run: node ./dist/playtest-parity-test.mjs
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/playtest
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
