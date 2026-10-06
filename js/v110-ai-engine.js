@@ -1267,6 +1267,14 @@ export const V110_PLAYTEST_API = Object.freeze({
   getTurnOrder(state) { return base.getTurnOrder(state).map(player => player.id); },
   ensureProductionAuctions,
   highestBid,
+  institutionScores(state) {
+    try {
+      const economy = previewEconomy(state);
+      return calculateInstitutionScores(state, economy.reports ?? [], [], state.city?.order, state.city?.population);
+    } catch {
+      return {};
+    }
+  },
 });
 
 export function applyAutoDemand(state) {
