@@ -106,6 +106,7 @@ function topBar(state) {
 function cityHtml(state) {
   const city = state.city ?? {};
   const rel = externalRelations(state);
+  const coreActions = humanActions();
   const relation = ([id,value]) =>
     '<span class="chip '+(value>0?'good':value<0?'bad':'')+'">'+pretty(id)+' '+(value>0?'+':'')+value+'</span>';
   let political = "";
@@ -117,6 +118,13 @@ function cityHtml(state) {
       '<button data-politics="scholarium">+1 Arcane</button>'+
     '</div>';
   }
+  const strategic = coreActions.filter(action => action.kind === "fortification" || action.kind === "study_elf_ways");
+  const strategicButtons = strategic.length ? '<div class="actions">'+strategic.map(action => {
+    if (action.kind === "fortification") {
+      return '<button data-spec="'+encodeSpec(action.spec)+'">Fortify L'+num(action.spec.nextLevel)+' · '+num(action.spec.nextLevel===1?2:action.spec.nextLevel===2?3:4)+'I</button>';
+    }
+    return '<button data-spec="'+encodeSpec(action.spec)+'">Study Elf Ways · '+num(action.spec.amount)+'I</button>';
+  }).join("")+'</div>' : "";
   return '<div class="section-title">City</div><section class="card">'+
     '<div class="metrics">'+
       '<div class="metric"><b>'+num(city.order)+'</b><span>Order</span></div>'+
@@ -127,9 +135,10 @@ function cityHtml(state) {
     '<div class="chips" style="margin-top:8px">'+
       '<span class="chip accent">Mil/Merc '+num(city.militaryMercantile)+'</span>'+
       '<span class="chip accent">Arc/Rel '+num(city.religionArcane)+'</span>'+
+      '<span class="chip">Fortification L'+num(city.fortificationLevel)+'</span>'+
     '</div>'+
     '<div class="chips" style="margin-top:7px">'+Object.entries(rel).map(relation).join("")+'</div>'+
-    political+
+    political+strategicButtons+
   '</section>';
 }
 
@@ -247,16 +256,30 @@ function institutionsHtml(state) {
 
 function hinterlandHtml(state) {
   const byLand = new Map();
-  for (const action of humanActions()) if (action.landId) byLand.set(action.landId,action);
-  const lands = (state.lands ?? []).filter(land => land.revealed || byLand.has(land.id)).slice(0,12);
+  for (const action of humanActions()) {
+    if (!action.landId) continue;
+    if (!byLand.has(action.landId)) byLand.set(action.landId,[]);
+    byLand.get(action.landId).push(action);
+  }
+  const lands = (state.lands ?? []).filter(land => land.revealed || byLand.has(land.id));
+  const actionLabel = action => {
+    if (action.kind === "farm") return "Convert to Farm";
+    if (action.kind === "expansion_vote") return "Propose expansion";
+    if (action.kind === "explore") return "Explore";
+    if (action.kind === "reforestation") return "Reforest · 2I → +1P";
+    if (action.kind === "gnome_land_improvement") return "Gnome Improve · 2I → +1P";
+    return pretty(action.kind);
+  };
   return '<div class="section-title">Hinterland</div><section class="grid two">'+lands.map(land => {
-    const action = byLand.get(land.id);
+    const landActions = byLand.get(land.id) ?? [];
     const kind = !land.revealed ? "Unexplored" : land.development === "farm" ? "Farm" : pretty(land.terrain ?? land.originalTerrain);
-    const button = action ? '<div class="actions"><button data-spec="'+encodeSpec(action.spec)+'">'+
-      (action.kind==="farm"?"Convert to Farm":action.kind==="expansion_vote"?"Propose expansion":"Explore")+'</button></div>' : "";
+    const buttons = landActions.length ? '<div class="actions">'+landActions.map(action =>
+      '<button data-spec="'+encodeSpec(action.spec)+'">'+actionLabel(action)+'</button>'
+    ).join("")+'</div>' : "";
+    const improvement = land.gnomeImprovementPermanent ? " · Gnome +1" : "";
     return '<article class="card"><div class="row"><h4>'+h(land.name ?? land.id)+'</h4><span class="chip">'+kind+'</span></div>'+
-      '<div class="small">'+(land.revealed?(pretty(land.resourceType)+' +'+num(land.baseCapacity)+' · owner '+h(family(state,land.ownerId))):"Terrain hidden")+'</div>'+
-      button+'</article>';
+      '<div class="small">'+(land.revealed?(pretty(land.resourceType)+' +'+num(land.baseCapacity)+' · owner '+h(family(state,land.ownerId))+improvement):"Terrain hidden")+'</div>'+
+      buttons+'</article>';
   }).join("")+'</section>';
 }
 

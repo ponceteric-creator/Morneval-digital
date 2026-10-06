@@ -656,6 +656,21 @@ function executeNormalCandidate(state, player, candidate, sequence) {
       explorationOrder: candidate.land.explorationOrder, terrain: reveal.terrain, resourceType: reveal.resourceType,
       influenceCost, wealthCost, randomRoll: reveal.roll };
   }
+  if (candidate.kind === "gnome_land_improvement") {
+    if (!state.externalRelations?.active || Number(state.externalRelations?.levels?.gnomes) < 1 || player.influence < 2) return null;
+    const land = candidate.land;
+    if (!land || !land.revealed || land.development === "urban"
+      || !playtestTerrainOwnerEligible(land, player.id)
+      || land.gnomeImproved || land.gnomeImprovementPermanent) return null;
+    player.influence -= 2;
+    land.gnomeImprovementPermanent = true;
+    land.baseCapacity = Math.max(0, Math.floor(Number(land.baseCapacity) || 0)) + 1;
+    return {
+      sequence, type: "gnome_land_improvement", actionKind: "gnome_land_improvement",
+      playerId: player.id, landId: land.id, influenceCost: 2, prestigeAward: 1,
+      productionGain: 1, newBaseCapacity: land.baseCapacity,
+    };
+  }
   if (candidate.kind === "development") {
     const { sector, cost } = candidate;
     if (!canPay(state, player, cost.influenceCost, cost.wealthCost)) return null;
@@ -861,7 +876,76 @@ function playtestCandidateSpec(candidate) {
   if (candidate.kind === "farm") return { kind: "farm", landId: candidate.land?.id ?? null };
   if (candidate.kind === "explore") return { kind: "explore", landId: candidate.land?.id ?? null };
   if (candidate.kind === "expansion_vote") return { kind: "expansion_vote", landId: candidate.target?.id ?? null };
+  if (candidate.kind === "reforestation") return { kind: "reforestation", landId: candidate.land?.id ?? null };
+  if (candidate.kind === "gnome_land_improvement") return { kind: "gnome_land_improvement", landId: candidate.land?.id ?? null };
+  if (candidate.kind === "fortification") return { kind: "fortification", nextLevel: candidate.nextLevel ?? null };
+  if (candidate.kind === "study_elf_ways") return { kind: "study_elf_ways", amount: candidate.amount ?? 1 };
   return { kind: String(candidate.kind ?? "pass") };
+}
+
+function playtestActiveForestCount(state) {
+  const pooled = (state.terrainPool ?? []).filter(terrain => terrain === "forest").length;
+  const revealed = (state.lands ?? []).filter(land =>
+    land.revealed && land.development === "natural" && land.terrain === "forest").length;
+  return pooled + revealed;
+}
+
+function playtestTerrainOwnerEligible(land, playerId) {
+  return land?.ownerId === playerId || land?.ownerId === "city" || land?.ownerId === "public";
+}
+
+function playtestDiplomaticActionCandidates(state, player) {
+  const out = [];
+  const rel = state.externalRelations;
+  if (!rel?.active) return out;
+
+  if (player.influence >= 2) {
+    const forestsBefore = playtestActiveForestCount(state);
+    for (const land of state.lands ?? []) {
+      if (!land.revealed || land.development === "urban" || !playtestTerrainOwnerEligible(land, player.id)) continue;
+      if (!(land.development === "natural" && land.terrain === "forest")) {
+        out.push({
+          kind: "reforestation", score: 1, land, influenceCost: 2,
+          prestigeAward: 1, forestsBefore,
+        });
+      }
+      if (Number(rel.levels?.gnomes) >= 1 && !land.gnomeImproved && !land.gnomeImprovementPermanent) {
+        out.push({
+          kind: "gnome_land_improvement", score: 1, land,
+          influenceCost: 2, prestigeAward: 1,
+        });
+      }
+    }
+  }
+
+  if (Number(rel.levels?.orcs) < 0) {
+    const level = Math.max(0, Math.min(3, Math.floor(Number(state.city?.fortificationLevel) || 0)));
+    if (level < 3) {
+      const nextLevel = level + 1;
+      const influenceCost = ({ 1: 2, 2: 3, 3: 4 })[nextLevel];
+      const prestige = ({ 1: 2, 2: 3, 3: 4 })[nextLevel];
+      const forceTrack = [0, 1, 3, 6];
+      if (player.influence >= influenceCost) {
+        out.push({
+          kind: "fortification", score: 1, nextLevel, influenceCost, prestige,
+          forceGain: forceTrack[nextLevel] - forceTrack[level],
+        });
+      }
+    }
+  }
+
+  const quest = rel.elvenAllianceQuest;
+  const hasScholarium = (player.institutionAgentRoster ?? []).some(agent => agent.institutionId === "scholarium");
+  const remaining = Math.max(0, 10 - Math.floor(Number(quest?.studyInfluenceSpent) || 0));
+  if (quest && !quest.completed && Number(rel.levels?.elves) >= 2
+      && playtestActiveForestCount(state) >= 9 && hasScholarium && remaining > 0 && player.influence > 0) {
+    const maxAmount = Math.min(2, remaining, Math.floor(player.influence));
+    for (let amount = 1; amount <= maxAmount; amount += 1) {
+      out.push({ kind: "study_elf_ways", score: 1, amount });
+    }
+  }
+
+  return out;
 }
 
 function playtestHumanCandidates(state, player, context) {
@@ -901,6 +985,8 @@ function playtestHumanCandidates(state, player, context) {
 
   const expansion = expansionVoteCandidate(state, player, context);
   if (expansion) candidates.push({ ...expansion, score: Math.max(1, expansion.score ?? 1) });
+
+  candidates.push(...playtestDiplomaticActionCandidates(state, player));
 
   for (const auction of context.auctions.values()) {
     if (auction.closed) continue;
@@ -949,6 +1035,8 @@ function playtestCandidateFromSpec(state, player, context, spec) {
     if (row.sectorId != null && row.sectorId !== spec.sectorId) return false;
     if (row.institutionId != null && row.institutionId !== spec.institutionId) return false;
     if (row.landId != null && row.landId !== spec.landId) return false;
+    if (row.nextLevel != null && row.nextLevel !== spec.nextLevel) return false;
+    if (row.amount != null && row.amount !== spec.amount) return false;
     return true;
   }) ?? null;
 }
@@ -1111,6 +1199,7 @@ function applyPrestigeScoring(state, summary, institutionScores) {
   for (const action of summary.actions ?? []) {
     if (action.type === "farm_conversion") add(action.playerId, Number(action.prestigeAward) || 0, "civic_farm");
     if (action.type === "sector_development") add(action.playerId, Number(action.prestige) || 0, "sector_development");
+    if (action.type === "gnome_land_improvement") add(action.playerId, Number(action.prestigeAward) || 0, "gnome_land_improvement");
   }
   for (const report of summary.economyReports ?? []) {
     for (const stake of report.servedStakes ?? []) {
