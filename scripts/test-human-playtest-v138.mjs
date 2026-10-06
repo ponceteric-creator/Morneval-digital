@@ -87,4 +87,72 @@ function finishWithPass(session) {
     console.log('institution queue ok',target.id);
   }
 }
+
+
+{
+  const game=createHumanPlaytest({humanSeat:0,replacePersonality:'investor',externalRelations:true});
+  game.players[0].influence=20;
+  game.externalRelations.levels.orcs=-1;
+  let session=beginInteractiveGeneration(game);
+  advanceUntilHuman(session,{singleAiStep:false});
+  const fortification=listHumanActions(session).find(row=>row.kind==='fortification');
+  assert.ok(fortification,'human must see Fortification when Orc relations are hostile');
+  assert.equal(playHumanAction(session,fortification.spec).ok,true);
+  const result=finishWithPass(session);
+  const action=(result.summary.actions??[]).find(row=>row.playerId===game.playtest.humanPlayerId&&row.actionKind==='fortification_construction');
+  assert.ok(action,'Fortification must replay into final generation');
+  console.log('fortification human action ok');
+}
+
+{
+  const game=createHumanPlaytest({humanSeat:0,replacePersonality:'investor',externalRelations:true});
+  game.players[0].influence=20;
+  game.externalRelations.levels.gnomes=1;
+  const target=(game.lands??[])[0];
+  target.revealed=true;
+  target.ownerId=game.players[0].id;
+  target.development='natural';
+  target.terrain='plains';
+  target.resourceType='wool';
+  target.baseCapacity=2;
+  let session=beginInteractiveGeneration(game);
+  advanceUntilHuman(session,{singleAiStep:false});
+  const legal=listHumanActions(session);
+  const reforest=legal.find(row=>row.kind==='reforestation'&&row.landId===target.id);
+  const improve=legal.find(row=>row.kind==='gnome_land_improvement'&&row.landId===target.id);
+  assert.ok(reforest,'human must see Reforestation on an eligible non-Forest land');
+  assert.ok(improve,'human must see Gnome Improve Land at Gnome relation +1');
+  assert.equal(playHumanAction(session,improve.spec).ok,true);
+  const result=finishWithPass(session);
+  const action=(result.summary.actions??[]).find(row=>row.playerId===game.playtest.humanPlayerId&&row.actionKind==='gnome_land_improvement');
+  assert.ok(action,'Gnome Improve Land must replay into final generation');
+  const finalLand=(result.state.lands??[]).find(row=>row.id===target.id);
+  assert.equal(finalLand.gnomeImprovementPermanent,true);
+  assert.ok(finalLand.baseCapacity>=3);
+  console.log('gnome terrain action ok');
+}
+
+{
+  const game=createHumanPlaytest({humanSeat:0,replacePersonality:'investor',externalRelations:true});
+  game.players[0].influence=20;
+  const target=(game.lands??[])[0];
+  target.revealed=true;
+  target.ownerId=game.players[0].id;
+  target.development='farm';
+  target.terrain='farm';
+  target.resourceType='grain';
+  target.baseCapacity=2;
+  let session=beginInteractiveGeneration(game);
+  advanceUntilHuman(session,{singleAiStep:false});
+  const reforest=listHumanActions(session).find(row=>row.kind==='reforestation'&&row.landId===target.id);
+  assert.ok(reforest);
+  assert.equal(playHumanAction(session,reforest.spec).ok,true);
+  const result=finishWithPass(session);
+  const action=(result.summary.actions??[]).find(row=>row.playerId===game.playtest.humanPlayerId&&row.actionKind==='reforestation');
+  assert.ok(action,'Reforestation must replay into final generation');
+  const finalLand=(result.state.lands??[]).find(row=>row.id===target.id);
+  assert.equal(finalLand.terrain,'forest');
+  console.log('reforestation human action ok');
+}
+
 console.log('human playtest v138 regression passed');
