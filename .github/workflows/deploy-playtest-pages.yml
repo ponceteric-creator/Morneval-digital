@@ -17,6 +17,7 @@ on:
       - 'js/v121-institution-tier-engine.js'
       - 'js/v122-institution-tier-full-engine.js'
       - 'scripts/build-playtest-browser.mjs'
+      - 'scripts/playtest-parity-snapshot.mjs'
       - 'scripts/**loader.mjs'
       - '.github/workflows/deploy-playtest-pages.yml'
 
@@ -49,6 +50,32 @@ jobs:
         run: node ./scripts/build-playtest-browser.mjs
       - name: Verify bundled engine
         run: node ./dist/playtest-parity-test.mjs
+      - name: Snapshot Node loader reference
+        env:
+          COST_MODE: proposed
+          MERCHANT_AI: wealth
+          PARITY_GAMES: 6
+          PARITY_GENERATIONS: 5
+        run: >
+          node
+          --loader ./scripts/development-cost-loader.mjs
+          --loader ./scripts/external-relations-loader.mjs
+          --loader ./scripts/elven-alliance-sim-loader.mjs
+          --loader ./scripts/elven-strategy-ai-loader.mjs
+          --loader ./scripts/elven-quest-autocomplete-loader.mjs
+          --loader ./scripts/fortification-sim-loader.mjs
+          --loader ./scripts/production-stake-ai-v132-loader.mjs
+          --loader ./scripts/investor-ai-v134-loader.mjs
+          --loader ./scripts/current-food-production-cleanup-loader.mjs
+          ./scripts/playtest-parity-snapshot.mjs
+          > ./dist/playtest-node-reference.json
+      - name: Snapshot Safari-equivalent bundle
+        env:
+          PARITY_GAMES: 6
+          PARITY_GENERATIONS: 5
+        run: node ./dist/playtest-browser-snapshot.mjs > ./dist/playtest-browser-reference.json
+      - name: Require exact Node/Safari parity
+        run: cmp ./dist/playtest-node-reference.json ./dist/playtest-browser-reference.json
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:
