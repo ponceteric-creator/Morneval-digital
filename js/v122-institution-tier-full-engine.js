@@ -198,7 +198,21 @@ function runInstitutionDevelopmentAI(state) {
   ensureInstitutionTierState(state);
   const actions = [];
   const scores = currentInstitutionScores(state);
+
+  const queued = Array.isArray(state.__playtestInstitutionDevelopmentQueue)
+    ? state.__playtestInstitutionDevelopmentQueue.splice(0)
+    : [];
+  for (const spec of queued) {
+    const player = (state.players ?? []).find(row => row.id === spec.playerId);
+    const institution = (state.institutions ?? []).find(row => row.id === spec.institutionId);
+    if (!player || !institution) continue;
+    const candidate = institutionDevelopmentCandidate(state, player, institution, scores);
+    const action = candidate ? executeInstitutionDevelopment(state, player, candidate) : null;
+    if (action) actions.push({ ...action, humanPlaytest: true });
+  }
+
   for (const player of turnOrder(state)) {
+    if (player.aiPersonality === "human") continue;
     let used = 0;
     while (used < MAX_SIM_INSTITUTION_DEVELOPMENTS_PER_FAMILY) {
       const candidates = state.institutions
@@ -345,6 +359,38 @@ export function prepareV111State(state, options = {}) {
   ensureInstitutionTierState(state);
   return prepared;
 }
+
+export const V122_PLAYTEST_API = Object.freeze({
+  listInstitutionDevelopments(state, playerId) {
+    ensureInstitutionTierState(state);
+    const player = (state.players ?? []).find(row => row.id === playerId);
+    if (!player) return [];
+    const scores = currentInstitutionScores(state);
+    return (state.institutions ?? []).map(institution => institutionDevelopmentCandidate(state, player, institution, scores))
+      .filter(Boolean).map(candidate => ({
+        institutionId: candidate.institution.id,
+        institutionName: candidate.institution.name,
+        tier: candidate.institution.tier,
+        phase: candidate.cost.phase,
+        influenceCost: candidate.cost.influenceCost,
+        wealthCost: candidate.cost.wealthCost,
+        prestige: candidate.cost.prestige,
+        completesTier: candidate.completesTier,
+      }));
+  },
+  applyInstitutionDevelopmentNow(state, playerId, institutionId) {
+    ensureInstitutionTierState(state);
+    const player = (state.players ?? []).find(row => row.id === playerId);
+    const institution = (state.institutions ?? []).find(row => row.id === institutionId);
+    if (!player || !institution) return null;
+    const candidate = institutionDevelopmentCandidate(state, player, institution, currentInstitutionScores(state));
+    return candidate ? executeInstitutionDevelopment(state, player, candidate) : null;
+  },
+  queueInstitutionDevelopment(state, playerId, institutionId) {
+    state.__playtestInstitutionDevelopmentQueue ??= [];
+    state.__playtestInstitutionDevelopmentQueue.push({ playerId, institutionId });
+  },
+});
 
 export function createV084Game(familyNames = ['Valenne', "D'Arcy", 'Corven']) {
   const state = legacy.createV084Game(familyNames);
