@@ -30,10 +30,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: \${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -60,6 +57,15 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist/playtest
+
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: \${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
