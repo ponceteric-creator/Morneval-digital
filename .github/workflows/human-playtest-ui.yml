@@ -1,0 +1,48 @@
+
+name: Human Playtest UI
+
+on:
+  push:
+    paths:
+      - 'playtest.html'
+      - 'playtest.css'
+      - 'js/playtest-app.js'
+      - 'js/v110-ai-engine.js'
+      - 'js/v115-intrigue-sim-engine.js'
+      - 'js/v119-political-influence-ai-engine.js'
+      - 'js/v121-institution-tier-engine.js'
+      - 'js/v122-institution-tier-full-engine.js'
+      - 'js/v138-human-playtest-engine.js'
+      - 'scripts/test-human-playtest-v138.mjs'
+      - '.github/workflows/human-playtest-ui.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Enable ESM
+        run: echo '{"type":"module"}' > package.json
+      - name: Browser client syntax
+        run: node --check js/playtest-app.js && node --check js/v138-human-playtest-engine.js
+      - name: Human playtest controller
+        run: >
+          node
+          --loader ./scripts/development-cost-loader.mjs
+          --loader ./scripts/external-relations-loader.mjs
+          --loader ./scripts/elven-alliance-sim-loader.mjs
+          --loader ./scripts/elven-strategy-ai-loader.mjs
+          --loader ./scripts/elven-quest-autocomplete-loader.mjs
+          --loader ./scripts/fortification-sim-loader.mjs
+          --loader ./scripts/production-stake-ai-v132-loader.mjs
+          --loader ./scripts/investor-ai-v134-loader.mjs
+          --loader ./scripts/current-food-production-cleanup-loader.mjs
+          ./scripts/test-human-playtest-v138.mjs
