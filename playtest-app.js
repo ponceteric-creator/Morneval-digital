@@ -1904,8 +1904,8 @@ function institutionTierRenown(state) {
 }
 function permanentWealthCardRenown(state) {
   return (state?.intrigue?.inPlay ?? []).reduce((sum, card2) => {
-    const meta2 = INTRIGUE_CARD_META[card2?.cardId];
-    if (!meta2?.permanent || !meta2.tags?.includes("wealth")) return sum;
+    const meta3 = INTRIGUE_CARD_META[card2?.cardId];
+    if (!meta3?.permanent || !meta3.tags?.includes("wealth")) return sum;
     return sum + V084_CONFIG2.renown.permanentWealthCardContribution;
   }, 0);
 }
@@ -8008,6 +8008,96 @@ function chooseOwnLand(state, source, terrain = null) {
 function chooseNaturalLand(state) {
   return (state.lands ?? []).filter((l) => l.revealed && l.development === "natural").sort((a, b) => (b.baseCapacity ?? 0) - (a.baseCapacity ?? 0))[0] ?? null;
 }
+function playtestChoicePlayer(state, source, choice) {
+  const target = playerById(state, choice?.playerId);
+  return target && target.id !== source.id ? target : null;
+}
+function playtestChoiceLand(state, choice, predicate = () => true) {
+  const land = (state.lands ?? []).find((row) => row.id === choice?.landId);
+  return land && predicate(land) ? land : null;
+}
+function playtestChoiceSector(state, choice, predicate = () => true) {
+  const sector = (state.productionSectors ?? []).find((row) => row.id === choice?.sectorId);
+  return sector && predicate(sector) ? sector : null;
+}
+function playtestChoicePatent(state, source, choice) {
+  const patent = patents(state).find((row) => row.instanceId === choice?.patentInstanceId);
+  return patent && patent.ownerId !== source.id ? patent : null;
+}
+function playtestChoiceStake(state, source, choice) {
+  for (const target of state.players ?? []) {
+    if (target.id === source.id) continue;
+    const stake = (target.productionStakes ?? []).find((row) => row.id === choice?.stakeId);
+    if (stake) return { player: target, stake };
+  }
+  return null;
+}
+function playtestChoiceAgent(target, choice) {
+  return (target?.institutionAgentRoster ?? []).find((row) => row.id === choice?.agentId) ?? null;
+}
+function playtestIntrigueTargets(state, player2, card2) {
+  const m = meta(card2?.cardId);
+  if (!m) return { requiresTarget: false, options: [] };
+  const option = (id, label2, choice, extra = {}) => ({ id, label: label2, choice, ...extra });
+  let options = [];
+  switch (m.id) {
+    case "gemstone_vein":
+    case "rare_breed":
+    case "precious_timber":
+      options = eligibleLand(state, player2.id, m.targetTerrain, true).map((land) => option(land.id, land.name ?? land.id, { landId: land.id }, { type: "land" }));
+      break;
+    case "assassination":
+      options = (state.players ?? []).filter((p) => p.id !== player2.id).flatMap((target) => (target.institutionAgentRoster ?? []).map((agent) => option(agent.id, target.familyName + " \xB7 " + agent.institutionId + " S" + (agent.seniority ?? 1), { playerId: target.id, agentId: agent.id }, { type: "agent" })));
+      break;
+    case "land_seizure":
+    case "ecclesiastical_confiscation":
+      options = eligibleLand(state, player2.id, null, false).map((land) => option(land.id, (land.name ?? land.id) + " \xB7 " + (playerById(state, land.ownerId)?.familyName ?? land.ownerId), { landId: land.id }, { type: "land" }));
+      break;
+    case "spy_network":
+      options = (state.players ?? []).filter((p) => p.id !== player2.id && (state.intrigue.hands[p.id] ?? []).length).flatMap((target) => {
+        const out = [option(target.id + ":inspect", target.familyName + " \xB7 inspect", { playerId: target.id, mode: "inspect" }, { type: "player" })];
+        if (player2.influence >= (m.influenceCost ?? 0) + 1) out.push(option(target.id + ":discard", target.familyName + " \xB7 discard best (+1I)", { playerId: target.id, mode: "discard" }, { type: "player" }));
+        if (player2.influence >= (m.influenceCost ?? 0) + 2) out.push(option(target.id + ":steal", target.familyName + " \xB7 steal best (+2I)", { playerId: target.id, mode: "steal" }, { type: "player" }));
+        return out;
+      });
+      break;
+    case "technological_acceleration":
+      options = (state.productionSectors ?? []).filter((sector) => sector.id !== "food" && sector.tier < 3 && getProductionDevelopmentCost?.(sector)).map((sector) => option(sector.id, sector.name ?? sector.id, { sectorId: sector.id }, { type: "sector" }));
+      break;
+    case "experimental_methods":
+      options = (state.lands ?? []).filter((land) => land.revealed && land.development === "natural").map((land) => option(land.id, land.name ?? land.id, { landId: land.id }, { type: "land" }));
+      break;
+    case "threat_excommunication":
+    case "anathema":
+      options = (state.players ?? []).filter((p) => p.id !== player2.id).map((target) => option(target.id, target.familyName, { playerId: target.id }, { type: "player" }));
+      break;
+    case "legal_contestation":
+    case "crooked_notary":
+      options = patents(state).filter((patent) => patent.ownerId !== player2.id).map((patent) => option(patent.instanceId, (meta(patent.cardId)?.name ?? patent.cardId) + " \xB7 " + (playerById(state, patent.ownerId)?.familyName ?? patent.ownerId), { patentInstanceId: patent.instanceId }, { type: "patent" }));
+      break;
+    case "hostile_takeover":
+      options = stakeEntries(state, (stake, p) => p.id !== player2.id && (stake.age === "mature" || stake.age === "elder")).map((entry) => option(entry.stake.id, entry.player.familyName + " \xB7 " + entry.stake.sectorId + " " + entry.stake.age, { stakeId: entry.stake.id }, { type: "stake" }));
+      break;
+    case "binding_bids":
+      options = (state.productionSectors ?? []).filter((sector) => sector.id !== "food" && sector.tier > stakeEntries(state, (stake) => stake.sectorId === sector.id && stake.age === "young").length).map((sector) => option(sector.id, sector.name ?? sector.id, { sectorId: sector.id }, { type: "sector" }));
+      break;
+    case "private_buyer":
+      options = (state.productionSectors ?? []).filter((sector) => sector.id !== "food").map((sector) => option(sector.id, sector.name ?? sector.id, { sectorId: sector.id }, { type: "sector" }));
+      break;
+    case "line_of_credit":
+      options = [1, 2, 3].filter((level) => level === 1 || level === 2 && (player2.prestige ?? 0) >= 20 || level === 3 && (player2.prestige ?? 0) >= 30).map((level) => {
+        const amount = level === 1 ? 5 : level === 2 ? 10 : 15;
+        return option(String(level), "Level " + level + " \xB7 +" + amount + " Influence", { level }, { type: "level" });
+      });
+      break;
+    case "preferential_contracts":
+      options = [1, 2, 3].filter((level) => player2.influence >= level).map((level) => option(String(level), "Level " + level + " \xB7 " + (level === 1 ? 1 : level === 2 ? 3 : 5) + " Influence", { level }, { type: "level" }));
+      break;
+    default:
+      return { requiresTarget: false, options: [] };
+  }
+  return { requiresTarget: true, options };
+}
 function stakeEntries(state, filter = () => true) {
   const out = [];
   for (const p of state.players ?? []) for (const s of p.productionStakes ?? []) if (filter(s, p)) out.push({ player: p, stake: s });
@@ -8053,7 +8143,7 @@ function logPlay(state, player2, card2, cost, effect) {
   ensureMetrics(state).totals.played++;
   if (meta(card2.cardId)?.power === "HIGH") ensureMetrics(state).totals.highPlayed++;
 }
-function resolveCard(state, player2, card2) {
+function resolveCard(state, player2, card2, choice = null) {
   const m = meta(card2.cardId);
   if (!m) return { ok: false, reason: "unknown" };
   const baseCost = m.influenceCost ?? 0;
@@ -8071,7 +8161,7 @@ function resolveCard(state, player2, card2) {
     case "gemstone_vein":
     case "rare_breed":
     case "precious_timber": {
-      const land = chooseOwnLand(state, player2, m.targetTerrain);
+      const land = choice ? playtestChoiceLand(state, choice, (l) => l.revealed && l.development === "natural" && (l.originalTerrain ?? l.terrain) === m.targetTerrain && l.ownerId === player2.id) : chooseOwnLand(state, player2, m.targetTerrain);
       if (!land) {
         player2.influence += baseCost;
         return { ok: false, reason: "no_land_target" };
@@ -8080,8 +8170,9 @@ function resolveCard(state, player2, card2) {
       break;
     }
     case "assassination": {
-      let target = maybeRedirect(state, player2, familyLeader(state, player2.id), "assassination");
-      const agent = bestAgent(target);
+      let target = choice ? playtestChoicePlayer(state, player2, choice) : familyLeader(state, player2.id);
+      target = maybeRedirect(state, player2, target, "assassination");
+      const agent = (choice && target?.id === choice.playerId ? playtestChoiceAgent(target, choice) : null) ?? bestAgent(target);
       if (!target || !agent) {
         player2.influence += baseCost;
         return { ok: false, reason: "no_agent_target" };
@@ -8091,7 +8182,7 @@ function resolveCard(state, player2, card2) {
       break;
     }
     case "land_seizure": {
-      let land = chooseLandTarget(state, player2);
+      let land = choice ? playtestChoiceLand(state, choice, (l) => l.revealed && l.development === "natural" && l.ownerId && l.ownerId !== player2.id && l.ownerId !== "city") : chooseLandTarget(state, player2);
       if (!land) {
         player2.influence += baseCost;
         return { ok: false, reason: "no_land_target" };
@@ -8134,7 +8225,8 @@ function resolveCard(state, player2, card2) {
       effect = { reserveIntent: true };
       break;
     case "spy_network": {
-      let target = maybeRedirect(state, player2, familyLeader(state, player2.id), "spy_network");
+      let target = choice ? playtestChoicePlayer(state, player2, choice) : familyLeader(state, player2.id);
+      target = maybeRedirect(state, player2, target, "spy_network");
       if (!target) {
         player2.influence += baseCost;
         return { ok: false, reason: "no_target" };
@@ -8149,13 +8241,14 @@ function resolveCard(state, player2, card2) {
         break;
       }
       const best = [...hand].sort((a, b) => legalCardScore(state, target, b) - legalCardScore(state, target, a))[0];
-      if (player2.influence >= 2) {
+      const mode = choice?.mode ?? (player2.influence >= 2 ? "steal" : player2.influence >= 1 ? "discard" : "inspect");
+      if (mode === "steal" && player2.influence >= 2) {
         player2.influence -= 2;
         cost += 2;
         removeFromHand(state, target.id, best.instanceId);
         state.intrigue.hands[player2.id].push({ ...best, stolenGeneration: state.generation });
         effect = { targetId: target.id, mode: "steal", cardId: best.cardId };
-      } else if (player2.influence >= 1) {
+      } else if (mode === "discard" && player2.influence >= 1) {
         player2.influence -= 1;
         cost += 1;
         removeFromHand(state, target.id, best.instanceId);
@@ -8166,7 +8259,8 @@ function resolveCard(state, player2, card2) {
     }
     case "technological_acceleration": {
       const sectors = (state.productionSectors ?? []).filter((s) => s.id !== "food" && s.tier < 3).map((s) => ({ s, c: getProductionDevelopmentCost?.(s) })).filter((x) => x.c && player2.influence >= x.c.influenceCost).sort((a, b) => (b.c.prestige ?? 0) - (a.c.prestige ?? 0));
-      const pick = sectors[0];
+      const selected = choice ? playtestChoiceSector(state, choice, (s) => s.id !== "food" && s.tier < 3) : null;
+      const pick = selected ? sectors.find((x) => x.s.id === selected.id) : sectors[0];
       if (!pick) {
         player2.influence += baseCost;
         return { ok: false, reason: "no_affordable_development" };
@@ -8190,7 +8284,7 @@ function resolveCard(state, player2, card2) {
       break;
     }
     case "experimental_methods": {
-      const land = chooseNaturalLand(state);
+      const land = choice ? playtestChoiceLand(state, choice, (l) => l.revealed && l.development === "natural") : chooseNaturalLand(state);
       if (!land) {
         player2.influence += baseCost;
         return { ok: false, reason: "no_natural_land" };
@@ -8231,7 +8325,8 @@ function resolveCard(state, player2, card2) {
       effect = { tax: taxAgents(state, player2, "temple", 2) };
       break;
     case "threat_excommunication": {
-      let target = maybeRedirect(state, player2, familyLeader(state, player2.id), "threat_excommunication");
+      let target = choice ? playtestChoicePlayer(state, player2, choice) : familyLeader(state, player2.id);
+      target = maybeRedirect(state, player2, target, "threat_excommunication");
       if (!target) {
         player2.influence += baseCost;
         return { ok: false, reason: "no_target" };
@@ -8247,7 +8342,8 @@ function resolveCard(state, player2, card2) {
       break;
     }
     case "anathema": {
-      let target = maybeRedirect(state, player2, familyLeader(state, player2.id), "anathema");
+      let target = choice ? playtestChoicePlayer(state, player2, choice) : familyLeader(state, player2.id);
+      target = maybeRedirect(state, player2, target, "anathema");
       if (!target) {
         player2.influence += baseCost;
         return { ok: false, reason: "no_target" };
@@ -8269,7 +8365,7 @@ function resolveCard(state, player2, card2) {
       effect = { squalor: -1, prestige: 1 };
       break;
     case "ecclesiastical_confiscation": {
-      let land = chooseLandTarget(state, player2);
+      let land = choice ? playtestChoiceLand(state, choice, (l) => l.revealed && l.development === "natural" && l.ownerId && l.ownerId !== player2.id && l.ownerId !== "city") : chooseLandTarget(state, player2);
       if (!land) {
         player2.influence += baseCost;
         return { ok: false, reason: "no_land_target" };
@@ -8292,7 +8388,7 @@ function resolveCard(state, player2, card2) {
       break;
     }
     case "legal_contestation": {
-      const patent = unownedPatentTarget(state, player2.id);
+      const patent = choice ? playtestChoicePatent(state, player2, choice) : unownedPatentTarget(state, player2.id);
       if (!patent || player2.influence < 1) {
         player2.influence += baseCost;
         return { ok: false, reason: "no_patent_or_opening_bid" };
@@ -8306,7 +8402,7 @@ function resolveCard(state, player2, card2) {
       break;
     }
     case "crooked_notary": {
-      const patent = unownedPatentTarget(state, player2.id);
+      const patent = choice ? playtestChoicePatent(state, player2, choice) : unownedPatentTarget(state, player2.id);
       if (!patent) {
         player2.influence += baseCost;
         return { ok: false, reason: "no_patent" };
@@ -8334,7 +8430,7 @@ function resolveCard(state, player2, card2) {
         player2.influence += baseCost;
         return { ok: false, reason: "no_stake_target" };
       }
-      const target = entries[0];
+      const target = (choice ? playtestChoiceStake(state, player2, choice) : null) ?? entries[0];
       if (maybeCounter(state, target.player, "hostile_takeover")) {
         effect = { cancelled: true };
         break;
@@ -8346,7 +8442,8 @@ function resolveCard(state, player2, card2) {
       break;
     }
     case "binding_bids": {
-      const sector = (state.productionSectors ?? []).filter((s) => s.id !== "food").find((s) => s.tier > stakeEntries(state, (x) => x.sectorId === s.id && x.age === "young").length);
+      const eligible = (state.productionSectors ?? []).filter((s) => s.id !== "food" && s.tier > stakeEntries(state, (x) => x.sectorId === s.id && x.age === "young").length);
+      const sector = (choice ? playtestChoiceSector(state, choice, (s) => eligible.some((e) => e.id === s.id)) : null) ?? eligible[0];
       if (!sector || player2.influence < 1) {
         player2.influence += baseCost;
         return { ok: false, reason: "no_vacant_young" };
@@ -8357,14 +8454,15 @@ function resolveCard(state, player2, card2) {
       break;
     }
     case "line_of_credit": {
-      let level = 1, amount = 5;
-      if ((player2.prestige ?? 0) >= 30 && player2.influence <= 4) {
-        level = 3;
-        amount = 15;
-      } else if ((player2.prestige ?? 0) >= 20 && player2.influence <= 6) {
-        level = 2;
-        amount = 10;
+      let level = Math.max(1, Math.min(3, Math.floor(Number(choice?.level) || 0)));
+      if (!choice) {
+        level = 1;
+        if ((player2.prestige ?? 0) >= 30 && player2.influence <= 4) level = 3;
+        else if ((player2.prestige ?? 0) >= 20 && player2.influence <= 6) level = 2;
       }
+      if (level === 3 && (player2.prestige ?? 0) < 30) level = 2;
+      if (level === 2 && (player2.prestige ?? 0) < 20) level = 1;
+      const amount = level === 1 ? 5 : level === 2 ? 10 : 15;
       const extra = level - baseCost;
       if (extra > 0) {
         if (player2.influence < extra) {
@@ -8381,9 +8479,12 @@ function resolveCard(state, player2, card2) {
       break;
     }
     case "preferential_contracts": {
-      let level = 1;
-      if (player2.influence >= 4) level = 3;
-      else if (player2.influence >= 2) level = 2;
+      let level = Math.max(1, Math.min(3, Math.floor(Number(choice?.level) || 0)));
+      if (!choice) {
+        level = 1;
+        if (player2.influence >= 4) level = 3;
+        else if (player2.influence >= 2) level = 2;
+      }
       const total2 = level === 1 ? 1 : level === 2 ? 3 : 5, extra = total2 - baseCost;
       if (player2.influence < extra) {
         player2.influence += baseCost;
@@ -8397,7 +8498,8 @@ function resolveCard(state, player2, card2) {
       break;
     }
     case "private_buyer": {
-      const sector = (state.productionSectors ?? []).filter((s) => s.id !== "food").sort((a, b) => (player2.productionStakes ?? []).filter((x) => x.sectorId === b.id).length - (player2.productionStakes ?? []).filter((x) => x.sectorId === a.id).length)[0];
+      const sectors = (state.productionSectors ?? []).filter((s) => s.id !== "food").sort((a, b) => (player2.productionStakes ?? []).filter((x) => x.sectorId === b.id).length - (player2.productionStakes ?? []).filter((x) => x.sectorId === a.id).length);
+      const sector = (choice ? playtestChoiceSector(state, choice, (s) => s.id !== "food") : null) ?? sectors[0];
       if (!sector) {
         player2.influence += baseCost;
         return { ok: false, reason: "no_sector" };
@@ -8433,7 +8535,7 @@ function runIntrigueActionPhase(state) {
     const player2 = playerById(state, spec.playerId);
     const card2 = (state.intrigue?.hands?.[spec.playerId] ?? []).find((c) => c.instanceId === spec.instanceId);
     if (!player2 || !card2) continue;
-    const r = resolveCard(state, player2, card2);
+    const r = resolveCard(state, player2, card2, spec.choice ?? null);
     if (r.ok) {
       used[player2.id] = (used[player2.id] ?? 0) + 1;
       actions.push({ playerId: player2.id, sequence: actions.length + 1, score: null, humanPlaytest: true, ...r });
@@ -8565,16 +8667,23 @@ var V115_PLAYTEST_API = Object.freeze({
       meta: meta(card2.cardId)
     }));
   },
-  applyIntrigueNow(state, playerId, instanceId) {
+  listTargets(state, playerId, instanceId) {
+    ensureConfigured(state);
+    const player2 = playerById(state, playerId);
+    const card2 = (state.intrigue?.hands?.[playerId] ?? []).find((row) => row.instanceId === instanceId);
+    if (!player2 || !card2) return { requiresTarget: false, options: [] };
+    return playtestIntrigueTargets(state, player2, card2);
+  },
+  applyIntrigueNow(state, playerId, instanceId, choice = null) {
     ensureConfigured(state);
     const player2 = playerById(state, playerId);
     const card2 = (state.intrigue?.hands?.[playerId] ?? []).find((row) => row.instanceId === instanceId);
     if (!player2 || !card2) return { ok: false, reason: "card_not_found" };
-    return resolveCard(state, player2, card2);
+    return resolveCard(state, player2, card2, choice);
   },
-  queueIntrigue(state, playerId, instanceId) {
+  queueIntrigue(state, playerId, instanceId, choice = null) {
     state.__playtestIntrigueQueue ??= [];
-    state.__playtestIntrigueQueue.push({ playerId, instanceId });
+    state.__playtestIntrigueQueue.push({ playerId, instanceId, choice });
   }
 });
 function createV084Game13(familyNames = ["Valenne", "D'Arcy", "Corven"]) {
@@ -9416,7 +9525,7 @@ function activePatentCount(state) {
     (card2) => INTRIGUE_CARD_META[card2.cardId]?.tags?.includes("patent")
   ).length;
 }
-function scoreParts(state, institutionId, legacyScore, patents2) {
+function scoreParts(state, institutionId, legacyScore, patents3) {
   const row = legacyScore ?? {};
   const tier = institutionTier(state, institutionId);
   const cap = PRESTIGE_CAP_BY_TIER[tier] ?? 2;
@@ -9429,7 +9538,7 @@ function scoreParts(state, institutionId, legacyScore, patents2) {
   } else if (institutionId === "merchant_guild") {
     structuralRaw = Math.max(0, n7(row.rawScore));
   } else if (institutionId === "scholarium") {
-    structuralRaw = Math.max(0, n7(row.permanent)) + patents2;
+    structuralRaw = Math.max(0, n7(row.permanent)) + patents3;
     transient = Math.max(0, n7(row.breakthrough));
   }
   const structuralCapped = Math.min(cap, structuralRaw);
@@ -9499,12 +9608,12 @@ function recomputeFirstPlayerWithoutExtraRng(state, summary) {
   summary.nextFirstPlayerId = state.firstPlayerId;
 }
 function applyInstitutionPrestigeModel(state, summary) {
-  const patents2 = activePatentCount(state);
+  const patents3 = activePatentCount(state);
   const scores = summary.institutionScores ?? {};
   const parts = {};
   for (const institutionId of INSTITUTION_IDS8) {
     const baseRow = scores[institutionId] ?? {};
-    const computed = scoreParts(state, institutionId, baseRow, patents2);
+    const computed = scoreParts(state, institutionId, baseRow, patents3);
     parts[institutionId] = computed;
     scores[institutionId] = {
       ...baseRow,
@@ -9515,7 +9624,7 @@ function applyInstitutionPrestigeModel(state, summary) {
       institutionTier: computed.tier,
       institutionPrestigeCap: computed.cap,
       transientOutsideCap: true,
-      ...institutionId === "scholarium" ? { activePatents: patents2, patentPrestige: patents2 } : {}
+      ...institutionId === "scholarium" ? { activePatents: patents3, patentPrestige: patents3 } : {}
     };
   }
   summary.institutionScores = scores;
@@ -9554,7 +9663,7 @@ function applyInstitutionPrestigeModel(state, summary) {
     structuralPrestigeCapByTier: { ...PRESTIGE_CAP_BY_TIER },
     transientEventsOutsideCap: true,
     scholariumPatentPrestige: "+1 structural Institution score per active Patent",
-    activePatentCount: patents2,
+    activePatentCount: patents3,
     scholariumBreakthroughOutsideCap: true,
     corrections
   };
@@ -9666,11 +9775,11 @@ function breakthroughOpportunity(state) {
 }
 function scholariumStrategicAdjustment(state, player2, seniority) {
   const ownAgents = scholariumAgentCount(player2);
-  const patents2 = activePatentCards(state).length;
+  const patents3 = activePatentCards(state).length;
   const patentAccess = patentDrawProbability(state, seniority);
   const breakthroughs = breakthroughOpportunity(state);
   const patentOptionValue = patentAccess * 0.6;
-  const activePatentValue = patents2 * (ownAgents === 0 ? 0.35 : 0.08);
+  const activePatentValue = patents3 * (ownAgents === 0 ? 0.35 : 0.08);
   const coverageFactor = ownAgents === 0 ? 1 : 0.22 / Math.max(1, ownAgents);
   const breakthroughValue = breakthroughs * 0.12 * coverageFactor;
   return patentOptionValue + activePatentValue + breakthroughValue;
@@ -11064,6 +11173,807 @@ function resolveAutomatedGeneration31(state) {
   return summary;
 }
 
+// morneval-loader:file:///home/runner/work/Morneval-digital/Morneval-digital/js/v115-intrigue-sim-engine.js?playtest-targeting=0.1.1
+var POWER_VALUE2 = { LOW: 1, MID: 2.2, HIGH: 4 };
+var INFLUENCE_CEILING2 = 15;
+var INSTITUTIONS2 = ["city_guard", "temple", "merchant_guild", "scholarium"];
+function playerById2(state, id) {
+  return (state.players ?? []).find((p) => p.id === id) ?? null;
+}
+function meta2(cardId) {
+  return INTRIGUE_CARD_META[cardId] ?? null;
+}
+function powerValue2(cardId) {
+  return POWER_VALUE2[meta2(cardId)?.power] ?? 1;
+}
+function familyLeader2(state, excludeId = null) {
+  return [...state.players ?? []].filter((p) => p.id !== excludeId).sort((a, b) => (b.prestige ?? 0) - (a.prestige ?? 0) || (b.influence ?? 0) - (a.influence ?? 0))[0] ?? null;
+}
+function ensureMetrics2(state) {
+  state.intrigueSim ??= { generations: [], totals: { seen: 0, kept: 0, played: 0, deadDraws: 0, reactions: 0, highSeen: 0, highPlayed: 0, patentsPlayed: 0, patentTransfers: 0 } };
+  return state.intrigueSim;
+}
+function ensureConfigured2(state) {
+  const intrigue = ensureIntrigueState(state);
+  ensureMetrics2(state);
+  if (!intrigue.v115Configured) {
+    configureIntrigueDecks(state, getActiveIntrigueCardDefinitions());
+    state.intrigue.v115Configured = true;
+    state.intrigue.v115Version = "0.11.5";
+  }
+  state.city.contingencyReserveFood ??= 0;
+  state.city.contingencyReserveExpiresAfter ??= null;
+  state.intrigueTemporary ??= {};
+  return state.intrigue;
+}
+function discard2(state, card2) {
+  if (!card2) return;
+  const m = meta2(card2.cardId);
+  if (!m) return;
+  state.intrigue.decks[m.institutionId].discardPile.push({ instanceId: card2.instanceId, cardId: card2.cardId });
+}
+function removeFromHand2(state, playerId, instanceId) {
+  const h2 = state.intrigue.hands[playerId] ?? [];
+  const idx = h2.findIndex((c) => c.instanceId === instanceId);
+  if (idx < 0) return null;
+  return h2.splice(idx, 1)[0];
+}
+function findReaction2(state, playerId, cardId) {
+  return (state.intrigue.hands[playerId] ?? []).find((c) => c.cardId === cardId) ?? null;
+}
+function consumeReaction2(state, player2, cardId, cost, reason) {
+  const c = findReaction2(state, player2.id, cardId);
+  if (!c || player2.influence < cost) return false;
+  player2.influence -= cost;
+  removeFromHand2(state, player2.id, c.instanceId);
+  discard2(state, c);
+  state.intrigue.playHistory.push({ generation: state.generation, playerId: player2.id, instanceId: c.instanceId, cardId, timing: "reaction", influenceCost: cost, permanent: false, reason });
+  ensureMetrics2(state).totals.reactions++;
+  return true;
+}
+function normalInfluenceGain2(player2, amount) {
+  player2.influence = Math.min(INFLUENCE_CEILING2, Math.max(0, player2.influence) + amount);
+}
+function syncAgentCounts2(player2) {
+  player2.institutionAgents ??= {};
+  for (const id of INSTITUTIONS2) player2.institutionAgents[id] = (player2.institutionAgentRoster ?? []).filter((a) => a.institutionId === id).length;
+}
+function removeAgent2(player2, agent) {
+  if (!agent) return false;
+  const roster = player2.institutionAgentRoster ?? [];
+  const i = roster.findIndex((a) => a.id === agent.id);
+  if (i < 0) return false;
+  roster.splice(i, 1);
+  syncAgentCounts2(player2);
+  return true;
+}
+function lowestAgent2(player2, institutionId = null) {
+  return [...player2.institutionAgentRoster ?? []].filter((a) => !institutionId || a.institutionId === institutionId).sort((a, b) => (a.seniority ?? 1) - (b.seniority ?? 1) || (b.placementOrder ?? 0) - (a.placementOrder ?? 0))[0] ?? null;
+}
+function bestAgent2(player2, institutionId = null) {
+  return [...player2.institutionAgentRoster ?? []].filter((a) => !institutionId || a.institutionId === institutionId).sort((a, b) => (b.seniority ?? 1) - (a.seniority ?? 1) || (a.placementOrder ?? 0) - (b.placementOrder ?? 0))[0] ?? null;
+}
+function patents2(state) {
+  return (state.intrigue.inPlay ?? []).filter((c) => meta2(c.cardId)?.tags?.includes("patent"));
+}
+function unownedPatentTarget2(state, playerId) {
+  return patents2(state).filter((c) => c.ownerId !== playerId).sort((a, b) => (playerById2(state, b.ownerId)?.prestige ?? 0) - (playerById2(state, a.ownerId)?.prestige ?? 0))[0] ?? null;
+}
+function eligibleLand2(state, playerId, terrain = null, owned = true) {
+  return (state.lands ?? []).filter((l) => l.revealed && l.development === "natural" && (!terrain || (l.originalTerrain ?? l.terrain) === terrain) && (owned ? l.ownerId === playerId : l.ownerId && l.ownerId !== playerId && l.ownerId !== "city"));
+}
+function hasPermanent2(state, cardId) {
+  return (state.intrigue.inPlay ?? []).some((c) => c.cardId === cardId);
+}
+function legalCardScore2(state, player2, card2) {
+  const m = meta2(card2.cardId);
+  if (!m) return 0;
+  let score = powerValue2(card2.cardId);
+  const influence = Math.max(0, Number(player2.influence) || 0);
+  const minCost = Math.max(0, Number(m.influenceCost) || 0);
+  if (influence < minCost) return 0;
+  if (m.permanent && hasPermanent2(state, m.id)) return 0;
+  if (m.permanent) score += Math.max(0, 2.2 - (Number(state.generation) || 0) * 0.08);
+  switch (m.id) {
+    case "gemstone_vein":
+    case "rare_breed":
+    case "precious_timber":
+      if (!eligibleLand2(state, player2.id, m.targetTerrain, true).length) return 0;
+      break;
+    case "assassination":
+      if (!(state.players ?? []).some((p) => p.id !== player2.id && (p.institutionAgentRoster ?? []).length)) return 0;
+      score += 0.4;
+      break;
+    case "bodyguards":
+      return 0.55;
+    case "land_seizure":
+      if (!eligibleLand2(state, player2.id, null, false).length) return 0;
+      score += 0.7;
+      break;
+    case "martial_law":
+      if ((state.city.order ?? 2) >= 4) score *= 0.55;
+      break;
+    case "officer_purge":
+      if (!(state.players ?? []).some((p) => p.id !== player2.id && (p.institutionAgents?.city_guard ?? 0) > 0)) return 0;
+      break;
+    case "contingency_reserves":
+      if (state.city.contingencyReserveFood > 0) return 0.15;
+      score += (getFoodSubsistenceStatus?.(state)?.localCapacity ?? 0) >= state.city.population ? 0.8 : 0.1;
+      break;
+    case "spy_network":
+      if (!(state.players ?? []).some((p) => p.id !== player2.id && (state.intrigue.hands[p.id] ?? []).length)) return 0;
+      break;
+    case "counter_intelligence":
+      return 0.8;
+    case "technological_acceleration":
+      if (!(state.productionSectors ?? []).some((s) => s.id !== "food" && s.tier < 3)) return 0;
+      break;
+    case "experimental_methods":
+      if (!(state.lands ?? []).some((l) => l.revealed && l.development === "natural")) return 0;
+      break;
+    case "expose_charlatans":
+      if (!(state.players ?? []).some((p) => p.id !== player2.id && (p.institutionAgents?.scholarium ?? 0) > 0)) return 0;
+      break;
+    case "insider_information":
+      score += (state.productionSectors ?? []).some((s) => s.tier > 0) ? 0.35 : 0;
+      break;
+    case "dark_magic":
+      if ((player2.prestige ?? 0) < 3) return 0;
+      score += influence <= 6 ? 1.2 : 0;
+      break;
+    case "infernal_pact":
+      if ((player2.prestige ?? 0) < 2) return 0;
+      score += influence <= 7 ? 0.9 : 0;
+      break;
+    case "hunt_heretics":
+      if (!(state.players ?? []).some((p) => p.id !== player2.id && (p.institutionAgents?.temple ?? 0) > 0)) return 0;
+      break;
+    case "anathema":
+      if (!(state.players ?? []).some((p) => p.id !== player2.id)) return 0;
+      score += 0.5;
+      break;
+    case "alms_poor":
+      if ((state.city.squalor ?? 0) <= 0) score *= 0.35;
+      break;
+    case "ecclesiastical_confiscation":
+      if (!eligibleLand2(state, player2.id, null, false).length) return 0;
+      score += 0.45;
+      break;
+    case "public_absolution":
+      return 0.65;
+    case "legal_contestation":
+      if (!unownedPatentTarget2(state, player2.id) || influence < 3) return 0;
+      score += 0.6;
+      break;
+    case "crooked_notary":
+      if (!unownedPatentTarget2(state, player2.id)) return 0;
+      score += 1.1;
+      break;
+    case "criminal_network":
+      if ((player2.prestige ?? 0) < 1) return 0;
+      score += influence <= 9 ? 0.6 : 0;
+      break;
+    case "hostile_takeover":
+      if (!(state.players ?? []).some((p) => p.id !== player2.id && (p.productionStakes ?? []).some((s) => s.age === "mature" || s.age === "elder")) || influence < 2) return 0;
+      score += 0.6;
+      break;
+    case "binding_bids":
+      if (influence < 2) return 0;
+      break;
+    case "line_of_credit":
+      if ((player2.prestige ?? 0) < 10) return 0;
+      score += influence <= 6 ? 0.8 : 0.1;
+      break;
+    case "preferential_contracts":
+      score += (player2.productionStakes ?? []).length ? 0.4 : 0;
+      break;
+    case "private_buyer":
+      score += (player2.productionStakes ?? []).length ? 0.55 : 0;
+      break;
+    case "misdirection":
+      return 0.75;
+    case "audit_license_privileges":
+      if (!(state.players ?? []).some((p) => p.id !== player2.id && (p.institutionAgents?.merchant_guild ?? 0) > 0)) return 0;
+      break;
+  }
+  score -= minCost * 0.12;
+  return Math.max(0, score);
+}
+function maybeRedirect2(state, source, target, attackId) {
+  if (!target || source.id === target.id) return target;
+  if (!findReaction2(state, target.id, "misdirection") || target.influence < 3) return target;
+  const alternatives = (state.players ?? []).filter((p) => p.id !== source.id && p.id !== target.id);
+  if (!alternatives.length) return target;
+  const redirected = [...alternatives].sort((a, b) => (b.prestige ?? 0) - (a.prestige ?? 0))[0];
+  consumeReaction2(state, target, "misdirection", 3, `redirect_${attackId}`);
+  return redirected;
+}
+function maybeCounter2(state, target, attackId) {
+  if (!target || attackId === "assassination") return false;
+  return consumeReaction2(state, target, "counter_intelligence", 2, `counter_${attackId}`);
+}
+function adversePrestigeLoss2(state, target, amount, sourceId) {
+  let loss = Math.max(0, amount);
+  if (target && sourceId !== target.id && loss > 0 && findReaction2(state, target.id, "public_absolution") && target.influence >= 1) {
+    consumeReaction2(state, target, "public_absolution", 1, "prestige_loss");
+    loss = Math.max(0, loss - 2);
+  }
+  target.prestige = Math.max(0, (target.prestige ?? 0) - loss);
+  return loss;
+}
+function taxAgents2(state, source, institutionId, costPerAgent) {
+  const out = [];
+  for (const target of state.players ?? []) {
+    if (target.id === source.id) continue;
+    const agents = [...target.institutionAgentRoster ?? []].filter((a) => a.institutionId === institutionId);
+    let paid = 0, removed = 0;
+    for (const a of agents) {
+      if (target.influence >= costPerAgent + 1) {
+        target.influence -= costPerAgent;
+        paid += costPerAgent;
+      } else if (removeAgent2(target, a)) removed++;
+    }
+    out.push({ targetId: target.id, paid, removed });
+  }
+  return out;
+}
+function chooseLandTarget2(state, source) {
+  return eligibleLand2(state, source.id, null, false).sort((a, b) => (playerById2(state, b.ownerId)?.prestige ?? 0) - (playerById2(state, a.ownerId)?.prestige ?? 0) || (b.baseCapacity ?? 0) - (a.baseCapacity ?? 0))[0] ?? null;
+}
+function chooseOwnLand2(state, source, terrain = null) {
+  return eligibleLand2(state, source.id, terrain, true).sort((a, b) => (b.baseCapacity ?? 0) - (a.baseCapacity ?? 0))[0] ?? null;
+}
+function chooseNaturalLand2(state) {
+  return (state.lands ?? []).filter((l) => l.revealed && l.development === "natural").sort((a, b) => (b.baseCapacity ?? 0) - (a.baseCapacity ?? 0))[0] ?? null;
+}
+function playtestChoicePlayer2(state, source, choice) {
+  const target = playerById2(state, choice?.playerId);
+  return target && target.id !== source.id ? target : null;
+}
+function playtestChoiceLand2(state, choice, predicate = () => true) {
+  const land = (state.lands ?? []).find((row) => row.id === choice?.landId);
+  return land && predicate(land) ? land : null;
+}
+function playtestChoiceSector2(state, choice, predicate = () => true) {
+  const sector = (state.productionSectors ?? []).find((row) => row.id === choice?.sectorId);
+  return sector && predicate(sector) ? sector : null;
+}
+function playtestChoicePatent2(state, source, choice) {
+  const patent = patents2(state).find((row) => row.instanceId === choice?.patentInstanceId);
+  return patent && patent.ownerId !== source.id ? patent : null;
+}
+function playtestChoiceStake2(state, source, choice) {
+  for (const target of state.players ?? []) {
+    if (target.id === source.id) continue;
+    const stake = (target.productionStakes ?? []).find((row) => row.id === choice?.stakeId);
+    if (stake) return { player: target, stake };
+  }
+  return null;
+}
+function playtestChoiceAgent2(target, choice) {
+  return (target?.institutionAgentRoster ?? []).find((row) => row.id === choice?.agentId) ?? null;
+}
+function playtestIntrigueTargets2(state, player2, card2) {
+  const m = meta2(card2?.cardId);
+  if (!m) return { requiresTarget: false, options: [] };
+  const option = (id, label2, choice, extra = {}) => ({ id, label: label2, choice, ...extra });
+  let options = [];
+  switch (m.id) {
+    case "gemstone_vein":
+    case "rare_breed":
+    case "precious_timber":
+      options = eligibleLand2(state, player2.id, m.targetTerrain, true).map((land) => option(land.id, land.name ?? land.id, { landId: land.id }, { type: "land" }));
+      break;
+    case "assassination":
+      options = (state.players ?? []).filter((p) => p.id !== player2.id).flatMap((target) => (target.institutionAgentRoster ?? []).map((agent) => option(agent.id, target.familyName + " \xB7 " + agent.institutionId + " S" + (agent.seniority ?? 1), { playerId: target.id, agentId: agent.id }, { type: "agent" })));
+      break;
+    case "land_seizure":
+    case "ecclesiastical_confiscation":
+      options = eligibleLand2(state, player2.id, null, false).map((land) => option(land.id, (land.name ?? land.id) + " \xB7 " + (playerById2(state, land.ownerId)?.familyName ?? land.ownerId), { landId: land.id }, { type: "land" }));
+      break;
+    case "spy_network":
+      options = (state.players ?? []).filter((p) => p.id !== player2.id && (state.intrigue.hands[p.id] ?? []).length).flatMap((target) => {
+        const out = [option(target.id + ":inspect", target.familyName + " \xB7 inspect", { playerId: target.id, mode: "inspect" }, { type: "player" })];
+        if (player2.influence >= (m.influenceCost ?? 0) + 1) out.push(option(target.id + ":discard", target.familyName + " \xB7 discard best (+1I)", { playerId: target.id, mode: "discard" }, { type: "player" }));
+        if (player2.influence >= (m.influenceCost ?? 0) + 2) out.push(option(target.id + ":steal", target.familyName + " \xB7 steal best (+2I)", { playerId: target.id, mode: "steal" }, { type: "player" }));
+        return out;
+      });
+      break;
+    case "technological_acceleration":
+      options = (state.productionSectors ?? []).filter((sector) => sector.id !== "food" && sector.tier < 3 && getProductionDevelopmentCost?.(sector)).map((sector) => option(sector.id, sector.name ?? sector.id, { sectorId: sector.id }, { type: "sector" }));
+      break;
+    case "experimental_methods":
+      options = (state.lands ?? []).filter((land) => land.revealed && land.development === "natural").map((land) => option(land.id, land.name ?? land.id, { landId: land.id }, { type: "land" }));
+      break;
+    case "threat_excommunication":
+    case "anathema":
+      options = (state.players ?? []).filter((p) => p.id !== player2.id).map((target) => option(target.id, target.familyName, { playerId: target.id }, { type: "player" }));
+      break;
+    case "legal_contestation":
+    case "crooked_notary":
+      options = patents2(state).filter((patent) => patent.ownerId !== player2.id).map((patent) => option(patent.instanceId, (meta2(patent.cardId)?.name ?? patent.cardId) + " \xB7 " + (playerById2(state, patent.ownerId)?.familyName ?? patent.ownerId), { patentInstanceId: patent.instanceId }, { type: "patent" }));
+      break;
+    case "hostile_takeover":
+      options = stakeEntries2(state, (stake, p) => p.id !== player2.id && (stake.age === "mature" || stake.age === "elder")).map((entry) => option(entry.stake.id, entry.player.familyName + " \xB7 " + entry.stake.sectorId + " " + entry.stake.age, { stakeId: entry.stake.id }, { type: "stake" }));
+      break;
+    case "binding_bids":
+      options = (state.productionSectors ?? []).filter((sector) => sector.id !== "food" && sector.tier > stakeEntries2(state, (stake) => stake.sectorId === sector.id && stake.age === "young").length).map((sector) => option(sector.id, sector.name ?? sector.id, { sectorId: sector.id }, { type: "sector" }));
+      break;
+    case "private_buyer":
+      options = (state.productionSectors ?? []).filter((sector) => sector.id !== "food").map((sector) => option(sector.id, sector.name ?? sector.id, { sectorId: sector.id }, { type: "sector" }));
+      break;
+    case "line_of_credit":
+      options = [1, 2, 3].filter((level) => level === 1 || level === 2 && (player2.prestige ?? 0) >= 20 || level === 3 && (player2.prestige ?? 0) >= 30).map((level) => {
+        const amount = level === 1 ? 5 : level === 2 ? 10 : 15;
+        return option(String(level), "Level " + level + " \xB7 +" + amount + " Influence", { level }, { type: "level" });
+      });
+      break;
+    case "preferential_contracts":
+      options = [1, 2, 3].filter((level) => player2.influence >= level).map((level) => option(String(level), "Level " + level + " \xB7 " + (level === 1 ? 1 : level === 2 ? 3 : 5) + " Influence", { level }, { type: "level" }));
+      break;
+    default:
+      return { requiresTarget: false, options: [] };
+  }
+  return { requiresTarget: true, options };
+}
+function stakeEntries2(state, filter = () => true) {
+  const out = [];
+  for (const p of state.players ?? []) for (const s of p.productionStakes ?? []) if (filter(s, p)) out.push({ player: p, stake: s });
+  return out;
+}
+function removeStake2(player2, stakeId) {
+  const i = (player2.productionStakes ?? []).findIndex((s) => s.id === stakeId);
+  if (i < 0) return null;
+  return player2.productionStakes.splice(i, 1)[0];
+}
+function addStake2(state, player2, sectorId, age = "young") {
+  state.nextProductionStakeOrder = Math.max(1, Number(state.nextProductionStakeOrder) || 1);
+  const order = state.nextProductionStakeOrder++;
+  const s = { id: `stake_${order}`, ownerId: player2.id, sectorId, age, placementOrder: order, servedThisGeneration: false, servedDemandCategory: null, wealthProducedThisGeneration: 0 };
+  player2.productionStakes ??= [];
+  player2.productionStakes.push(s);
+  return s;
+}
+function simpleAuction2(state, source, opening, eligiblePlayers, { allPay = false, bonusByPlayer = {} } = {}) {
+  const bids = [];
+  for (const p of eligiblePlayers) {
+    const bonus = bonusByPlayer[p.id] ?? 0, available = Math.max(0, p.influence + bonus);
+    let willingness = Math.min(available, Math.max(opening, 1 + Math.floor((p.prestige ?? 0) / 12)));
+    if (p.id === source.id) willingness = Math.max(opening, willingness);
+    bids.push({ player: p, bid: willingness, bonus });
+  }
+  bids.sort((a, b) => b.bid - a.bid || (a.player.id === source.id ? -1 : 1));
+  const winner = bids[0] ?? null;
+  for (const b of bids) if (allPay || b === winner) {
+    const cash = Math.max(0, b.bid - b.bonus);
+    b.player.influence = Math.max(0, b.player.influence - cash);
+  }
+  return { winner, bids: bids.map((b) => ({ playerId: b.player.id, bid: b.bid, bonus: b.bonus })) };
+}
+function transferPatent2(state, patent, newOwnerId) {
+  const old = patent.ownerId;
+  patent.ownerId = newOwnerId;
+  ensureMetrics2(state).totals.patentTransfers++;
+  return { cardId: patent.cardId, from: old, to: newOwnerId };
+}
+function logPlay2(state, player2, card2, cost, effect) {
+  state.intrigue.playHistory.push({ generation: Number(state.generation) || 0, playerId: player2.id, instanceId: card2.instanceId, cardId: card2.cardId, timing: meta2(card2.cardId)?.timing, influenceCost: cost, permanent: Boolean(meta2(card2.cardId)?.permanent), effect });
+  ensureMetrics2(state).totals.played++;
+  if (meta2(card2.cardId)?.power === "HIGH") ensureMetrics2(state).totals.highPlayed++;
+}
+function resolveCard2(state, player2, card2, choice = null) {
+  const m = meta2(card2.cardId);
+  if (!m) return { ok: false, reason: "unknown" };
+  const baseCost = m.influenceCost ?? 0;
+  if (player2.influence < baseCost) return { ok: false, reason: "insufficient_influence" };
+  const t = state.intrigueTemporary;
+  let cost = baseCost, effect = {};
+  player2.influence -= baseCost;
+  switch (m.id) {
+    case "advanced_farming_techniques":
+    case "civic_sanitation_works":
+    case "advanced_judicial_system":
+    case "advanced_architecture":
+      effect = { permanent: true };
+      break;
+    case "gemstone_vein":
+    case "rare_breed":
+    case "precious_timber": {
+      const land = choice ? playtestChoiceLand2(state, choice, (l) => l.revealed && l.development === "natural" && (l.originalTerrain ?? l.terrain) === m.targetTerrain && l.ownerId === player2.id) : chooseOwnLand2(state, player2, m.targetTerrain);
+      if (!land) {
+        player2.influence += baseCost;
+        return { ok: false, reason: "no_land_target" };
+      }
+      effect = { targetLandId: land.id };
+      break;
+    }
+    case "assassination": {
+      let target = choice ? playtestChoicePlayer2(state, player2, choice) : familyLeader2(state, player2.id);
+      target = maybeRedirect2(state, player2, target, "assassination");
+      const agent = (choice && target?.id === choice.playerId ? playtestChoiceAgent2(target, choice) : null) ?? bestAgent2(target);
+      if (!target || !agent) {
+        player2.influence += baseCost;
+        return { ok: false, reason: "no_agent_target" };
+      }
+      removeAgent2(target, agent);
+      effect = { targetPlayerId: target.id, targetAgentId: agent.id, dynastyNotSimulated: true };
+      break;
+    }
+    case "land_seizure": {
+      let land = choice ? playtestChoiceLand2(state, choice, (l) => l.revealed && l.development === "natural" && l.ownerId && l.ownerId !== player2.id && l.ownerId !== "city") : chooseLandTarget2(state, player2);
+      if (!land) {
+        player2.influence += baseCost;
+        return { ok: false, reason: "no_land_target" };
+      }
+      let target = playerById2(state, land.ownerId);
+      target = maybeRedirect2(state, player2, target, "land_seizure");
+      if (target && target.id !== land.ownerId) {
+        const alt = eligibleLand2(state, player2.id, null, false).find((l) => l.ownerId === target.id);
+        if (alt) land = alt;
+      }
+      if (target && maybeCounter2(state, target, "land_seizure")) {
+        effect = { cancelled: true };
+        break;
+      }
+      const domainCost = getDomainAcquisitionCost?.(state, player2.id) ?? 1;
+      if (player2.influence < domainCost) {
+        player2.influence += baseCost;
+        return { ok: false, reason: "insufficient_domain_cost" };
+      }
+      player2.influence -= domainCost;
+      cost += domainCost;
+      effect = { landId: land.id, from: land.ownerId, to: player2.id, domainCost };
+      land.ownerId = player2.id;
+      break;
+    }
+    case "martial_law":
+      t.orderModifier = (t.orderModifier ?? 0) + 1;
+      player2.prestige = (player2.prestige ?? 0) + 1;
+      effect = { order: 1, prestige: 1 };
+      break;
+    case "officer_purge":
+      effect = { tax: taxAgents2(state, player2, "city_guard", 1) };
+      break;
+    case "contingency_reserves":
+      if (state.city.contingencyReserveFood > 0) {
+        player2.influence += baseCost;
+        return { ok: false, reason: "reserve_exists" };
+      }
+      t.reserveIntentBy = player2.id;
+      effect = { reserveIntent: true };
+      break;
+    case "spy_network": {
+      let target = choice ? playtestChoicePlayer2(state, player2, choice) : familyLeader2(state, player2.id);
+      target = maybeRedirect2(state, player2, target, "spy_network");
+      if (!target) {
+        player2.influence += baseCost;
+        return { ok: false, reason: "no_target" };
+      }
+      if (maybeCounter2(state, target, "spy_network")) {
+        effect = { cancelled: true };
+        break;
+      }
+      const hand = state.intrigue.hands[target.id] ?? [];
+      if (!hand.length) {
+        effect = { targetId: target.id, seen: [] };
+        break;
+      }
+      const best = [...hand].sort((a, b) => legalCardScore2(state, target, b) - legalCardScore2(state, target, a))[0];
+      const mode = choice?.mode ?? (player2.influence >= 2 ? "steal" : player2.influence >= 1 ? "discard" : "inspect");
+      if (mode === "steal" && player2.influence >= 2) {
+        player2.influence -= 2;
+        cost += 2;
+        removeFromHand2(state, target.id, best.instanceId);
+        state.intrigue.hands[player2.id].push({ ...best, stolenGeneration: state.generation });
+        effect = { targetId: target.id, mode: "steal", cardId: best.cardId };
+      } else if (mode === "discard" && player2.influence >= 1) {
+        player2.influence -= 1;
+        cost += 1;
+        removeFromHand2(state, target.id, best.instanceId);
+        discard2(state, best);
+        effect = { targetId: target.id, mode: "discard", cardId: best.cardId };
+      } else effect = { targetId: target.id, mode: "inspect", seen: hand.map((c) => c.cardId) };
+      break;
+    }
+    case "technological_acceleration": {
+      const sectors = (state.productionSectors ?? []).filter((s) => s.id !== "food" && s.tier < 3).map((s) => ({ s, c: getProductionDevelopmentCost?.(s) })).filter((x) => x.c && player2.influence >= x.c.influenceCost).sort((a, b) => (b.c.prestige ?? 0) - (a.c.prestige ?? 0));
+      const selected = choice ? playtestChoiceSector2(state, choice, (s) => s.id !== "food" && s.tier < 3) : null;
+      const pick = selected ? sectors.find((x) => x.s.id === selected.id) : sectors[0];
+      if (!pick) {
+        player2.influence += baseCost;
+        return { ok: false, reason: "no_affordable_development" };
+      }
+      player2.influence -= pick.c.influenceCost;
+      cost += pick.c.influenceCost;
+      const targetTier = pick.s.tier + 1;
+      pick.s.developmentPhase = pick.c.phase;
+      pick.s.developmentTargetTier = targetTier;
+      pick.s.lastDevelopmentGeneration = state.generation;
+      pick.s.lastDevelopmentContributorId = player2.id;
+      let tierActivated = false;
+      if (pick.c.phase === 3) {
+        pick.s.tier = targetTier;
+        pick.s.developmentPhase = 0;
+        pick.s.developmentTargetTier = pick.s.tier < 3 ? pick.s.tier + 1 : null;
+        tierActivated = true;
+      }
+      player2.prestige = (player2.prestige ?? 0) + (pick.c.prestige ?? 0) + 1;
+      effect = { sectorId: pick.s.id, developmentCost: pick.c.influenceCost, prestige: (pick.c.prestige ?? 0) + 1, tierActivated };
+      break;
+    }
+    case "experimental_methods": {
+      const land = choice ? playtestChoiceLand2(state, choice, (l) => l.revealed && l.development === "natural") : chooseNaturalLand2(state);
+      if (!land) {
+        player2.influence += baseCost;
+        return { ok: false, reason: "no_natural_land" };
+      }
+      t.capacityBoosts ??= [];
+      t.capacityBoosts.push({ landId: land.id, amount: 1 });
+      player2.prestige = (player2.prestige ?? 0) + 1;
+      effect = { landId: land.id, capacity: 1, prestige: 1 };
+      break;
+    }
+    case "expose_charlatans":
+      effect = { tax: taxAgents2(state, player2, "scholarium", 2) };
+      break;
+    case "insider_information":
+      t.bidBonusByPlayer ??= {};
+      t.bidBonusByPlayer[player2.id] = (t.bidBonusByPlayer[player2.id] ?? 0) + 2;
+      effect = { bidOnlyInfluence: 2 };
+      break;
+    case "dark_magic":
+      if ((player2.prestige ?? 0) < 3) {
+        player2.influence += baseCost;
+        return { ok: false, reason: "insufficient_prestige" };
+      }
+      player2.prestige -= 3;
+      normalInfluenceGain2(player2, 6);
+      effect = { prestige: -3, influence: 6 };
+      break;
+    case "infernal_pact":
+      if ((player2.prestige ?? 0) < 2) {
+        player2.influence += baseCost;
+        return { ok: false, reason: "insufficient_prestige" };
+      }
+      player2.prestige -= 2;
+      normalInfluenceGain2(player2, 4);
+      effect = { prestige: -2, influence: 4 };
+      break;
+    case "hunt_heretics":
+      effect = { tax: taxAgents2(state, player2, "temple", 2) };
+      break;
+    case "threat_excommunication": {
+      let target = choice ? playtestChoicePlayer2(state, player2, choice) : familyLeader2(state, player2.id);
+      target = maybeRedirect2(state, player2, target, "threat_excommunication");
+      if (!target) {
+        player2.influence += baseCost;
+        return { ok: false, reason: "no_target" };
+      }
+      if (maybeCounter2(state, target, "threat_excommunication")) {
+        effect = { cancelled: true };
+        break;
+      }
+      if (target.influence >= 4) {
+        target.influence -= 2;
+        effect = { targetId: target.id, influence: -2 };
+      } else effect = { targetId: target.id, prestige: -adversePrestigeLoss2(state, target, 1, player2.id) };
+      break;
+    }
+    case "anathema": {
+      let target = choice ? playtestChoicePlayer2(state, player2, choice) : familyLeader2(state, player2.id);
+      target = maybeRedirect2(state, player2, target, "anathema");
+      if (!target) {
+        player2.influence += baseCost;
+        return { ok: false, reason: "no_target" };
+      }
+      if (maybeCounter2(state, target, "anathema")) {
+        effect = { cancelled: true };
+        break;
+      }
+      const agent = lowestAgent2(target);
+      if (agent) {
+        removeAgent2(target, agent);
+        effect = { targetId: target.id, removedAgentId: agent.id };
+      } else effect = { targetId: target.id, prestige: -adversePrestigeLoss2(state, target, 4, player2.id) };
+      break;
+    }
+    case "alms_poor":
+      state.city.squalor = Math.max(0, (state.city.squalor ?? 0) - 1);
+      player2.prestige = (player2.prestige ?? 0) + 1;
+      effect = { squalor: -1, prestige: 1 };
+      break;
+    case "ecclesiastical_confiscation": {
+      let land = choice ? playtestChoiceLand2(state, choice, (l) => l.revealed && l.development === "natural" && l.ownerId && l.ownerId !== player2.id && l.ownerId !== "city") : chooseLandTarget2(state, player2);
+      if (!land) {
+        player2.influence += baseCost;
+        return { ok: false, reason: "no_land_target" };
+      }
+      let target = playerById2(state, land.ownerId);
+      target = maybeRedirect2(state, player2, target, "ecclesiastical_confiscation");
+      if (target && target.id !== land.ownerId) {
+        const alt = eligibleLand2(state, player2.id, null, false).find((l) => l.ownerId === target.id);
+        if (alt) land = alt;
+      }
+      if (target && maybeCounter2(state, target, "ecclesiastical_confiscation")) {
+        effect = { cancelled: true };
+        break;
+      }
+      const former = playerById2(state, land.ownerId);
+      land.ownerId = "city";
+      land.municipalDonation = true;
+      if (former) former.prestige = (former.prestige ?? 0) + 2;
+      effect = { landId: land.id, formerOwnerId: former?.id ?? null, formerPrestige: 2 };
+      break;
+    }
+    case "legal_contestation": {
+      const patent = choice ? playtestChoicePatent2(state, player2, choice) : unownedPatentTarget2(state, player2.id);
+      if (!patent || player2.influence < 1) {
+        player2.influence += baseCost;
+        return { ok: false, reason: "no_patent_or_opening_bid" };
+      }
+      const auc = simpleAuction2(state, player2, 1, state.players ?? [], { bonusByPlayer: t.bidBonusByPlayer ?? {} });
+      if (!auc.winner) {
+        player2.influence += baseCost;
+        return { ok: false, reason: "auction_failed" };
+      }
+      effect = { auction: auc, transfer: transferPatent2(state, patent, auc.winner.player.id) };
+      break;
+    }
+    case "crooked_notary": {
+      const patent = choice ? playtestChoicePatent2(state, player2, choice) : unownedPatentTarget2(state, player2.id);
+      if (!patent) {
+        player2.influence += baseCost;
+        return { ok: false, reason: "no_patent" };
+      }
+      const owner = playerById2(state, patent.ownerId);
+      if (owner && maybeCounter2(state, owner, "crooked_notary")) {
+        effect = { cancelled: true };
+        break;
+      }
+      effect = { transfer: transferPatent2(state, patent, player2.id) };
+      break;
+    }
+    case "criminal_network":
+      if ((player2.prestige ?? 0) < 1) {
+        player2.influence += baseCost;
+        return { ok: false, reason: "insufficient_prestige" };
+      }
+      player2.prestige -= 1;
+      normalInfluenceGain2(player2, 2);
+      effect = { prestige: -1, influence: 2 };
+      break;
+    case "hostile_takeover": {
+      const entries = stakeEntries2(state, (s, p) => p.id !== player2.id && (s.age === "mature" || s.age === "elder")).sort((a, b) => (b.player.prestige ?? 0) - (a.player.prestige ?? 0));
+      if (!entries.length || player2.influence < 1) {
+        player2.influence += baseCost;
+        return { ok: false, reason: "no_stake_target" };
+      }
+      const target = (choice ? playtestChoiceStake2(state, player2, choice) : null) ?? entries[0];
+      if (maybeCounter2(state, target.player, "hostile_takeover")) {
+        effect = { cancelled: true };
+        break;
+      }
+      removeStake2(target.player, target.stake.id);
+      const auc = simpleAuction2(state, player2, 1, state.players ?? [], { bonusByPlayer: t.bidBonusByPlayer ?? {} });
+      if (auc.winner) addStake2(state, auc.winner.player, target.stake.sectorId, target.stake.age);
+      effect = { removedStakeId: target.stake.id, sectorId: target.stake.sectorId, age: target.stake.age, auction: auc };
+      break;
+    }
+    case "binding_bids": {
+      const eligible = (state.productionSectors ?? []).filter((s) => s.id !== "food" && s.tier > stakeEntries2(state, (x) => x.sectorId === s.id && x.age === "young").length);
+      const sector = (choice ? playtestChoiceSector2(state, choice, (s) => eligible.some((e) => e.id === s.id)) : null) ?? eligible[0];
+      if (!sector || player2.influence < 1) {
+        player2.influence += baseCost;
+        return { ok: false, reason: "no_vacant_young" };
+      }
+      const auc = simpleAuction2(state, player2, 1, state.players ?? [], { allPay: true, bonusByPlayer: t.bidBonusByPlayer ?? {} });
+      if (auc.winner) addStake2(state, auc.winner.player, sector.id, "young");
+      effect = { sectorId: sector.id, auction: auc, allPay: true };
+      break;
+    }
+    case "line_of_credit": {
+      let level = Math.max(1, Math.min(3, Math.floor(Number(choice?.level) || 0)));
+      if (!choice) {
+        level = 1;
+        if ((player2.prestige ?? 0) >= 30 && player2.influence <= 4) level = 3;
+        else if ((player2.prestige ?? 0) >= 20 && player2.influence <= 6) level = 2;
+      }
+      if (level === 3 && (player2.prestige ?? 0) < 30) level = 2;
+      if (level === 2 && (player2.prestige ?? 0) < 20) level = 1;
+      const amount = level === 1 ? 5 : level === 2 ? 10 : 15;
+      const extra = level - baseCost;
+      if (extra > 0) {
+        if (player2.influence < extra) {
+          player2.influence += baseCost;
+          return { ok: false, reason: "insufficient_variable_cost" };
+        }
+        player2.influence -= extra;
+        cost += extra;
+      }
+      player2.influence += amount;
+      t.creditDebts ??= [];
+      t.creditDebts.push({ playerId: player2.id, amount });
+      effect = { level, temporaryInfluence: amount };
+      break;
+    }
+    case "preferential_contracts": {
+      let level = Math.max(1, Math.min(3, Math.floor(Number(choice?.level) || 0)));
+      if (!choice) {
+        level = 1;
+        if (player2.influence >= 4) level = 3;
+        else if (player2.influence >= 2) level = 2;
+      }
+      const total2 = level === 1 ? 1 : level === 2 ? 3 : 5, extra = total2 - baseCost;
+      if (player2.influence < extra) {
+        player2.influence += baseCost;
+        return { ok: false, reason: "insufficient_variable_cost" };
+      }
+      player2.influence -= extra;
+      cost = total2;
+      t.preferential ??= [];
+      t.preferential.push({ playerId: player2.id, units: level });
+      effect = { priorityUnits: level, simulationApproximation: true };
+      break;
+    }
+    case "private_buyer": {
+      const sectors = (state.productionSectors ?? []).filter((s) => s.id !== "food").sort((a, b) => (player2.productionStakes ?? []).filter((x) => x.sectorId === b.id).length - (player2.productionStakes ?? []).filter((x) => x.sectorId === a.id).length);
+      const sector = (choice ? playtestChoiceSector2(state, choice, (s) => s.id !== "food") : null) ?? sectors[0];
+      if (!sector) {
+        player2.influence += baseCost;
+        return { ok: false, reason: "no_sector" };
+      }
+      t.privateBuyer ??= [];
+      t.privateBuyer.push({ sectorId: sector.id, amount: 1 });
+      effect = { sectorId: sector.id, externalDemand: 1, simulationApproximation: true };
+      break;
+    }
+    case "audit_license_privileges":
+      effect = { tax: taxAgents2(state, player2, "merchant_guild", 1) };
+      break;
+    default:
+      player2.influence += baseCost;
+      return { ok: false, reason: "unsupported" };
+  }
+  const played = removeFromHand2(state, player2.id, card2.instanceId);
+  if (!played) {
+    player2.influence += cost;
+    return { ok: false, reason: "card_missing" };
+  }
+  if (m.permanent) {
+    state.intrigue.inPlay.push({ ...played, ownerId: player2.id, playedGeneration: Number(state.generation) || 0, ...effect.targetLandId ? { targetLandId: effect.targetLandId } : {} });
+    ensureMetrics2(state).totals.patentsPlayed += m.tags?.includes("patent") ? 1 : 0;
+  } else discard2(state, played);
+  logPlay2(state, player2, played, cost, effect);
+  return { ok: true, cardId: m.id, cost, effect };
+}
+var V115_PLAYTEST_API2 = Object.freeze({
+  listActionCards(state, playerId) {
+    ensureConfigured2(state);
+    return (state.intrigue?.hands?.[playerId] ?? []).filter((card2) => meta2(card2.cardId)?.timing === "action").map((card2) => ({
+      ...card2,
+      meta: meta2(card2.cardId)
+    }));
+  },
+  listTargets(state, playerId, instanceId) {
+    ensureConfigured2(state);
+    const player2 = playerById2(state, playerId);
+    const card2 = (state.intrigue?.hands?.[playerId] ?? []).find((row) => row.instanceId === instanceId);
+    if (!player2 || !card2) return { requiresTarget: false, options: [] };
+    return playtestIntrigueTargets2(state, player2, card2);
+  },
+  applyIntrigueNow(state, playerId, instanceId, choice = null) {
+    ensureConfigured2(state);
+    const player2 = playerById2(state, playerId);
+    const card2 = (state.intrigue?.hands?.[playerId] ?? []).find((row) => row.instanceId === instanceId);
+    if (!player2 || !card2) return { ok: false, reason: "card_not_found" };
+    return resolveCard2(state, player2, card2, choice);
+  },
+  queueIntrigue(state, playerId, instanceId, choice = null) {
+    state.__playtestIntrigueQueue ??= [];
+    state.__playtestIntrigueQueue.push({ playerId, instanceId, choice });
+  }
+});
+
 // morneval-loader:file:///home/runner/work/Morneval-digital/Morneval-digital/js/v138-human-playtest-engine.js?v=0.1.0
 var PLAYTEST_VERSION = "0.1.0";
 var ENGINE_VERSION = "0.11.29-sim";
@@ -11243,11 +12153,19 @@ function queuePoliticalBid(session2, pole) {
   session2.rootState.__playtestPoliticalBidQueue.push({ playerId: session2.humanPlayerId, pole });
   return recapturePreActions(session2);
 }
-function queueIntrigueCard(session2, instanceId) {
+function queueIntrigueCard(session2, instanceId, choice = null) {
   session2.rootState.__playtestIntrigueQueue ??= [];
   const exists = session2.rootState.__playtestIntrigueQueue.some((row) => row.playerId === session2.humanPlayerId && row.instanceId === instanceId);
-  if (!exists) session2.rootState.__playtestIntrigueQueue.push({ playerId: session2.humanPlayerId, instanceId });
+  if (!exists) session2.rootState.__playtestIntrigueQueue.push({ playerId: session2.humanPlayerId, instanceId, choice: clone(choice) });
   return recapturePreActions(session2);
+}
+function intrigueTargets(session2, instanceId) {
+  if (!session2) return { requiresTarget: false, options: [] };
+  try {
+    return V115_PLAYTEST_API2.listTargets(session2.planningState, session2.humanPlayerId, instanceId);
+  } catch {
+    return { requiresTarget: false, options: [] };
+  }
 }
 function recordAction(session2, action, source) {
   if (!action) return;
@@ -11468,6 +12386,7 @@ var session = null;
 var replacePersonality = "investor";
 var tab = "board";
 var selectedCard = null;
+var selectedIntrigueChoice = null;
 var debug = false;
 var stepAi = false;
 var flash = "";
@@ -11513,6 +12432,7 @@ function startGame() {
   game.playtest.stepAi = stepAi;
   session = beginInteractiveGeneration(game);
   selectedCard = null;
+  selectedIntrigueChoice = null;
   tab = "board";
   render();
 }
@@ -11520,6 +12440,7 @@ function resetGame() {
   game = null;
   session = null;
   selectedCard = null;
+  selectedIntrigueChoice = null;
   render();
 }
 function setupHtml() {
@@ -11656,10 +12577,19 @@ function hinterlandHtml(state) {
 }
 function intrigueHtml(state) {
   const hand = intrigueHand(state, state.playtest.humanPlayerId);
+  let targetHtml = "";
+  if (selectedCard && session?.status === "pre_actions") {
+    const targetInfo = intrigueTargets(session, selectedCard);
+    if (targetInfo.requiresTarget) {
+      targetHtml = '<section class="card" style="margin-top:8px"><h3>Choose target</h3>' + (targetInfo.options.length ? '<div class="actions">' + targetInfo.options.map(
+        (option) => '<button data-intrigue-choice="' + encodeSpec(option.choice) + '" class="' + (JSON.stringify(selectedIntrigueChoice) === JSON.stringify(option.choice) ? "primary" : "") + '">' + h(option.label) + "</button>"
+      ).join("") + "</div>" : '<div class="small">No legal target for this card.</div>') + "</section>";
+    }
+  }
   return '<div class="section-title">Intrigue</div>' + (hand.length ? '<section class="card-strip">' + hand.map((card2) => {
-    const meta2 = card2.meta ?? {};
-    return '<article class="card intrigue ' + (selectedCard === card2.instanceId ? "selected" : "") + '" data-card="' + h(card2.instanceId) + '"><div class="power">' + h(meta2.power ?? meta2.timing ?? "Intrigue") + "</div><h3>" + h(meta2.name ?? card2.cardId) + '</h3><div class="small">' + h(meta2.shortText ?? meta2.effectText ?? meta2.description ?? meta2.timing ?? "") + '</div><div class="chips" style="margin-top:8px"><span class="chip">' + h(meta2.institutionId ?? "") + '</span><span class="chip">Cost ' + num(meta2.influenceCost ?? meta2.cost) + "I</span></div></article>";
-  }).join("") + "</section>" : '<section class="card"><span class="small">No Intrigue cards in hand.</span></section>');
+    const meta3 = card2.meta ?? {};
+    return '<article class="card intrigue ' + (selectedCard === card2.instanceId ? "selected" : "") + '" data-card="' + h(card2.instanceId) + '"><div class="power">' + h(meta3.power ?? meta3.timing ?? "Intrigue") + "</div><h3>" + h(meta3.name ?? card2.cardId) + '</h3><div class="small">' + h(meta3.shortText ?? meta3.effectText ?? meta3.description ?? meta3.timing ?? "") + '</div><div class="chips" style="margin-top:8px"><span class="chip">' + h(meta3.institutionId ?? "") + '</span><span class="chip">Cost ' + num(meta3.influenceCost ?? meta3.cost) + "I</span></div></article>";
+  }).join("") + "</section>" + targetHtml : '<section class="card"><span class="small">No Intrigue cards in hand.</span></section>');
 }
 function boardHtml(state) {
   return '<main><div class="notice">Human playtest v' + PLAYTEST_VERSION + " \xB7 engine " + ENGINE_VERSION + ". Tap the board area you want to use; legal actions appear directly on that card.</div>" + cityHtml(state) + familiesHtml(state) + productionHtml(state) + institutionsHtml(state) + hinterlandHtml(state) + intrigueHtml(state) + "</main>";
@@ -11687,7 +12617,11 @@ function drawerHtml(state) {
   let controls = "";
   if (session.status === "pre_actions") {
     status = "Optional pre-actions, then start the action phase.";
-    if (selectedCard) controls += '<button class="primary" id="play-card">Play card</button>';
+    if (selectedCard) {
+      const targetInfo = intrigueTargets(session, selectedCard);
+      const disabled = targetInfo.requiresTarget && !selectedIntrigueChoice;
+      controls += '<button class="primary" id="play-card" ' + (disabled ? "disabled" : "") + ">" + (disabled ? "Choose target" : "Play card") + "</button>";
+    }
     controls += '<button class="primary" id="start-actions">Start actions</button><button class="ghost" id="restart-game">Restart</button>';
   } else if (session.status === "human_turn") {
     status = "Your action \xB7 " + me.familyName + " \xB7 " + num(me.influence) + " Influence";
@@ -11772,7 +12706,12 @@ function bind() {
     render();
   }));
   root.querySelectorAll("[data-card]").forEach((card2) => card2.addEventListener("click", () => {
+    if (selectedCard !== card2.dataset.card) selectedIntrigueChoice = null;
     selectedCard = card2.dataset.card;
+    render();
+  }));
+  root.querySelectorAll("[data-intrigue-choice]").forEach((button) => button.addEventListener("click", () => {
+    selectedIntrigueChoice = decodeSpec(button.dataset.intrigueChoice);
     render();
   }));
   root.querySelector("#play-card")?.addEventListener("click", () => {
@@ -11780,8 +12719,14 @@ function bind() {
       notify("Select an Intrigue card before core actions.");
       return;
     }
-    session = queueIntrigueCard(session, selectedCard);
+    const targetInfo = intrigueTargets(session, selectedCard);
+    if (targetInfo.requiresTarget && !selectedIntrigueChoice) {
+      notify("Choose a legal target first.");
+      return;
+    }
+    session = queueIntrigueCard(session, selectedCard, selectedIntrigueChoice);
     selectedCard = null;
+    selectedIntrigueChoice = null;
     render();
   });
   root.querySelector("#start-actions")?.addEventListener("click", () => {
@@ -11806,6 +12751,7 @@ function bind() {
     game = result.state;
     session = beginInteractiveGeneration(game);
     selectedCard = null;
+    selectedIntrigueChoice = null;
     tab = "board";
     render();
   });
