@@ -4,6 +4,11 @@ on:
   push:
     paths:
       - '.github/workflows/balance-external-relations.yml'
+      - 'js/v110-ai-engine.js'
+      - 'js/v115-intrigue-sim-engine.js'
+      - 'js/v119-political-influence-ai-engine.js'
+      - 'js/v121-institution-tier-engine.js'
+      - 'js/v122-institution-tier-full-engine.js'
       - 'js/v128-external-relations-engine.js'
       - 'js/v129-terrain-actions-engine.js'
       - 'js/v130-elven-alliance-engine.js'
