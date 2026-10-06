@@ -2,7 +2,7 @@
 import {
   createHumanPlaytest, beginInteractiveGeneration, advanceUntilHuman, listHumanActions,
   playHumanAction, undoLastHumanAction, queueInstitutionDevelopment, queuePoliticalBid,
-  queueIntrigueCard, finishInteractiveGeneration, intrigueHand, economyPreview,
+  queueIntrigueCard, intrigueTargets, finishInteractiveGeneration, intrigueHand, economyPreview,
   externalRelations, engine, V110_PLAYTEST_API, PLAYTEST_VERSION, ENGINE_VERSION
 } from "./v138-human-playtest-engine.js?v=0.1.0";
 
@@ -14,6 +14,7 @@ let session = null;
 let replacePersonality = "investor";
 let tab = "board";
 let selectedCard = null;
+let selectedIntrigueChoice = null;
 let debug = false;
 let stepAi = false;
 let flash = "";
@@ -58,6 +59,7 @@ function startGame() {
   game.playtest.stepAi = stepAi;
   session = beginInteractiveGeneration(game);
   selectedCard = null;
+  selectedIntrigueChoice = null;
   tab = "board";
   render();
 }
@@ -65,6 +67,7 @@ function resetGame() {
   game = null;
   session = null;
   selectedCard = null;
+  selectedIntrigueChoice = null;
   render();
 }
 
@@ -285,6 +288,20 @@ function hinterlandHtml(state) {
 
 function intrigueHtml(state) {
   const hand = intrigueHand(state,state.playtest.humanPlayerId);
+  let targetHtml = "";
+  if (selectedCard && session?.status === "pre_actions") {
+    const targetInfo = intrigueTargets(session,selectedCard);
+    if (targetInfo.requiresTarget) {
+      targetHtml = '<section class="card" style="margin-top:8px"><h3>Choose target</h3>'+
+        (targetInfo.options.length
+          ? '<div class="actions">'+targetInfo.options.map(option =>
+              '<button data-intrigue-choice="'+encodeSpec(option.choice)+'" class="'+
+              (JSON.stringify(selectedIntrigueChoice)===JSON.stringify(option.choice)?'primary':'')+'">'+h(option.label)+'</button>'
+            ).join("")+'</div>'
+          : '<div class="small">No legal target for this card.</div>')+
+        '</section>';
+    }
+  }
   return '<div class="section-title">Intrigue</div>'+
     (hand.length?'<section class="card-strip">'+hand.map(card => {
       const meta = card.meta ?? {};
@@ -293,7 +310,7 @@ function intrigueHtml(state) {
         '<div class="small">'+h(meta.shortText ?? meta.effectText ?? meta.description ?? meta.timing ?? "")+'</div>'+
         '<div class="chips" style="margin-top:8px"><span class="chip">'+h(meta.institutionId ?? "")+'</span><span class="chip">Cost '+num(meta.influenceCost ?? meta.cost)+'I</span></div>'+
       '</article>';
-    }).join("")+'</section>':'<section class="card"><span class="small">No Intrigue cards in hand.</span></section>');
+    }).join("")+'</section>'+targetHtml:'<section class="card"><span class="small">No Intrigue cards in hand.</span></section>');
 }
 
 function boardHtml(state) {
@@ -345,7 +362,11 @@ function drawerHtml(state) {
   let controls = "";
   if (session.status === "pre_actions") {
     status = "Optional pre-actions, then start the action phase.";
-    if (selectedCard) controls += '<button class="primary" id="play-card">Play card</button>';
+    if (selectedCard) {
+      const targetInfo = intrigueTargets(session,selectedCard);
+      const disabled = targetInfo.requiresTarget && !selectedIntrigueChoice;
+      controls += '<button class="primary" id="play-card" '+(disabled?'disabled':'')+'>'+(disabled?'Choose target':'Play card')+'</button>';
+    }
     controls += '<button class="primary" id="start-actions">Start actions</button><button class="ghost" id="restart-game">Restart</button>';
   } else if (session.status === "human_turn") {
     status = "Your action · "+me.familyName+" · "+num(me.influence)+" Influence";
@@ -414,13 +435,21 @@ function bind() {
     render();
   }));
   root.querySelectorAll("[data-card]").forEach(card => card.addEventListener("click",() => {
+    if (selectedCard !== card.dataset.card) selectedIntrigueChoice = null;
     selectedCard = card.dataset.card;
+    render();
+  }));
+  root.querySelectorAll("[data-intrigue-choice]").forEach(button => button.addEventListener("click",() => {
+    selectedIntrigueChoice = decodeSpec(button.dataset.intrigueChoice);
     render();
   }));
   root.querySelector("#play-card")?.addEventListener("click",() => {
     if (!selectedCard || session.status !== "pre_actions") { notify("Select an Intrigue card before core actions."); return; }
-    session = queueIntrigueCard(session,selectedCard);
+    const targetInfo = intrigueTargets(session,selectedCard);
+    if (targetInfo.requiresTarget && !selectedIntrigueChoice) { notify("Choose a legal target first."); return; }
+    session = queueIntrigueCard(session,selectedCard,selectedIntrigueChoice);
     selectedCard = null;
+    selectedIntrigueChoice = null;
     render();
   });
   root.querySelector("#start-actions")?.addEventListener("click",() => { advanceUntilHuman(session,{singleAiStep:stepAi});render(); });
@@ -439,6 +468,7 @@ function bind() {
     game = result.state;
     session = beginInteractiveGeneration(game);
     selectedCard = null;
+    selectedIntrigueChoice = null;
     tab = "board";
     render();
   });

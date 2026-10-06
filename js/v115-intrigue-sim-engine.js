@@ -149,6 +149,80 @@ function taxAgents(state,source,institutionId,costPerAgent){ const out=[]; for(c
 function chooseLandTarget(state,source){ return eligibleLand(state,source.id,null,false).sort((a,b)=>((playerById(state,b.ownerId)?.prestige??0)-(playerById(state,a.ownerId)?.prestige??0))||((b.baseCapacity??0)-(a.baseCapacity??0)))[0]??null; }
 function chooseOwnLand(state,source,terrain=null){ return eligibleLand(state,source.id,terrain,true).sort((a,b)=>(b.baseCapacity??0)-(a.baseCapacity??0))[0]??null; }
 function chooseNaturalLand(state){ return (state.lands??[]).filter(l=>l.revealed&&l.development==='natural').sort((a,b)=>(b.baseCapacity??0)-(a.baseCapacity??0))[0]??null; }
+function playtestChoicePlayer(state, source, choice){
+  const target=playerById(state,choice?.playerId);
+  return target&&target.id!==source.id?target:null;
+}
+function playtestChoiceLand(state, choice, predicate=()=>true){
+  const land=(state.lands??[]).find(row=>row.id===choice?.landId);
+  return land&&predicate(land)?land:null;
+}
+function playtestChoiceSector(state, choice, predicate=()=>true){
+  const sector=(state.productionSectors??[]).find(row=>row.id===choice?.sectorId);
+  return sector&&predicate(sector)?sector:null;
+}
+function playtestChoicePatent(state, source, choice){
+  const patent=patents(state).find(row=>row.instanceId===choice?.patentInstanceId);
+  return patent&&patent.ownerId!==source.id?patent:null;
+}
+function playtestChoiceStake(state, source, choice){
+  for(const target of state.players??[]){
+    if(target.id===source.id)continue;
+    const stake=(target.productionStakes??[]).find(row=>row.id===choice?.stakeId);
+    if(stake)return{player:target,stake};
+  }
+  return null;
+}
+function playtestChoiceAgent(target, choice){
+  return (target?.institutionAgentRoster??[]).find(row=>row.id===choice?.agentId)??null;
+}
+function playtestIntrigueTargets(state, player, card){
+  const m=meta(card?.cardId); if(!m)return{requiresTarget:false,options:[]};
+  const option=(id,label,choice,extra={})=>({id,label,choice,...extra});
+  let options=[];
+  switch(m.id){
+    case 'gemstone_vein':case 'rare_breed':case 'precious_timber':
+      options=eligibleLand(state,player.id,m.targetTerrain,true).map(land=>option(land.id,land.name??land.id,{landId:land.id},{type:'land'}));break;
+    case 'assassination':
+      options=(state.players??[]).filter(p=>p.id!==player.id).flatMap(target=>(target.institutionAgentRoster??[]).map(agent=>
+        option(agent.id,target.familyName+' · '+agent.institutionId+' S'+(agent.seniority??1),{playerId:target.id,agentId:agent.id},{type:'agent'})));break;
+    case 'land_seizure':case 'ecclesiastical_confiscation':
+      options=eligibleLand(state,player.id,null,false).map(land=>option(land.id,(land.name??land.id)+' · '+(playerById(state,land.ownerId)?.familyName??land.ownerId),{landId:land.id},{type:'land'}));break;
+    case 'spy_network':
+      options=(state.players??[]).filter(p=>p.id!==player.id&&(state.intrigue.hands[p.id]??[]).length).flatMap(target=>{
+        const out=[option(target.id+':inspect',target.familyName+' · inspect',{playerId:target.id,mode:'inspect'},{type:'player'})];
+        if(player.influence>=(m.influenceCost??0)+1)out.push(option(target.id+':discard',target.familyName+' · discard best (+1I)',{playerId:target.id,mode:'discard'},{type:'player'}));
+        if(player.influence>=(m.influenceCost??0)+2)out.push(option(target.id+':steal',target.familyName+' · steal best (+2I)',{playerId:target.id,mode:'steal'},{type:'player'}));
+        return out;
+      });break;
+    case 'technological_acceleration':
+      options=(state.productionSectors??[]).filter(sector=>sector.id!=='food'&&sector.tier<3&&ai.getProductionDevelopmentCost?.(sector)).map(sector=>
+        option(sector.id,sector.name??sector.id,{sectorId:sector.id},{type:'sector'}));break;
+    case 'experimental_methods':
+      options=(state.lands??[]).filter(land=>land.revealed&&land.development==='natural').map(land=>option(land.id,land.name??land.id,{landId:land.id},{type:'land'}));break;
+    case 'threat_excommunication':case 'anathema':
+      options=(state.players??[]).filter(p=>p.id!==player.id).map(target=>option(target.id,target.familyName,{playerId:target.id},{type:'player'}));break;
+    case 'legal_contestation':case 'crooked_notary':
+      options=patents(state).filter(patent=>patent.ownerId!==player.id).map(patent=>option(patent.instanceId,(meta(patent.cardId)?.name??patent.cardId)+' · '+(playerById(state,patent.ownerId)?.familyName??patent.ownerId),{patentInstanceId:patent.instanceId},{type:'patent'}));break;
+    case 'hostile_takeover':
+      options=stakeEntries(state,(stake,p)=>p.id!==player.id&&(stake.age==='mature'||stake.age==='elder')).map(entry=>
+        option(entry.stake.id,entry.player.familyName+' · '+entry.stake.sectorId+' '+entry.stake.age,{stakeId:entry.stake.id},{type:'stake'}));break;
+    case 'binding_bids':
+      options=(state.productionSectors??[]).filter(sector=>sector.id!=='food'&&sector.tier>stakeEntries(state,stake=>stake.sectorId===sector.id&&stake.age==='young').length).map(sector=>
+        option(sector.id,sector.name??sector.id,{sectorId:sector.id},{type:'sector'}));break;
+    case 'private_buyer':
+      options=(state.productionSectors??[]).filter(sector=>sector.id!=='food').map(sector=>option(sector.id,sector.name??sector.id,{sectorId:sector.id},{type:'sector'}));break;
+    case 'line_of_credit':
+      options=[1,2,3].filter(level=>level===1||(level===2&&(player.prestige??0)>=20)||(level===3&&(player.prestige??0)>=30)).map(level=>{
+        const amount=level===1?5:level===2?10:15;
+        return option(String(level),'Level '+level+' · +'+amount+' Influence',{level},{type:'level'});
+      });break;
+    case 'preferential_contracts':
+      options=[1,2,3].filter(level=>player.influence>=level).map(level=>option(String(level),'Level '+level+' · '+(level===1?1:level===2?3:5)+' Influence',{level},{type:'level'}));break;
+    default:return{requiresTarget:false,options:[]};
+  }
+  return{requiresTarget:true,options};
+}
 function stakeEntries(state,filter=()=>true){ const out=[]; for(const p of state.players??[])for(const s of p.productionStakes??[])if(filter(s,p))out.push({player:p,stake:s});return out; }
 function removeStake(player,stakeId){ const i=(player.productionStakes??[]).findIndex(s=>s.id===stakeId);if(i<0)return null;return player.productionStakes.splice(i,1)[0]; }
 function addStake(state,player,sectorId,age='young'){ state.nextProductionStakeOrder=Math.max(1,Number(state.nextProductionStakeOrder)||1); const order=state.nextProductionStakeOrder++; const s={id:`stake_${order}`,ownerId:player.id,sectorId,age,placementOrder:order,servedThisGeneration:false,servedDemandCategory:null,wealthProducedThisGeneration:0}; player.productionStakes??=[];player.productionStakes.push(s);return s; }
@@ -156,36 +230,36 @@ function simpleAuction(state,source,opening,eligiblePlayers,{allPay=false,bonusB
 function transferPatent(state,patent,newOwnerId){ const old=patent.ownerId;patent.ownerId=newOwnerId;ensureMetrics(state).totals.patentTransfers++;return{cardId:patent.cardId,from:old,to:newOwnerId}; }
 function logPlay(state,player,card,cost,effect){ state.intrigue.playHistory.push({generation:Number(state.generation)||0,playerId:player.id,instanceId:card.instanceId,cardId:card.cardId,timing:meta(card.cardId)?.timing,influenceCost:cost,permanent:Boolean(meta(card.cardId)?.permanent),effect}); ensureMetrics(state).totals.played++; if(meta(card.cardId)?.power==='HIGH')ensureMetrics(state).totals.highPlayed++; }
 
-function resolveCard(state,player,card){
+function resolveCard(state,player,card,choice=null){
   const m=meta(card.cardId);if(!m)return{ok:false,reason:'unknown'};const baseCost=m.influenceCost??0;if(player.influence<baseCost)return{ok:false,reason:'insufficient_influence'};const t=state.intrigueTemporary;let cost=baseCost,effect={};player.influence-=baseCost;
   switch(m.id){
     case 'advanced_farming_techniques':case 'civic_sanitation_works':case 'advanced_judicial_system':case 'advanced_architecture':effect={permanent:true};break;
-    case 'gemstone_vein':case 'rare_breed':case 'precious_timber':{const land=chooseOwnLand(state,player,m.targetTerrain);if(!land){player.influence+=baseCost;return{ok:false,reason:'no_land_target'};}effect={targetLandId:land.id};break;}
-    case 'assassination':{let target=maybeRedirect(state,player,familyLeader(state,player.id),'assassination');const agent=bestAgent(target);if(!target||!agent){player.influence+=baseCost;return{ok:false,reason:'no_agent_target'};}removeAgent(target,agent);effect={targetPlayerId:target.id,targetAgentId:agent.id,dynastyNotSimulated:true};break;}
-    case 'land_seizure':{let land=chooseLandTarget(state,player);if(!land){player.influence+=baseCost;return{ok:false,reason:'no_land_target'};}let target=playerById(state,land.ownerId);target=maybeRedirect(state,player,target,'land_seizure');if(target&&target.id!==land.ownerId){const alt=eligibleLand(state,player.id,null,false).find(l=>l.ownerId===target.id);if(alt)land=alt;}if(target&&maybeCounter(state,target,'land_seizure')){effect={cancelled:true};break;}const domainCost=ai.getDomainAcquisitionCost?.(state,player.id)??1;if(player.influence<domainCost){player.influence+=baseCost;return{ok:false,reason:'insufficient_domain_cost'};}player.influence-=domainCost;cost+=domainCost;effect={landId:land.id,from:land.ownerId,to:player.id,domainCost};land.ownerId=player.id;break;}
+    case 'gemstone_vein':case 'rare_breed':case 'precious_timber':{const land=choice?playtestChoiceLand(state,choice,l=>l.revealed&&l.development==='natural'&&(l.originalTerrain??l.terrain)===m.targetTerrain&&l.ownerId===player.id):chooseOwnLand(state,player,m.targetTerrain);if(!land){player.influence+=baseCost;return{ok:false,reason:'no_land_target'};}effect={targetLandId:land.id};break;}
+    case 'assassination':{let target=choice?playtestChoicePlayer(state,player,choice):familyLeader(state,player.id);target=maybeRedirect(state,player,target,'assassination');const agent=(choice&&target?.id===choice.playerId?playtestChoiceAgent(target,choice):null)??bestAgent(target);if(!target||!agent){player.influence+=baseCost;return{ok:false,reason:'no_agent_target'};}removeAgent(target,agent);effect={targetPlayerId:target.id,targetAgentId:agent.id,dynastyNotSimulated:true};break;}
+    case 'land_seizure':{let land=choice?playtestChoiceLand(state,choice,l=>l.revealed&&l.development==='natural'&&l.ownerId&&l.ownerId!==player.id&&l.ownerId!=='city'):chooseLandTarget(state,player);if(!land){player.influence+=baseCost;return{ok:false,reason:'no_land_target'};}let target=playerById(state,land.ownerId);target=maybeRedirect(state,player,target,'land_seizure');if(target&&target.id!==land.ownerId){const alt=eligibleLand(state,player.id,null,false).find(l=>l.ownerId===target.id);if(alt)land=alt;}if(target&&maybeCounter(state,target,'land_seizure')){effect={cancelled:true};break;}const domainCost=ai.getDomainAcquisitionCost?.(state,player.id)??1;if(player.influence<domainCost){player.influence+=baseCost;return{ok:false,reason:'insufficient_domain_cost'};}player.influence-=domainCost;cost+=domainCost;effect={landId:land.id,from:land.ownerId,to:player.id,domainCost};land.ownerId=player.id;break;}
     case 'martial_law':t.orderModifier=(t.orderModifier??0)+1;player.prestige=(player.prestige??0)+1;effect={order:1,prestige:1};break;
     case 'officer_purge':effect={tax:taxAgents(state,player,'city_guard',1)};break;
     case 'contingency_reserves':if(state.city.contingencyReserveFood>0){player.influence+=baseCost;return{ok:false,reason:'reserve_exists'};}t.reserveIntentBy=player.id;effect={reserveIntent:true};break;
-    case 'spy_network':{let target=maybeRedirect(state,player,familyLeader(state,player.id),'spy_network');if(!target){player.influence+=baseCost;return{ok:false,reason:'no_target'};}if(maybeCounter(state,target,'spy_network')){effect={cancelled:true};break;}const hand=state.intrigue.hands[target.id]??[];if(!hand.length){effect={targetId:target.id,seen:[]};break;}const best=[...hand].sort((a,b)=>legalCardScore(state,target,b)-legalCardScore(state,target,a))[0];if(player.influence>=2){player.influence-=2;cost+=2;removeFromHand(state,target.id,best.instanceId);state.intrigue.hands[player.id].push({...best,stolenGeneration:state.generation});effect={targetId:target.id,mode:'steal',cardId:best.cardId};}else if(player.influence>=1){player.influence-=1;cost+=1;removeFromHand(state,target.id,best.instanceId);discard(state,best);effect={targetId:target.id,mode:'discard',cardId:best.cardId};}else effect={targetId:target.id,mode:'inspect',seen:hand.map(c=>c.cardId)};break;}
-    case 'technological_acceleration':{const sectors=(state.productionSectors??[]).filter(s=>s.id!=='food'&&s.tier<3).map(s=>({s,c:ai.getProductionDevelopmentCost?.(s)})).filter(x=>x.c&&player.influence>=x.c.influenceCost).sort((a,b)=>(b.c.prestige??0)-(a.c.prestige??0));const pick=sectors[0];if(!pick){player.influence+=baseCost;return{ok:false,reason:'no_affordable_development'};}player.influence-=pick.c.influenceCost;cost+=pick.c.influenceCost;const targetTier=pick.s.tier+1;pick.s.developmentPhase=pick.c.phase;pick.s.developmentTargetTier=targetTier;pick.s.lastDevelopmentGeneration=state.generation;pick.s.lastDevelopmentContributorId=player.id;let tierActivated=false;if(pick.c.phase===3){pick.s.tier=targetTier;pick.s.developmentPhase=0;pick.s.developmentTargetTier=pick.s.tier<3?pick.s.tier+1:null;tierActivated=true;}player.prestige=(player.prestige??0)+(pick.c.prestige??0)+1;effect={sectorId:pick.s.id,developmentCost:pick.c.influenceCost,prestige:(pick.c.prestige??0)+1,tierActivated};break;}
-    case 'experimental_methods':{const land=chooseNaturalLand(state);if(!land){player.influence+=baseCost;return{ok:false,reason:'no_natural_land'};}t.capacityBoosts??=[];t.capacityBoosts.push({landId:land.id,amount:1});player.prestige=(player.prestige??0)+1;effect={landId:land.id,capacity:1,prestige:1};break;}
+    case 'spy_network':{let target=choice?playtestChoicePlayer(state,player,choice):familyLeader(state,player.id);target=maybeRedirect(state,player,target,'spy_network');if(!target){player.influence+=baseCost;return{ok:false,reason:'no_target'};}if(maybeCounter(state,target,'spy_network')){effect={cancelled:true};break;}const hand=state.intrigue.hands[target.id]??[];if(!hand.length){effect={targetId:target.id,seen:[]};break;}const best=[...hand].sort((a,b)=>legalCardScore(state,target,b)-legalCardScore(state,target,a))[0];const mode=choice?.mode??(player.influence>=2?'steal':player.influence>=1?'discard':'inspect');if(mode==='steal'&&player.influence>=2){player.influence-=2;cost+=2;removeFromHand(state,target.id,best.instanceId);state.intrigue.hands[player.id].push({...best,stolenGeneration:state.generation});effect={targetId:target.id,mode:'steal',cardId:best.cardId};}else if(mode==='discard'&&player.influence>=1){player.influence-=1;cost+=1;removeFromHand(state,target.id,best.instanceId);discard(state,best);effect={targetId:target.id,mode:'discard',cardId:best.cardId};}else effect={targetId:target.id,mode:'inspect',seen:hand.map(c=>c.cardId)};break;}
+    case 'technological_acceleration':{const sectors=(state.productionSectors??[]).filter(s=>s.id!=='food'&&s.tier<3).map(s=>({s,c:ai.getProductionDevelopmentCost?.(s)})).filter(x=>x.c&&player.influence>=x.c.influenceCost).sort((a,b)=>(b.c.prestige??0)-(a.c.prestige??0));const selected=choice?playtestChoiceSector(state,choice,s=>s.id!=='food'&&s.tier<3):null;const pick=selected?sectors.find(x=>x.s.id===selected.id):sectors[0];if(!pick){player.influence+=baseCost;return{ok:false,reason:'no_affordable_development'};}player.influence-=pick.c.influenceCost;cost+=pick.c.influenceCost;const targetTier=pick.s.tier+1;pick.s.developmentPhase=pick.c.phase;pick.s.developmentTargetTier=targetTier;pick.s.lastDevelopmentGeneration=state.generation;pick.s.lastDevelopmentContributorId=player.id;let tierActivated=false;if(pick.c.phase===3){pick.s.tier=targetTier;pick.s.developmentPhase=0;pick.s.developmentTargetTier=pick.s.tier<3?pick.s.tier+1:null;tierActivated=true;}player.prestige=(player.prestige??0)+(pick.c.prestige??0)+1;effect={sectorId:pick.s.id,developmentCost:pick.c.influenceCost,prestige:(pick.c.prestige??0)+1,tierActivated};break;}
+    case 'experimental_methods':{const land=choice?playtestChoiceLand(state,choice,l=>l.revealed&&l.development==='natural'):chooseNaturalLand(state);if(!land){player.influence+=baseCost;return{ok:false,reason:'no_natural_land'};}t.capacityBoosts??=[];t.capacityBoosts.push({landId:land.id,amount:1});player.prestige=(player.prestige??0)+1;effect={landId:land.id,capacity:1,prestige:1};break;}
     case 'expose_charlatans':effect={tax:taxAgents(state,player,'scholarium',2)};break;
     case 'insider_information':t.bidBonusByPlayer??={};t.bidBonusByPlayer[player.id]=(t.bidBonusByPlayer[player.id]??0)+2;effect={bidOnlyInfluence:2};break;
     case 'dark_magic':if((player.prestige??0)<3){player.influence+=baseCost;return{ok:false,reason:'insufficient_prestige'};}player.prestige-=3;normalInfluenceGain(player,6);effect={prestige:-3,influence:6};break;
     case 'infernal_pact':if((player.prestige??0)<2){player.influence+=baseCost;return{ok:false,reason:'insufficient_prestige'};}player.prestige-=2;normalInfluenceGain(player,4);effect={prestige:-2,influence:4};break;
     case 'hunt_heretics':effect={tax:taxAgents(state,player,'temple',2)};break;
-    case 'threat_excommunication':{let target=maybeRedirect(state,player,familyLeader(state,player.id),'threat_excommunication');if(!target){player.influence+=baseCost;return{ok:false,reason:'no_target'};}if(maybeCounter(state,target,'threat_excommunication')){effect={cancelled:true};break;}if(target.influence>=4){target.influence-=2;effect={targetId:target.id,influence:-2};}else effect={targetId:target.id,prestige:-adversePrestigeLoss(state,target,1,player.id)};break;}
-    case 'anathema':{let target=maybeRedirect(state,player,familyLeader(state,player.id),'anathema');if(!target){player.influence+=baseCost;return{ok:false,reason:'no_target'};}if(maybeCounter(state,target,'anathema')){effect={cancelled:true};break;}const agent=lowestAgent(target);if(agent){removeAgent(target,agent);effect={targetId:target.id,removedAgentId:agent.id};}else effect={targetId:target.id,prestige:-adversePrestigeLoss(state,target,4,player.id)};break;}
+    case 'threat_excommunication':{let target=choice?playtestChoicePlayer(state,player,choice):familyLeader(state,player.id);target=maybeRedirect(state,player,target,'threat_excommunication');if(!target){player.influence+=baseCost;return{ok:false,reason:'no_target'};}if(maybeCounter(state,target,'threat_excommunication')){effect={cancelled:true};break;}if(target.influence>=4){target.influence-=2;effect={targetId:target.id,influence:-2};}else effect={targetId:target.id,prestige:-adversePrestigeLoss(state,target,1,player.id)};break;}
+    case 'anathema':{let target=choice?playtestChoicePlayer(state,player,choice):familyLeader(state,player.id);target=maybeRedirect(state,player,target,'anathema');if(!target){player.influence+=baseCost;return{ok:false,reason:'no_target'};}if(maybeCounter(state,target,'anathema')){effect={cancelled:true};break;}const agent=lowestAgent(target);if(agent){removeAgent(target,agent);effect={targetId:target.id,removedAgentId:agent.id};}else effect={targetId:target.id,prestige:-adversePrestigeLoss(state,target,4,player.id)};break;}
     case 'alms_poor':state.city.squalor=Math.max(0,(state.city.squalor??0)-1);player.prestige=(player.prestige??0)+1;effect={squalor:-1,prestige:1};break;
-    case 'ecclesiastical_confiscation':{let land=chooseLandTarget(state,player);if(!land){player.influence+=baseCost;return{ok:false,reason:'no_land_target'};}let target=playerById(state,land.ownerId);target=maybeRedirect(state,player,target,'ecclesiastical_confiscation');if(target&&target.id!==land.ownerId){const alt=eligibleLand(state,player.id,null,false).find(l=>l.ownerId===target.id);if(alt)land=alt;}if(target&&maybeCounter(state,target,'ecclesiastical_confiscation')){effect={cancelled:true};break;}const former=playerById(state,land.ownerId);land.ownerId='city';land.municipalDonation=true;if(former)former.prestige=(former.prestige??0)+2;effect={landId:land.id,formerOwnerId:former?.id??null,formerPrestige:2};break;}
-    case 'legal_contestation':{const patent=unownedPatentTarget(state,player.id);if(!patent||player.influence<1){player.influence+=baseCost;return{ok:false,reason:'no_patent_or_opening_bid'};}const auc=simpleAuction(state,player,1,state.players??[],{bonusByPlayer:t.bidBonusByPlayer??{}});if(!auc.winner){player.influence+=baseCost;return{ok:false,reason:'auction_failed'};}effect={auction:auc,transfer:transferPatent(state,patent,auc.winner.player.id)};break;}
-    case 'crooked_notary':{const patent=unownedPatentTarget(state,player.id);if(!patent){player.influence+=baseCost;return{ok:false,reason:'no_patent'};}const owner=playerById(state,patent.ownerId);if(owner&&maybeCounter(state,owner,'crooked_notary')){effect={cancelled:true};break;}effect={transfer:transferPatent(state,patent,player.id)};break;}
+    case 'ecclesiastical_confiscation':{let land=choice?playtestChoiceLand(state,choice,l=>l.revealed&&l.development==='natural'&&l.ownerId&&l.ownerId!==player.id&&l.ownerId!=='city'):chooseLandTarget(state,player);if(!land){player.influence+=baseCost;return{ok:false,reason:'no_land_target'};}let target=playerById(state,land.ownerId);target=maybeRedirect(state,player,target,'ecclesiastical_confiscation');if(target&&target.id!==land.ownerId){const alt=eligibleLand(state,player.id,null,false).find(l=>l.ownerId===target.id);if(alt)land=alt;}if(target&&maybeCounter(state,target,'ecclesiastical_confiscation')){effect={cancelled:true};break;}const former=playerById(state,land.ownerId);land.ownerId='city';land.municipalDonation=true;if(former)former.prestige=(former.prestige??0)+2;effect={landId:land.id,formerOwnerId:former?.id??null,formerPrestige:2};break;}
+    case 'legal_contestation':{const patent=choice?playtestChoicePatent(state,player,choice):unownedPatentTarget(state,player.id);if(!patent||player.influence<1){player.influence+=baseCost;return{ok:false,reason:'no_patent_or_opening_bid'};}const auc=simpleAuction(state,player,1,state.players??[],{bonusByPlayer:t.bidBonusByPlayer??{}});if(!auc.winner){player.influence+=baseCost;return{ok:false,reason:'auction_failed'};}effect={auction:auc,transfer:transferPatent(state,patent,auc.winner.player.id)};break;}
+    case 'crooked_notary':{const patent=choice?playtestChoicePatent(state,player,choice):unownedPatentTarget(state,player.id);if(!patent){player.influence+=baseCost;return{ok:false,reason:'no_patent'};}const owner=playerById(state,patent.ownerId);if(owner&&maybeCounter(state,owner,'crooked_notary')){effect={cancelled:true};break;}effect={transfer:transferPatent(state,patent,player.id)};break;}
     case 'criminal_network':if((player.prestige??0)<1){player.influence+=baseCost;return{ok:false,reason:'insufficient_prestige'};}player.prestige-=1;normalInfluenceGain(player,2);effect={prestige:-1,influence:2};break;
-    case 'hostile_takeover':{const entries=stakeEntries(state,(s,p)=>p.id!==player.id&&(s.age==='mature'||s.age==='elder')).sort((a,b)=>(b.player.prestige??0)-(a.player.prestige??0));if(!entries.length||player.influence<1){player.influence+=baseCost;return{ok:false,reason:'no_stake_target'};}const target=entries[0];if(maybeCounter(state,target.player,'hostile_takeover')){effect={cancelled:true};break;}removeStake(target.player,target.stake.id);const auc=simpleAuction(state,player,1,state.players??[],{bonusByPlayer:t.bidBonusByPlayer??{}});if(auc.winner)addStake(state,auc.winner.player,target.stake.sectorId,target.stake.age);effect={removedStakeId:target.stake.id,sectorId:target.stake.sectorId,age:target.stake.age,auction:auc};break;}
-    case 'binding_bids':{const sector=(state.productionSectors??[]).filter(s=>s.id!=='food').find(s=>s.tier>stakeEntries(state,x=>x.sectorId===s.id&&x.age==='young').length);if(!sector||player.influence<1){player.influence+=baseCost;return{ok:false,reason:'no_vacant_young'};}const auc=simpleAuction(state,player,1,state.players??[],{allPay:true,bonusByPlayer:t.bidBonusByPlayer??{}});if(auc.winner)addStake(state,auc.winner.player,sector.id,'young');effect={sectorId:sector.id,auction:auc,allPay:true};break;}
-    case 'line_of_credit':{let level=1,amount=5;if((player.prestige??0)>=30&&player.influence<=4){level=3;amount=15;}else if((player.prestige??0)>=20&&player.influence<=6){level=2;amount=10;}const extra=level-baseCost;if(extra>0){if(player.influence<extra){player.influence+=baseCost;return{ok:false,reason:'insufficient_variable_cost'};}player.influence-=extra;cost+=extra;}player.influence+=amount;t.creditDebts??=[];t.creditDebts.push({playerId:player.id,amount});effect={level,temporaryInfluence:amount};break;}
-    case 'preferential_contracts':{let level=1;if(player.influence>=4)level=3;else if(player.influence>=2)level=2;const total=level===1?1:level===2?3:5,extra=total-baseCost;if(player.influence<extra){player.influence+=baseCost;return{ok:false,reason:'insufficient_variable_cost'};}player.influence-=extra;cost=total;t.preferential??=[];t.preferential.push({playerId:player.id,units:level});effect={priorityUnits:level,simulationApproximation:true};break;}
-    case 'private_buyer':{const sector=(state.productionSectors??[]).filter(s=>s.id!=='food').sort((a,b)=>((player.productionStakes??[]).filter(x=>x.sectorId===b.id).length)-((player.productionStakes??[]).filter(x=>x.sectorId===a.id).length))[0];if(!sector){player.influence+=baseCost;return{ok:false,reason:'no_sector'};}t.privateBuyer??=[];t.privateBuyer.push({sectorId:sector.id,amount:1});effect={sectorId:sector.id,externalDemand:1,simulationApproximation:true};break;}
+    case 'hostile_takeover':{const entries=stakeEntries(state,(s,p)=>p.id!==player.id&&(s.age==='mature'||s.age==='elder')).sort((a,b)=>(b.player.prestige??0)-(a.player.prestige??0));if(!entries.length||player.influence<1){player.influence+=baseCost;return{ok:false,reason:'no_stake_target'};}const target=(choice?playtestChoiceStake(state,player,choice):null)??entries[0];if(maybeCounter(state,target.player,'hostile_takeover')){effect={cancelled:true};break;}removeStake(target.player,target.stake.id);const auc=simpleAuction(state,player,1,state.players??[],{bonusByPlayer:t.bidBonusByPlayer??{}});if(auc.winner)addStake(state,auc.winner.player,target.stake.sectorId,target.stake.age);effect={removedStakeId:target.stake.id,sectorId:target.stake.sectorId,age:target.stake.age,auction:auc};break;}
+    case 'binding_bids':{const eligible=(state.productionSectors??[]).filter(s=>s.id!=='food'&&s.tier>stakeEntries(state,x=>x.sectorId===s.id&&x.age==='young').length);const sector=(choice?playtestChoiceSector(state,choice,s=>eligible.some(e=>e.id===s.id)):null)??eligible[0];if(!sector||player.influence<1){player.influence+=baseCost;return{ok:false,reason:'no_vacant_young'};}const auc=simpleAuction(state,player,1,state.players??[],{allPay:true,bonusByPlayer:t.bidBonusByPlayer??{}});if(auc.winner)addStake(state,auc.winner.player,sector.id,'young');effect={sectorId:sector.id,auction:auc,allPay:true};break;}
+    case 'line_of_credit':{let level=Math.max(1,Math.min(3,Math.floor(Number(choice?.level)||0)));if(!choice){level=1;if((player.prestige??0)>=30&&player.influence<=4)level=3;else if((player.prestige??0)>=20&&player.influence<=6)level=2;}if(level===3&&(player.prestige??0)<30)level=2;if(level===2&&(player.prestige??0)<20)level=1;const amount=level===1?5:level===2?10:15;const extra=level-baseCost;if(extra>0){if(player.influence<extra){player.influence+=baseCost;return{ok:false,reason:'insufficient_variable_cost'};}player.influence-=extra;cost+=extra;}player.influence+=amount;t.creditDebts??=[];t.creditDebts.push({playerId:player.id,amount});effect={level,temporaryInfluence:amount};break;}
+    case 'preferential_contracts':{let level=Math.max(1,Math.min(3,Math.floor(Number(choice?.level)||0)));if(!choice){level=1;if(player.influence>=4)level=3;else if(player.influence>=2)level=2;}const total=level===1?1:level===2?3:5,extra=total-baseCost;if(player.influence<extra){player.influence+=baseCost;return{ok:false,reason:'insufficient_variable_cost'};}player.influence-=extra;cost=total;t.preferential??=[];t.preferential.push({playerId:player.id,units:level});effect={priorityUnits:level,simulationApproximation:true};break;}
+    case 'private_buyer':{const sectors=(state.productionSectors??[]).filter(s=>s.id!=='food').sort((a,b)=>((player.productionStakes??[]).filter(x=>x.sectorId===b.id).length)-((player.productionStakes??[]).filter(x=>x.sectorId===a.id).length));const sector=(choice?playtestChoiceSector(state,choice,s=>s.id!=='food'):null)??sectors[0];if(!sector){player.influence+=baseCost;return{ok:false,reason:'no_sector'};}t.privateBuyer??=[];t.privateBuyer.push({sectorId:sector.id,amount:1});effect={sectorId:sector.id,externalDemand:1,simulationApproximation:true};break;}
     case 'audit_license_privileges':effect={tax:taxAgents(state,player,'merchant_guild',1)};break;
     default:player.influence+=baseCost;return{ok:false,reason:'unsupported'};
   }
@@ -195,7 +269,7 @@ function resolveCard(state,player,card){
 
 function runIntrigueActionPhase(state){ const order=turnOrder(state),actions=[],used=Object.fromEntries(order.map(p=>[p.id,0]));
   const queued=Array.isArray(state.__playtestIntrigueQueue)?state.__playtestIntrigueQueue.splice(0):[];
-  for(const spec of queued){const player=playerById(state,spec.playerId);const card=(state.intrigue?.hands?.[spec.playerId]??[]).find(c=>c.instanceId===spec.instanceId);if(!player||!card)continue;const r=resolveCard(state,player,card);if(r.ok){used[player.id]=(used[player.id]??0)+1;actions.push({playerId:player.id,sequence:actions.length+1,score:null,humanPlaytest:true,...r});}}
+  for(const spec of queued){const player=playerById(state,spec.playerId);const card=(state.intrigue?.hands?.[spec.playerId]??[]).find(c=>c.instanceId===spec.instanceId);if(!player||!card)continue;const r=resolveCard(state,player,card,spec.choice??null);if(r.ok){used[player.id]=(used[player.id]??0)+1;actions.push({playerId:player.id,sequence:actions.length+1,score:null,humanPlaytest:true,...r});}}
   let rounds=0,progress=true;while(progress&&rounds<MAX_INTRIGUE_ACTIONS_PER_FAMILY){progress=false;rounds++;for(const player of order){if(player.aiPersonality==='human')continue;if(used[player.id]>=MAX_INTRIGUE_ACTIONS_PER_FAMILY)continue;const ranked=(state.intrigue.hands[player.id]??[]).filter(c=>meta(c.cardId)?.timing==='action').map(c=>({c,score:legalCardScore(state,player,c)})).sort((a,b)=>b.score-a.score);const pick=ranked[0];if(!pick||pick.score<AI_PLAY_FLOOR)continue;const r=resolveCard(state,player,pick.c);if(r.ok){used[player.id]++;progress=true;actions.push({playerId:player.id,sequence:actions.length+1,score:pick.score,...r});}}}return actions; }
 
 function applyBeforeLegacy(state){ const t=state.intrigueTemporary;t.reverts=[];if(hasPermanent(state,'advanced_farming_techniques'))for(const land of state.lands??[])if(land.development==='farm'){t.reverts.push({landId:land.id,before:land.baseCapacity});land.baseCapacity=(Number(land.baseCapacity)||0)+1;}for(const b of t.capacityBoosts??[]){const land=(state.lands??[]).find(l=>l.id===b.landId);if(land){t.reverts.push({landId:land.id,before:land.baseCapacity});land.baseCapacity=(Number(land.baseCapacity)||0)+b.amount;}}
@@ -218,16 +292,23 @@ export const V115_PLAYTEST_API=Object.freeze({
       meta:meta(card.cardId),
     }));
   },
-  applyIntrigueNow(state,playerId,instanceId){
+  listTargets(state,playerId,instanceId){
+    ensureConfigured(state);
+    const player=playerById(state,playerId);
+    const card=(state.intrigue?.hands?.[playerId]??[]).find(row=>row.instanceId===instanceId);
+    if(!player||!card)return {requiresTarget:false,options:[]};
+    return playtestIntrigueTargets(state,player,card);
+  },
+  applyIntrigueNow(state,playerId,instanceId,choice=null){
     ensureConfigured(state);
     const player=playerById(state,playerId);
     const card=(state.intrigue?.hands?.[playerId]??[]).find(row=>row.instanceId===instanceId);
     if(!player||!card)return {ok:false,reason:'card_not_found'};
-    return resolveCard(state,player,card);
+    return resolveCard(state,player,card,choice);
   },
-  queueIntrigue(state,playerId,instanceId){
+  queueIntrigue(state,playerId,instanceId,choice=null){
     state.__playtestIntrigueQueue??=[];
-    state.__playtestIntrigueQueue.push({playerId,instanceId});
+    state.__playtestIntrigueQueue.push({playerId,instanceId,choice});
   },
 });
 

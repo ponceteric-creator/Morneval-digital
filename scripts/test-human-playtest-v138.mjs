@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   createHumanPlaytest, beginInteractiveGeneration, advanceUntilHuman, listHumanActions,
   playHumanAction, finishInteractiveGeneration, queuePoliticalBid, queueInstitutionDevelopment,
-  PLAYTEST_VERSION, ENGINE_VERSION,
+  queueIntrigueCard, intrigueTargets, PLAYTEST_VERSION, ENGINE_VERSION,
 } from '../js/v138-human-playtest-engine.js';
 
 function toHumanTurn(session) {
@@ -153,6 +153,45 @@ function finishWithPass(session) {
   const finalLand=(result.state.lands??[]).find(row=>row.id===target.id);
   assert.equal(finalLand.terrain,'forest');
   console.log('reforestation human action ok');
+}
+
+
+{
+  const game=createHumanPlaytest({humanSeat:1,replacePersonality:'merchant',externalRelations:true});
+  const humanId=game.playtest.humanPlayerId;
+  game.intrigue.hands[humanId].push({instanceId:'human_private_buyer',cardId:'private_buyer'});
+  let session=beginInteractiveGeneration(game);
+  const targetInfo=intrigueTargets(session,'human_private_buyer');
+  assert.equal(targetInfo.requiresTarget,true);
+  assert.ok(targetInfo.options.length>=3,'Private Buyer should expose Production Sector targets');
+  const chosen=targetInfo.options.find(option=>option.choice?.sectorId==='materials')??targetInfo.options.at(-1);
+  session=queueIntrigueCard(session,'human_private_buyer',chosen.choice);
+  advanceUntilHuman(session,{singleAiStep:false});
+  const result=finishWithPass(session);
+  const action=(result.summary.intrigue?.actions??[]).find(row=>row.playerId===humanId&&row.cardId==='private_buyer');
+  assert.ok(action,'selected Private Buyer must resolve');
+  assert.equal(action.effect?.sectorId,chosen.choice.sectorId,'Private Buyer must use the human-selected sector');
+  console.log('targeted Intrigue sector choice ok',chosen.choice.sectorId);
+}
+
+{
+  const game=createHumanPlaytest({humanSeat:1,replacePersonality:'merchant',externalRelations:true});
+  const humanId=game.playtest.humanPlayerId;
+  game.players.find(row=>row.id===humanId).prestige=30;
+  game.players.find(row=>row.id===humanId).influence=20;
+  game.intrigue.hands[humanId].push({instanceId:'human_credit',cardId:'line_of_credit'});
+  let session=beginInteractiveGeneration(game);
+  const targetInfo=intrigueTargets(session,'human_credit');
+  assert.equal(targetInfo.requiresTarget,true);
+  const chosen=targetInfo.options.find(option=>option.choice?.level===2);
+  assert.ok(chosen,'Line of Credit should expose Level 2 when Prestige permits it');
+  session=queueIntrigueCard(session,'human_credit',chosen.choice);
+  advanceUntilHuman(session,{singleAiStep:false});
+  const result=finishWithPass(session);
+  const action=(result.summary.intrigue?.actions??[]).find(row=>row.playerId===humanId&&row.cardId==='line_of_credit');
+  assert.ok(action,'selected Line of Credit must resolve');
+  assert.equal(action.effect?.level,2,'Line of Credit must preserve the human-selected level');
+  console.log('targeted Intrigue variable level ok');
 }
 
 console.log('human playtest v138 regression passed');
