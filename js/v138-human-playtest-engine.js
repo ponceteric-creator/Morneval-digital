@@ -1,6 +1,7 @@
 import * as current from './v137-merchant-ai-clean-engine.js?playtest=0.11.29';
 import { V110_PLAYTEST_API, V090_CONFIG } from './v110-ai-engine.js?real=0.11.0-v120';
 import { INTRIGUE_CARD_META } from './v115-intrigue-card-catalog.js?v=0.11.5';
+import { V115_PLAYTEST_API } from './v115-intrigue-sim-engine.js?playtest-targeting=0.1.1';
 
 export const PLAYTEST_VERSION = '0.1.0';
 export const ENGINE_VERSION = '0.11.29-sim';
@@ -191,12 +192,21 @@ export function queuePoliticalBid(session, pole) {
   return recapturePreActions(session);
 }
 
-export function queueIntrigueCard(session, instanceId) {
+export function queueIntrigueCard(session, instanceId, choice = null) {
   session.rootState.__playtestIntrigueQueue ??= [];
   const exists = session.rootState.__playtestIntrigueQueue.some(row =>
     row.playerId === session.humanPlayerId && row.instanceId === instanceId);
-  if (!exists) session.rootState.__playtestIntrigueQueue.push({ playerId: session.humanPlayerId, instanceId });
+  if (!exists) session.rootState.__playtestIntrigueQueue.push({ playerId: session.humanPlayerId, instanceId, choice: clone(choice) });
   return recapturePreActions(session);
+}
+
+export function intrigueTargets(session, instanceId) {
+  if (!session) return { requiresTarget: false, options: [] };
+  try {
+    return V115_PLAYTEST_API.listTargets(session.planningState, session.humanPlayerId, instanceId);
+  } catch {
+    return { requiresTarget: false, options: [] };
+  }
 }
 
 function recordAction(session, action, source) {
@@ -432,4 +442,4 @@ export function externalRelations(state) {
   return clone(state.externalRelations?.levels ?? { elves: 0, gnomes: 0, orcs: 0, mainland: 2 });
 }
 
-export { current as engine, V110_PLAYTEST_API };
+export { current as engine, V110_PLAYTEST_API, V115_PLAYTEST_API };
