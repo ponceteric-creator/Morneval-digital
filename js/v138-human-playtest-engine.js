@@ -27,7 +27,39 @@ V090_CONFIG.personalities.investor ??= {
   discount: 0.92,
 };
 
-function clone(value) { return structuredClone(value); }
+function clone(value, seen = new WeakMap()) {
+  if (value == null || typeof value !== 'object') return value;
+  if (seen.has(value)) return seen.get(value);
+  if (value instanceof Date) return new Date(value.getTime());
+  if (value instanceof Map) {
+    const out = new Map();
+    seen.set(value, out);
+    for (const [key, row] of value) out.set(clone(key, seen), clone(row, seen));
+    return out;
+  }
+  if (value instanceof Set) {
+    const out = new Set();
+    seen.set(value, out);
+    for (const row of value) out.add(clone(row, seen));
+    return out;
+  }
+  if (Array.isArray(value)) {
+    const out = [];
+    seen.set(value, out);
+    for (const row of value) out.push(clone(row, seen));
+    return out;
+  }
+  const out = Object.create(Object.getPrototypeOf(value));
+  seen.set(value, out);
+  for (const key of Reflect.ownKeys(value)) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    if (!descriptor) continue;
+    if ('value' in descriptor) descriptor.value = clone(descriptor.value, seen);
+    try { Object.defineProperty(out, key, descriptor); }
+    catch { out[key] = clone(value[key], seen); }
+  }
+  return out;
+}
 function dataClone(value) {
   if (value == null) return value;
   return JSON.parse(JSON.stringify(value, (_key, row) => typeof row === 'function' ? undefined : row));
