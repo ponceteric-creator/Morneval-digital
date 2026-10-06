@@ -193,7 +193,10 @@ function resolveCard(state,player,card){
   if(m.permanent){state.intrigue.inPlay.push({...played,ownerId:player.id,playedGeneration:Number(state.generation)||0,...(effect.targetLandId?{targetLandId:effect.targetLandId}:{})});ensureMetrics(state).totals.patentsPlayed+=m.tags?.includes('patent')?1:0;}else discard(state,played);logPlay(state,player,played,cost,effect);return{ok:true,cardId:m.id,cost,effect};
 }
 
-function runIntrigueActionPhase(state){ const order=turnOrder(state),actions=[],used=Object.fromEntries(order.map(p=>[p.id,0]));let rounds=0,progress=true;while(progress&&rounds<MAX_INTRIGUE_ACTIONS_PER_FAMILY){progress=false;rounds++;for(const player of order){if(used[player.id]>=MAX_INTRIGUE_ACTIONS_PER_FAMILY)continue;const ranked=(state.intrigue.hands[player.id]??[]).filter(c=>meta(c.cardId)?.timing==='action').map(c=>({c,score:legalCardScore(state,player,c)})).sort((a,b)=>b.score-a.score);const pick=ranked[0];if(!pick||pick.score<AI_PLAY_FLOOR)continue;const r=resolveCard(state,player,pick.c);if(r.ok){used[player.id]++;progress=true;actions.push({playerId:player.id,sequence:actions.length+1,score:pick.score,...r});}}}return actions; }
+function runIntrigueActionPhase(state){ const order=turnOrder(state),actions=[],used=Object.fromEntries(order.map(p=>[p.id,0]));
+  const queued=Array.isArray(state.__playtestIntrigueQueue)?state.__playtestIntrigueQueue.splice(0):[];
+  for(const spec of queued){const player=playerById(state,spec.playerId);const card=(state.intrigue?.hands?.[spec.playerId]??[]).find(c=>c.instanceId===spec.instanceId);if(!player||!card)continue;const r=resolveCard(state,player,card);if(r.ok){used[player.id]=(used[player.id]??0)+1;actions.push({playerId:player.id,sequence:actions.length+1,score:null,humanPlaytest:true,...r});}}
+  let rounds=0,progress=true;while(progress&&rounds<MAX_INTRIGUE_ACTIONS_PER_FAMILY){progress=false;rounds++;for(const player of order){if(player.aiPersonality==='human')continue;if(used[player.id]>=MAX_INTRIGUE_ACTIONS_PER_FAMILY)continue;const ranked=(state.intrigue.hands[player.id]??[]).filter(c=>meta(c.cardId)?.timing==='action').map(c=>({c,score:legalCardScore(state,player,c)})).sort((a,b)=>b.score-a.score);const pick=ranked[0];if(!pick||pick.score<AI_PLAY_FLOOR)continue;const r=resolveCard(state,player,pick.c);if(r.ok){used[player.id]++;progress=true;actions.push({playerId:player.id,sequence:actions.length+1,score:pick.score,...r});}}}return actions; }
 
 function applyBeforeLegacy(state){ const t=state.intrigueTemporary;t.reverts=[];if(hasPermanent(state,'advanced_farming_techniques'))for(const land of state.lands??[])if(land.development==='farm'){t.reverts.push({landId:land.id,before:land.baseCapacity});land.baseCapacity=(Number(land.baseCapacity)||0)+1;}for(const b of t.capacityBoosts??[]){const land=(state.lands??[]).find(l=>l.id===b.landId);if(land){t.reverts.push({landId:land.id,before:land.baseCapacity});land.baseCapacity=(Number(land.baseCapacity)||0)+b.amount;}}
   if(state.city.contingencyReserveFood>0&&typeof legacy.getFoodSubsistenceStatus==='function'){const food=legacy.getFoodSubsistenceStatus(state);if((food.localCapacity??0)<state.city.population){const land=(state.lands??[]).find(l=>l.resourceType==='grain'&&l.development!=='urban');if(land){t.reverts.push({landId:land.id,before:land.baseCapacity});land.baseCapacity=(Number(land.baseCapacity)||0)+1;state.city.contingencyReserveFood=0;t.reserveConsumed=true;}}}
@@ -206,6 +209,27 @@ function applyAfterLegacy(state,summary){const t=state.intrigueTemporary;if(hasP
   if(t.reserveIntentBy&&state.city.contingencyReserveFood<=0&&typeof legacy.getFoodSubsistenceStatus==='function'){const food=legacy.getFoodSubsistenceStatus(state);if((food.localCapacity??0)>state.city.population){state.city.contingencyReserveFood=1;state.city.contingencyReserveExpiresAfter=(Number(state.generation)||0)+1;const p=playerById(state,t.reserveIntentBy);if(p)p.prestige=(p.prestige??0)+1;summary.contingencyReserve={created:true,playerId:t.reserveIntentBy};}else summary.contingencyReserve={created:false,playerId:t.reserveIntentBy};}
   if(state.city.contingencyReserveFood>0&&state.city.contingencyReserveExpiresAfter!=null&&Number(state.generation)>state.city.contingencyReserveExpiresAfter){state.city.contingencyReserveFood=0;summary.contingencyReserveExpired=true;}
   const debts=[];for(const d of t.creditDebts??[]){const p=playerById(state,d.playerId);if(!p)continue;const repaid=Math.min(d.amount,Math.max(0,p.influence));p.influence-=repaid;const unpaid=d.amount-repaid;if(unpaid>0)p.prestige=Math.max(0,(p.prestige??0)-unpaid*2);debts.push({...d,repaid,unpaid,prestigePenalty:unpaid*2});}summary.intrigueCreditRepayment=debts;summary.intriguePreferentialContracts=(t.preferential??[]).map(x=>({...x,simulationApproximation:true}));summary.intrigueReserveConsumed=Boolean(t.reserveConsumed);state.intrigueTemporary={};}
+
+export const V115_PLAYTEST_API=Object.freeze({
+  listActionCards(state,playerId){
+    ensureConfigured(state);
+    return (state.intrigue?.hands?.[playerId]??[]).filter(card=>meta(card.cardId)?.timing==='action').map(card=>({
+      ...card,
+      meta:meta(card.cardId),
+    }));
+  },
+  applyIntrigueNow(state,playerId,instanceId){
+    ensureConfigured(state);
+    const player=playerById(state,playerId);
+    const card=(state.intrigue?.hands?.[playerId]??[]).find(row=>row.instanceId===instanceId);
+    if(!player||!card)return {ok:false,reason:'card_not_found'};
+    return resolveCard(state,player,card);
+  },
+  queueIntrigue(state,playerId,instanceId){
+    state.__playtestIntrigueQueue??=[];
+    state.__playtestIntrigueQueue.push({playerId,instanceId});
+  },
+});
 
 export function createV084Game(familyNames=['Valenne',"D'Arcy",'Corven']){const state=legacy.createV084Game(familyNames);ensureConfigured(state);return state;}
 export function applyAutoDemand(state){ensureConfigured(state);legacy.applyAutoDemand(state);}
